@@ -1,0 +1,31 @@
+<html>
+<head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+<script>
+$(function() {
+
+  $.ajax('/check_login', {
+    type: 'GET',
+    success: function(data, status, xhr) {
+      if(data === 'true') {
+        $(document.body).append($("<div>Logged in</div>"));
+      }
+    },
+    failure: function(data, status, xhr) {
+      console.log("Getting logged in status failed: ", {d: data, s: status});
+    }
+  });
+});
+</script>
+</head>
+
+
+<body>
+Welcome to PLT-Belay.
+<a href="/glogin">Log in with Google</a>
+<div>Don't have a Google Account?  
+<a href="/create-account.html">Log in with Brown Apps</a>
+</div>
+</body>
+</html>
