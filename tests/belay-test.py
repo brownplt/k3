@@ -8,10 +8,10 @@ import httplib, urllib
 # Constants, to be updated as the UI changes
 BELAY_DOMAIN = "localhost:8080"
 BELAY_URL = "http://localhost:8080/belay-frame.html"
-GOOGLE_LOGIN_LINKTEXT = "Log in with Google"
+GOOGLE_LOGIN_ID = "glogin"
 GOOGLE_LOGIN_BUTTONID = "submit-login"
 
-CREATE_PLT_LINKTEXT = "Log in with Brown Apps"
+CREATE_PLT_ID = "createplt"
 CREATE_PLT_USERFIELDID = "username"
 CREATE_PLT_PW1FIELDID = "password1"
 CREATE_PLT_PW2FIELDID = "password2"
@@ -48,20 +48,25 @@ def account_exists(driver, username):
   return r == "Taken"
 
 
+def get_elt(driver, ident):
+  try:
+    link = driver.find_element_by_id(ident)
+    return link
+  except:
+    error(driver, "couldn't find element: " + ident)
+    return None
+
+
 # Log in as google user, and check for the cookie
 def google_login_test(driver):
   driver.get(BELAY_URL)
-
-  link = driver.find_element_by_link_text(GOOGLE_LOGIN_LINKTEXT)
-  if link == None:
-    error(driver, "google_login_test error: couldnt find login link with text: " + GOOGLE_LOGIN_LINKTEXT)
+  
+  link = get_elt(driver, "glogin")
   link.click()
 
-  login_button = driver.find_element_by_id(GOOGLE_LOGIN_BUTTONID)
-  if login_button == None:
-    error(driver, "google_login_test error: couldnt find login button with id: " + GOOGLE_LOGIN_BUTTONID)
-
+  login_button = get_elt(driver, GOOGLE_LOGIN_BUTTONID)
   login_button.click()
+
   if not session_cookie_exists(driver):
     error(driver, "google_login_test fail: couldn't find session cookie")
 
@@ -115,26 +120,14 @@ def create_pltaccount_test(driver):
 
   driver.get(BELAY_URL)
 
-  link = driver.find_element_by_link_text(CREATE_PLT_LINKTEXT)
-  if link == None:
-    error(driver, "create_plt_test error: couldn't find login link with text " + CREATE_PLT_LINKTEXT)
+  #link = get_link(driver, CREATE_PLT_LINKTEXT)
+  link = get_elt(driver, CREATE_PLT_ID)
   link.click()
 
-  username_field = driver.find_element_by_id(CREATE_PLT_USERFIELDID)
-  if username_field == None:
-    error(driver, "create_plt_test error: couldn't find username field")
-
-  pw1_field = driver.find_element_by_id(CREATE_PLT_PW1FIELDID)
-  if pw1_field == None:
-    error(driver, "create_plt_test error: couldn't find password1 field")
-
-  pw2_field = driver.find_element_by_id(CREATE_PLT_PW2FIELDID)
-  if pw2_field == None:
-    error(driver, "create_plt_test error: couldn't find password2 field")
-
-  submit = driver.find_element_by_id(CREATE_PLT_BUTTONID)
-  if submit == None:
-    error(driver, "create_plt_test error: couldn't find submit button")
+  username_field = get_elt(driver, CREATE_PLT_USERFIELDID)
+  pw1_field = get_elt(driver, CREATE_PLT_PW1FIELDID)
+  pw2_field = get_elt(driver, CREATE_PLT_PW2FIELDID)
+  submit = get_elt(driver, CREATE_PLT_BUTTONID)
 
   mismatch_test()
   shortpw_test()
