@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import uuid
+import lib.py.belay as belay
 
 from google.appengine.api import users
 
@@ -16,6 +17,8 @@ def djangoSetup():
 djangoSetup()
 
 from django.template.loader import render_to_string
+
+GENERATE_STATION = "http://localhost:9001/belay/generate"
 
 class BelayAccount(db.Model):
   station_url = db.StringProperty()
@@ -52,7 +55,12 @@ class GoogleLoginHandler(webapp.RequestHandler):
     if(len(results) > 1): raise Exception("FATAL: Multiple entries for GUser")
 
     if(len(results) == 0):
-      account = BelayAccount(station_url="http://not-a-url")
+      try:
+        station_cap = belay.Capability(GENERATE_STATION).invoke('GET')
+      except belay.BelayException:
+        self.response.set_status(500)
+        return
+      account = BelayAccount(station_url=station_cap.serialize())
       account.put()
       gc = GoogleCredentials(account=account, user=user)
       gc.put()
@@ -95,17 +103,31 @@ class PLTLoginHandler(webapp.RequestHandler):
     username = self.request.get("username")
     password = self.request.get("password")
 
+    if not unameExists(username):
+      self.response.out.write("PLT Login Failed: bad username/pw")
+      return
+
     q = PltCredentials.all()
     q.filter("username =", username)
     results = q.fetch(2)
 
     if (len(results) > 1): raise Exception("FATAL: Multiple entries for PLTUser")
 
-    if len(results) != 1:
+    pc = results[0]
+    current_hashed = get_hashed(password, pc.salt)
+
+    if current_hashed != pc.hashed_password:
       self.response.out.write("PLT Login Failed: bad username/pw")
       return
-    
-    self.response.out.write("PLT Login success")
+
+    session_id = str(uuid.uuid4())
+    session = BelaySession(account=pc.account, session_id=session_id)
+    session.put()
+
+    self.response.headers.add_header('Set-Cookie', \
+        'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % \
+        session_id)
+    self.response.out.write("PLT Login: Success")
 
 
 class CreatePltCredentials(webapp.RequestHandler):
@@ -115,18 +137,28 @@ class CreatePltCredentials(webapp.RequestHandler):
 
     if len(username) > 20:
       self.response.out.write("Failed: Bad uname")
+      return
 
     if len(rawpassword) < 8:
       self.response.out.write("Failed: Bad password")
+      return
 
     if unameExists(username):
       self.response.out.write("Failed: Username taken")
+      return
 
     salt = str(uuid.uuid4())
 
     hashed_password = get_hashed(rawpassword, salt)    
 
-    account = BelayAccount(station_url="http://not-a-url")
+    try:
+      station_cap = belay.Capability(GENERATE_STATION).invoke('GET')
+    except Exception:
+      self.response.out.write("Failed")
+      self.response.set_status(500)
+      return
+
+    account = BelayAccount(station_url=station_cap.serialize())
     account.put()
 
     credentials = PltCredentials(username=username, \
@@ -154,21 +186,42 @@ class UsernameHandler(webapp.RequestHandler):
     else:
       self.response.out.write('Available')
 
+def accountForSession(session_id):
+  q = BelaySession.all()
+  q.filter("session_id = ", session_id)
+  results = q.fetch(1)
+
+  if len(results) == 0:
+    return None
+  else:
+    return results[0].account
+
 class CheckLoginHandler(webapp.RequestHandler):
   def get(self):
-    if self.request.cookies.has_key('session'):
-      session_id = self.request.cookies['session'] 
-    else:
-      session_id = ""
+    if not 'session' in self.request.cookies:
+      self.response.out.write('false')
+      return
 
-    q = BelaySession.all()
-    q.filter("session_id = ", session_id)
-    results = q.fetch(1)
+    session_id = self.request.cookies['session'] 
+    acct = accountForSession(session_id)
 
-    if len(results) == 0:
+    if acct is None:
       self.response.out.write('false')
     else:
       self.response.out.write('true')
+
+class GetStationHandler(webapp.RequestHandler):
+  def get(self):
+    if not 'session' in self.request.cookies:
+      logging.debug('Failed to find session')
+      self.response.set_status(500)
+      return
+
+    session_id = self.request.cookies['session'] 
+    acct = accountForSession(session_id)
+
+    self.response.out.write(acct.station_url)
+    
 
 application = webapp.WSGIApplication(
   [('/get_station', GetStationHandler),
