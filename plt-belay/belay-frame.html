@@ -9,6 +9,9 @@ $(function() {
     success: function(data, status, xhr) {
       if(data === 'true') {
         $(document.body).append($("<div>Logged in</div>"));
+        $("#loginplt").css("visibility", "invisible");
+      } else {
+        $("#loginplt").css("visibility", "visible");
       }
     },
     failure: function(data, status, xhr) {
@@ -27,6 +30,7 @@ $(function() {
 <div style="font-size:small">
 <p>Don't have a Google Account?  Use Brown Apps instead.</br>
 <a href="/create-account.html" id="createplt">(Create an account)</a>
+<a href="/login.html" id="loginplt" style="visibility:hidden">(Login with your Brown Apps account)</a>
 </p>
 </div>
 </div>

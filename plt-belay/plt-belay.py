@@ -89,6 +89,25 @@ def unameExists(username):
   
   return len(results) == 1
 
+
+class PLTLoginHandler(webapp.RequestHandler):
+  def post(self):
+    username = self.request.get("username")
+    password = self.request.get("password")
+
+    q = PltCredentials.all()
+    q.filter("username =", username)
+    results = q.fetch(2)
+
+    if (len(results) > 1): raise Exception("FATAL: Multiple entries for PLTUser")
+
+    if len(results) != 1:
+      self.response.out.write("PLT Login Failed: bad username/pw")
+      return
+    
+    self.response.out.write("PLT Login success")
+
+
 class CreatePltCredentials(webapp.RequestHandler):
   def post(self):
     username = self.request.get("username")
@@ -137,7 +156,11 @@ class UsernameHandler(webapp.RequestHandler):
 
 class CheckLoginHandler(webapp.RequestHandler):
   def get(self):
-    session_id = self.request.cookies['session'] 
+    if self.request.cookies.has_key('session'):
+      session_id = self.request.cookies['session'] 
+    else:
+      session_id = ""
+
     q = BelaySession.all()
     q.filter("session_id = ", session_id)
     results = q.fetch(1)
@@ -151,6 +174,7 @@ application = webapp.WSGIApplication(
   [('/get_station', GetStationHandler),
    ('/create_plt_account', CreatePltCredentials),
    ('/glogin', GoogleLoginHandler),
+   ('/plt_login', PLTLoginHandler),
    ('/check_uname', UsernameHandler),
    ('/check_login', CheckLoginHandler)
   ],
