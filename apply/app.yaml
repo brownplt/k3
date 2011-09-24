@@ -9,7 +9,7 @@ handlers:
   script: index.py
   login: required
 
-- url: /(.*\.(html|css|js))
+- url: /(.*\.(html|css|js|png))
   static_files: \1
-  upload: (.*\.(html|css|js))
+  upload: (.*\.(html|css|js|png))
 

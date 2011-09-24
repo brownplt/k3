@@ -81,10 +81,28 @@ def get_hashed(rawpassword, salt):
   logging.debug("Salted: %s" % salted)
   return salted
 
+def unameExists(username):
+  q = PltCredentials.all()
+
+  q.filter("username = ", username)
+  results = q.fetch(1)
+  
+  return len(results) == 1
+
 class CreatePltCredentials(webapp.RequestHandler):
   def post(self):
     username = self.request.get("username")
     rawpassword = self.request.get("password")
+
+    if len(username) > 20:
+      self.response.out.write("Failed: Bad uname")
+
+    if len(rawpassword) < 8:
+      self.response.out.write("Failed: Bad password")
+
+    if unameExists(username):
+      self.response.out.write("Failed: Username taken")
+
     salt = str(uuid.uuid4())
 
     hashed_password = get_hashed(rawpassword, salt)    
@@ -111,15 +129,11 @@ class CreatePltCredentials(webapp.RequestHandler):
 class UsernameHandler(webapp.RequestHandler):
   def post(self):
     username = self.request.get("username")
-    q = PltCredentials.all()
 
-    q.filter("username = ", username)
-    results = q.fetch(1)
-
-    if len(results) == 0:
-      self.response.out.write('Available')
-    else:
+    if unameExists(username):
       self.response.out.write('Taken')
+    else:
+      self.response.out.write('Available')
 
 class CheckLoginHandler(webapp.RequestHandler):
   def get(self):
