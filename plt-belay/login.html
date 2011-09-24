@@ -13,10 +13,10 @@ $(function() {
         type: 'POST',
         data: {username: username, password: password},
         success: function(data, status, xhr) {
-          console.log(data);
+          console.log("post success: " + data);
         },
         failure: function(data, status, xhr) {
-          console.log("failure");
+          console.log("post failure: " + data);
         }
       });
     }
