@@ -4,6 +4,18 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
 <script>
 $(function() {
+  function get_station(k) {
+    $.ajax('/get_station', {
+      type: 'GET',
+      success: function(data, status, xhr) {
+        k(data);
+      },
+      error: function(data, status, xhr) {
+        console.log('failed to get station');
+      }
+    });
+  }
+
   $.ajax('/check_login', {
     type: 'GET',
     success: function(data, status, xhr) {
@@ -12,9 +24,12 @@ $(function() {
         $("#loginplt").css("visibility", "invisible");
       } else {
         $("#loginplt").css("visibility", "visible");
+        get_station(function(station) {
+          $(document.body).append($("<div>" + station + "</div>"));
+        });
       }
     },
-    failure: function(data, status, xhr) {
+    error: function(data, status, xhr) {
       console.log("Getting logged in status failed: ", {d: data, s: status});
     }
   });
