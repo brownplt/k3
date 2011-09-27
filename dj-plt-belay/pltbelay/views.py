@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
+  logging.debug('checking')
   return len(q) == 1
 
 HASH_ITERATIONS = 20
@@ -89,3 +90,17 @@ def create_plt_account(request):
 # TODO : google login
 def glogin(request):
   return HttpResponse("Google Login NYI", status=500)
+
+def plt_login(request):
+  return HttpResponse("Google Login NYI", status=500)
+
+def check_uname(request):
+  uname = request.POST['username']
+  if unameExists(uname):
+    return HttpResponse('Taken', status=200)
+  else:
+    return HttpResponse('Available', status=200)
+
+def check_login(request):
+  return HttpResponse("Check_login NYI", status=500)
+

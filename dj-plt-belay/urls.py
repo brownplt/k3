@@ -1,9 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
 
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
-
 urlpatterns = patterns('',
     (r'^get_station/$', 'pltbelay.views.get_station'),
     (r'^create_plt_account/$', 'pltbelay.views.create_plt_account'),
