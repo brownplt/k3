@@ -4,6 +4,8 @@ import logging
 import uuid
 import hashlib
 
+import belaylibs
+
 logger = logging.getLogger(__name__)
 
 def unameExists(uname):

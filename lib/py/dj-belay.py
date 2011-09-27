@@ -148,134 +148,88 @@ def dataPostProcess(serialized):
   except ValueError as exn:
     logging.debug(str(exn))
     logging.debug("Unloadable: " + str(serialized))
-      
-class BcapHandler(webapp.RequestHandler):  
+
+class BcapHandler(object):
+  pass
+
+def xhr_response(response):
+  response['Access-Control-Allow-Origin'] = '*'
+
+def xhr_content(response, content, content_type):
+  xhr_response(response)
+  response.write(content)
+  response["Cache-Control"] = "no-cache"
+  response["Content-Type"] = content_type
+  response["Expires"] = "Fri, 01 Jan 1990 00:00:00 GMT"
+
+def bcapNullResponse():
+  response = HttpResponse()
+  xhr_response(response)
+  return response
+
+def bcapResponse(content):
+  response = HttpResponse()
+  content = dataPreProcess(content)
+  xhr_content(response, content, "text/plain;charset=UTF-8")
+  return response
+
+
+path_to_handler = {}
+default_prefix = '/caps/'
+prefix_strip_length = len(default_prefix)
+
+def set_handlers(cap_prefix, path_map):
+  if not cap_prefix.startswith('/'):
+    cap_prefix = '/' + cap_prefix
+  if not cap_prefix.endswith('/'):
+    cap_prefix += '/'
   
-  def xhr_response(self):
-    self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+  prefix_strip_length = len(cap_prefix)
+  default_prefix = this_server_url_prefix() + cap_prefix
+  for (url, handler) in path_map:
+    set_handler(url, handler)
 
-  def xhr_content(self, content, content_type):
-    self.xhr_response()
-    self.response.out.write(content)
-    self.response.headers.add_header("Cache-Control", "no-cache")
-    self.response.headers.add_header("Content-Type", content_type)
-    self.response.headers.add_header("Expires", "Fri, 01 Jan 1990 00:00:00 GMT")
-
-  def bcapRequest(self):
-    return dataPostProcess(self.request.body)
-      
-  def bcapResponse(self, jsonResp):
-    resp = dataPreProcess(jsonResp)
-    self.xhr_content(resp, "text/plain;charset=UTF-8")
-
-  def bcapNullResponse(self):
-    self.xhr_response()
-    
-  # allows cross-domain requests  
-  def options(self):
-    m = self.request.headers["Access-Control-Request-Method"]
-    h = self.request.headers["Access-Control-Request-Headers"]
-
-    self.response.headers["Access-Control-Allow-Origin"] = "*"
-    self.response.headers["Access-Control-Max-Age"] = "2592000"
-    self.response.headers["Access-Control-Allow-Methods"] = m      
-    if h:
-      self.response.headers["Access-Control-Allow-Headers"] = h
-    else:
-      pass
+def get_handler(path):
+  return path_to_handler[path]
+def set_handler(path, handler):
+  return path_to_handler[path] = handler
 
 
-# Base class for handlers that process capability invocations.
-class CapHandler(BcapHandler):
+def proxyHandler(request):
+  cap_id = request.path_info[prefix_strip_length:]
+  grants = Grant.objects.filter(cap_id=cap_id)
 
-  def set_entity(self, entity):
-    self.__entity__ = entity
+  if len(grants) == 0:
+    response = xhr_content("proxyHandler: " + \
+                           "Cap not found: %s\n" % cap_id)
+    response.status_code = 404
+    return response
 
-  def get_entity(self):
-    return self.__entity__
-
-
-# A WSGIApplication handler that invokes granted capabilities.
-class ProxyHandler(BcapHandler):
-
-  default_prefix = '/caps/'
-  prefix_strip_length = len(default_prefix)
+  if len(grants) > 1:
+    # TODO(arjun.guha@gmail.com): appropriate error in response
+    raise BelayException('%s, %s' % (self.request.path_info, cap_id))
   
-  __url_mapping__ = None
-  
-  @classmethod
-  def setUrlMap(klass, url_mapping):
-    if klass.__url_mapping__ is not None: # do not reinit (FastCGI)
-      return
-    
-    klass.__url_mapping__ = { }
-    for (url, handler_class) in url_mapping:
-      if hasattr(handler_class, 'default_internal_url'):
-        pass
-      else:
-        handler_class.default_internal_url = url
-      klass.__url_mapping__[url] = handler_class
+  grant = grants[0]   
+  handler_class = path_to_handler[grant.internal_path]
+  handler = handler_class()
 
-  def __init__(self):
-    pass
+  method = request.method
+  item = grant.db_entity
+  args = dataPostProcess(request.read())
 
-  def init_cap_handler(self):
-    # Strip the '/caps/' prefix off self.request.path
-    cap_id = self.request.path_info[self.__class__.prefix_strip_length:]
-
-    grants = Grant.all().filter('cap_id =', cap_id).fetch(2)
-
-    if len(grants) == 0:
-      self.bcapNullResponse()
-      self.response.set_status(404)
-      self.response.out.write("ProxyHandler.init_cap_handler: " + \
-                              "Cap not found: %s\n" % cap_id)
-      return
-    if len(grants) > 1:
-      # TODO(arjun): appropriate error in response
-      raise BelayException('%s, %s' % (self.request.path_info, cap_id))
-
-    grant = grants[0]
-    handler_class = self.__url_mapping__[grant.internal_path]
-    # instantiates appropriate subclass of db.Model
-    item = grant.db_entity 
-
-    handler = handler_class()
-    handler.set_entity(item)
-
-    self.request.path_info = grant.internal_path # handler sees private path
-    handler.initialize(self.request, self.response)
-    return handler
-
-  def get(self):
-    handler = self.init_cap_handler()
-    if handler is None:
-      pass
-    else:
-      handler.get()
-
-  def post(self):
-    handler = self.init_cap_handler()
-    if handler is None:
-      pass
-    else:
-      handler.post()
-
-  def put(self):
-    handler = self.init_cap_handler()
-    if handler is None:
-      pass
-    else:
-      handler.put()
-
-  def delete(self):
-    handler = self.init_cap_handler()
-    if handler is None:
-      pass
-    else:
-      handler.delete()
-
-
+  if method == 'GET':
+    return handler.get(item)
+  elif method == 'POST':
+    return handler.post(args, item)
+  elif method == 'DELETE':
+    return handler.delete(item)
+  elif method == 'PUT':
+    return handler.put(args, item)
+  else:
+    response = xhr_content("proxyHandler: " + \
+                           "Bad method: %s\n" % request.method)
+    response.status_code = 404
+    return response
 
 def get_path(path_or_handler):
   if isinstance(path_or_handler, str):
@@ -312,13 +266,3 @@ def revoke(path_or_handler, entity):
 
 def revokeEntity(entity):
   entity.grant_set.delete()
-
-def set_handlers(cap_prefix, path_map):
-  if not cap_prefix.startswith('/'):
-    cap_prefix = '/' + cap_prefix
-  if not cap_prefix.endswith('/'):
-    cap_prefix += '/'
-  
-  ProxyHandler.prefix_strip_length = len(cap_prefix)
-  ProxyHandler.default_prefix = this_server_url_prefix() + cap_prefix
-  ProxyHandler.setUrlMap(path_map)

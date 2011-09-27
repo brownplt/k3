@@ -9,13 +9,6 @@ urlpatterns = patterns('',
     (r'^create_plt_account/$', 'pltbelay.views.create_plt_account'),
     (r'^glogin/$', 'pltbelay.views.glogin'),
     (r'^plt_login/$', 'pltbelay.views.plt_login'),
-    # Examples:
-    # url(r'^$', 'k3.views.home', name='home'),
-    # url(r'^k3/', include('k3.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
+    (r'^check_uname/$', 'pltbelay.views.check_uname'),
+    (r'^check_login/$', 'pltbelay.views.check_login'),
 )
