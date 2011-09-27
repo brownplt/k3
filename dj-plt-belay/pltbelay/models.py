@@ -19,3 +19,4 @@ class GoogleCredentials(models.Model):
 class BelaySession(models.Model):
   session_id = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
+
