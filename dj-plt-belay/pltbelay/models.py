@@ -11,12 +11,9 @@ class PltCredentials(bcap.Grantable):
   hashed_password = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
 
-# TODO: how to django google login?
-"""
 class GoogleCredentials(models.Model):
-  user = db.UserProperty()
-  account = db.ReferenceProperty(BelayAccount, required=True)
-"""
+  identity = models.CharField(max_length=200)
+  account = models.ForeignKey(BelayAccount)
 
 class BelaySession(bcap.Grantable):
   session_id = models.CharField(max_length=200)

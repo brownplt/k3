@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpRequest
 from django.template.loader import render_to_string
-from pltbelay.models import BelaySession, PltCredentials
+from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials
 from lib.py.bs import bs
 import logging
 import uuid
@@ -109,23 +109,48 @@ def glogin(request):
     return HttpResponse("Error contacting Google OID endpoint", status=500)
   raw_uri = uris[0].contents[0]
   parsed = urlparse(raw_uri)
-  logger.info(parsed)
 
   param_obj = {
       'openid.ns' : 'http://specs.openid.net/auth/2.0',
       'openid.claimed_id' : 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
-      'openid.return_to' : 'http://66.228.37.176:8000/belay_frame/',
+      'openid.return_to' : 'http://66.228.37.176:8000/glogin_landing/',
       'openid.realm' : 'http://66.228.37.176:8000',
       'openid.mode' : 'checkid_setup'
   }
   params = encode_for_get(param_obj)
+
   req_url = ("https://" + parsed.netloc + parsed.path + "?%s") % params
   f = urllib2.urlopen(req_url)
-  logger.info(f.code)
-  logger.info(f.info)
-  logger.info(f.headers)
   return HttpResponse(f.read())
+
+def glogin_landing(request):
+  if request.method == 'GET':
+    d = request.GET
+  else:
+    d = request.POST
+  identity = d['openid.identity']
+
+  q = GoogleCredentials.objects.filter(identity=identity)
+  if len(q) == 0:
+    # TODO: call station.  for now, account has a dummy station_url
+    dummy_url = str(uuid.uuid4())
+    account = BelayAccount(station_url=dummy_url)
+    account.save()
+
+    gc = GoogleCredentials(account=account, identity=identity)
+    gc.save()
+  else:
+    account = q[0].account
+
+  session_id = str(uuid.uuid4())
+  session = BelaySession(account=account, session_id=session_id)
+  session.save()
+
+  response = HttpResponse()
+  cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
+  response['Set-Cookie'] = cstr
+  return HttpResponse("Success")
 
 def plt_login(request):
   return HttpResponse("PLT Login NYI", status=500)
