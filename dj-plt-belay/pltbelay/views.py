@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpRequest
 from django.template.loader import render_to_string
 from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials
-from lib.py.bs import bs
+from xml.dom import minidom
 import logging
 import uuid
 import hashlib
@@ -106,12 +106,12 @@ def glogin(request):
     return s[:len(s)-1]
 
   f = urllib2.urlopen("https://www.google.com/accounts/o8/id")
-  soup = bs.BeautifulSoup(f.read()) 
-  uris = soup.findAll("uri")
+  dom = minidom.parse(f)
+  uris = dom.getElementsByTagName("URI")
 
   if len(uris) != 1:
     return HttpResponse("Error contacting Google OID endpoint", status=500)
-  raw_uri = uris[0].contents[0]
+  raw_uri = uris[0].firstChild.toxml()
   parsed = urlparse(raw_uri)
 
   param_obj = {
