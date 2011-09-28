@@ -90,6 +90,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
+    '/home/matt/k3-repo/k3/dj-plt-belay/pltbelay/static',
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -112,13 +113,28 @@ INSTALLED_APPS = (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters' : {
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
+        'console' : {
+          'level' : 'DEBUG',
+          'class' : 'logging.StreamHandler',
+          'formatter' : 'simple'
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
         }
     },
     'loggers': {
+        'default' : {
+            'handlers' : ['console'],
+            'propagate' : False,
+            'level' : 'INFO'
+        },
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',

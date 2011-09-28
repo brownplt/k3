@@ -1,14 +1,20 @@
 from django.http import HttpResponse, HttpRequest
+from django.template.loader import render_to_string
 from pltbelay.models import BelaySession, PltCredentials
+from lib.py.bs import bs
 import logging
 import uuid
 import hashlib
+import httplib
+import urllib
+import urllib2
+from urlparse import urlparse
 
 import belaylibs.dj_belay as belay
 
 import models as model
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('default')
 
 GENERATE_STATION = "http://localhost:9001/belay/generate"
 def unameExists(uname):
@@ -85,12 +91,43 @@ def create_plt_account(request):
   response['Set-Cookie'] = cstr
   return response
 
-# TODO : google login
+# TODO : fix intermediate page (to get on google's domain)
 def glogin(request):
-  return HttpResponse("Google Login NYI", status=500)
+  def encode_for_get(param_obj):
+    s = ""
+    for nm in param_obj:
+      s += nm + "=" + param_obj[nm] + "&"
+    return s[:len(s)-1]
+
+  f = urllib2.urlopen("https://www.google.com/accounts/o8/id")
+  soup = bs.BeautifulSoup(f.read()) 
+  uris = soup.findAll("uri")
+
+  if len(uris) != 1:
+    return HttpResponse("Error contacting Google OID endpoint", status=500)
+  raw_uri = uris[0].contents[0]
+  parsed = urlparse(raw_uri)
+  logger.info(parsed)
+
+  param_obj = {
+      'openid.ns' : 'http://specs.openid.net/auth/2.0',
+      'openid.claimed_id' : 'http://specs.openid.net/auth/2.0/identifier_select',
+      'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
+      'openid.return_to' : 'http://cs.brown.edu',
+      'openid.realm' : 'http://cs.brown.edu',
+      'openid.mode' : 'checkid_setup'
+  }
+  params = encode_for_get(param_obj)
+  req_url = ("https://" + parsed.netloc + parsed.path + "?%s") % params
+  f = urllib2.urlopen(req_url)
+  return HttpResponse(f.read())
 
 def plt_login(request):
-  return HttpResponse("Google Login NYI", status=500)
+  return HttpResponse("PLT Login NYI", status=500)
+
+def belay_frame(request):
+  rendered = render_to_string("belay-frame.html", {})
+  return HttpResponse(rendered)
 
 def check_uname(request):
   uname = request.POST['username']
@@ -101,4 +138,3 @@ def check_uname(request):
 
 def check_login(request):
   return HttpResponse("Check_login NYI", status=500)
-
