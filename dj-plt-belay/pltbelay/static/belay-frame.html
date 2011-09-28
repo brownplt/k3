@@ -6,7 +6,7 @@
 <script>
 $(function() {
   function get_station(k) {
-    $.ajax('/get_station', {
+    $.ajax('/get_station/', {
       type: 'GET',
       success: function(data, status, xhr) {
         k(data);
@@ -17,7 +17,7 @@ $(function() {
     });
   }
 
-  $.ajax('/check_login', {
+  $.ajax('/check_login/', {
     type: 'GET',
     success: function(data, status, xhr) {
       if(data === 'true') {

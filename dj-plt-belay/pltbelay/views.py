@@ -147,10 +147,10 @@ def glogin_landing(request):
   session = BelaySession(account=account, session_id=session_id)
   session.save()
 
-  response = HttpResponse()
+  response = HttpResponse('Success')
   cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
   response['Set-Cookie'] = cstr
-  return HttpResponse("Success")
+  return response
 
 def plt_login(request):
   return HttpResponse("PLT Login NYI", status=500)
