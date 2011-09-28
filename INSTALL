@@ -1,0 +1,36 @@
+There are several applications in this repository:
+
+[TODO: finalize paths, fill in here]
+
+-----------
+DEVELOPMENT
+-----------
+
+You need Django installed: https://www.djangoproject.com/download/
+
+Start apply at localhost:8001 and belay at localhost:8000  :
+
+$ cd dj-apply
+$ python manage.py syncdb
+$ python manage.py runserver 8001
+
+$ cd dj-plt-belay
+$ python manage.py syncdb
+$ python manage.py runserver 8000
+
+----------
+PRODUCTION
+----------
+
+All of them run on top of Django with a Postgres backend.
+
+  Django is here: https://www.djangoproject.com/download/
+
+  Postgres is here: http://www.postgresql.org/
+
+  PsycoPG connects Django to a Postgres backend:
+  http://initd.org/psycopg/install/#installing-from-source-code
+
+  (required installing packages python-dev and libpq-dev)
+
+
