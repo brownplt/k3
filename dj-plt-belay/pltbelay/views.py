@@ -37,17 +37,21 @@ def get_hashed(rawpassword, salt):
   logging.debug("Salted: %s" % salted)
   return salted
 
+def accountForSession(session_id):
+  q = BelaySession.objects.filter(session_id=session_id)
+
+  if len(q) == 0:
+    return None
+  else:
+    return q[0].account
+
 def get_station(request):
   if not 'session' in request.COOKIES:
     logger.debug('Failed to find session')
     return HttpResponse(status=500)
     
   sid = request.COOKIES['session']
-  q = BelaySession.objects.filter(session_id=sid)
-  if len(q) == 0:
-    acct = None
-  else:
-    acct = q[0]
+  acct = accountForSession(sid)
 
   return HttpResponse(acct.station_url)
 
@@ -74,7 +78,7 @@ def create_plt_account(request):
 
   station_cap = bcap.Capability(GENERATE_STATION).invoke('GET')
 
-  account = model.BelayAccount(station_url=station_cap.serialize())
+  account = BelayAccount(station_url=station_cap.serialize())
   account.save()
   credentials = PltCredentials(username=username, \
     salt=salt, \

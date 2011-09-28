@@ -16,7 +16,7 @@ DATABASES = {
     },
     'production': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
+        'NAME': 'belay',
         'USER': 'postgres',
         'PASSWORD': '',
         'HOST': '',
