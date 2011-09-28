@@ -11,7 +11,7 @@ class PltCredentials(bcap.Grantable):
   hashed_password = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
 
-class GoogleCredentials(models.Model):
+class GoogleCredentials(bcap.Grantable):
   identity = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
 
