@@ -22,10 +22,10 @@ $(function() {
     success: function(data, status, xhr) {
       if(data === 'true') {
         $(document.body).append($("<div>Logged in</div>"));
-      } else {
         get_station(function(station) {
           $(document.body).append($("<div>" + station + "</div>"));
         });
+      } else {
       }
     },
     error: function(data, status, xhr) {
@@ -38,6 +38,7 @@ $(function() {
 
 
 <body>
+<div id="belay-frame">
 <p>
 <a href="/glogin"><button id="glogin" style="width:20em;height:5em;font-size:larger">Log in with Google</button></a>
 </p>
@@ -46,6 +47,7 @@ $(function() {
 <a href="/static/create-account.html" id="createplt">(Create an account)</a>
 <a href="/static/login.html" id="loginplt">(Log in with your Brown Apps account)</a>
 </p>
+</div>
 </div>
 </div>
 </body>
