@@ -94,6 +94,7 @@ def create_plt_account(request):
 
 # TODO : fix intermediate page (to get on google's domain)
 def glogin(request):
+  # I tried to use urllib.urlencode, but it translates slashes into escape sequences
   def encode_for_get(param_obj):
     s = ""
     for nm in param_obj:
@@ -114,13 +115,16 @@ def glogin(request):
       'openid.ns' : 'http://specs.openid.net/auth/2.0',
       'openid.claimed_id' : 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
-      'openid.return_to' : 'http://cs.brown.edu',
-      'openid.realm' : 'http://cs.brown.edu',
+      'openid.return_to' : 'http://66.228.37.176:8000/belay_frame/',
+      'openid.realm' : 'http://66.228.37.176:8000',
       'openid.mode' : 'checkid_setup'
   }
   params = encode_for_get(param_obj)
   req_url = ("https://" + parsed.netloc + parsed.path + "?%s") % params
   f = urllib2.urlopen(req_url)
+  logger.info(f.code)
+  logger.info(f.info)
+  logger.info(f.headers)
   return HttpResponse(f.read())
 
 def plt_login(request):
