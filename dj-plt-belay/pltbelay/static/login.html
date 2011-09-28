@@ -1,0 +1,39 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+<script>
+$(function() {
+  $("#submit").click(function(e) {
+    var username = $("#username").val();
+    var password = $("#password").val();
+
+    function login() {
+      console.log("attempting plt account login");
+      $.ajax("/plt_login", {
+        type: 'POST',
+        data: {username: username, password: password},
+        success: function(data, status, xhr) {
+          // TODO: redirect somewhere on login success?
+          console.log("post success: " + data);
+        },
+        failure: function(data, status, xhr) {
+          console.log("post failure: " + data);
+        }
+      });
+    }
+
+    login();
+  });
+});
+</script>
+</head>
+<body>
+
+<div>
+Username: <input type="text" id="username" value=""></input>
+Password: <input type="password" id="password" value=""></input>
+<button id="submit" value="Submit">Submit</button>
+</div>
+
+</body>
+</html>

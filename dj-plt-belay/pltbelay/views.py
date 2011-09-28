@@ -4,10 +4,13 @@ import logging
 import uuid
 import hashlib
 
-import belaylibs
+import belaylibs.dj_belay as belay
+
+import models as model
 
 logger = logging.getLogger(__name__)
 
+GENERATE_STATION = "http://localhost:9001/belay/generate"
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
   logging.debug('checking')
@@ -42,7 +45,7 @@ def create_plt_account(request):
   if request.method != 'POST':
     return HttpResponse("only POST is implemented", status=500)
 
-  keys = reqest.POST.keys()
+  keys = request.POST.keys()
   if not ('username' in keys and 'password' in keys):
     logger.error('create_plt_account: post data missing username or password')
     return HttpResponse(status=500)
@@ -60,15 +63,10 @@ def create_plt_account(request):
   hashed_password = get_hashed(rawpassword, salt)
 
   # TODO: port station to django
-  """
-  try:
-    station_cap = belay.Capability(GENERATE_STATION).invoke('GET')
-  except Exception:
-    return HttpResponse('Failed', status=500)
+  station_cap = belay.Capability(GENERATE_STATION).invoke('GET')
 
-  account = BelayAccount(station_url=station_cap.serialize())
+  account = model.BelayAccount(station_url=station_cap.serialize())
   account.save()
-  """
   credentials = PltCredentials(username=username, \
     salt=salt, \
     hashed_password=hashed_password, \
