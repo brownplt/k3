@@ -9,10 +9,14 @@ import httplib
 import urllib
 import urllib2
 from urlparse import urlparse
+import hashlib
 
-import belaylibs.dj_belay as belay
+import belaylibs.dj_belay as bcap
 
-import models as model
+from django.http import HttpResponse, HttpRequest
+from django.template.loader import render_to_string
+
+from pltbelay.models import BelaySession, PltCredentials, BelayAccount
 
 logger = logging.getLogger('default')
 
@@ -68,8 +72,7 @@ def create_plt_account(request):
   salt = str(uuid.uuid4())
   hashed_password = get_hashed(rawpassword, salt)
 
-  # TODO: port station to django
-  station_cap = belay.Capability(GENERATE_STATION).invoke('GET')
+  station_cap = bcap.Capability(GENERATE_STATION).invoke('GET')
 
   account = model.BelayAccount(station_url=station_cap.serialize())
   account.save()
@@ -81,10 +84,8 @@ def create_plt_account(request):
 
   session_id = str(uuid.uuid4())
 
-  # TODO: port station to django
-  #logger.debug("Session id: %s" % session_id)
-  #session = BelaySession(session_id=session_id, account=account)
-  #session.save()
+  session = BelaySession(session_id=session_id, account=account)
+  session.save()
 
   response = HttpResponse()
   cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
@@ -137,4 +138,10 @@ def check_uname(request):
     return HttpResponse('Available', status=200)
 
 def check_login(request):
-  return HttpResponse("Check_login NYI", status=500)
+  if not ('session' in request.COOKIES):
+    return HttpResponse("false")
+  session_id = request.COOKIES['session']
+  sessions = BelaySession.objects.filter(session_id=session_id)
+  if len(sessions) == 0:
+    return HttpResponse("false")
+  return HttpResponse("true")
