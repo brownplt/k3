@@ -1,20 +1,9 @@
 from django.conf.urls.defaults import patterns, include, url
 
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
-
 urlpatterns = patterns('',
     (r'^cap/.*', 'belaylibs.dj_belay.proxyHandler'),
     (r'^belay/generate/', 'station.views.generate'),
     (r'^belay/launch/', 'station.views.launch'),
-    # Examples:
-    # url(r'^$', 'dj_apply.views.home', name='home'),
-    # url(r'^dj_apply/', include('dj_apply.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
+    (r'^instances/.*', 'station.views.instances')
+    (r'^instance/.*', 'station.views.instance')
 )

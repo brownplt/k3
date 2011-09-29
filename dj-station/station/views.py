@@ -55,18 +55,12 @@ def launch(request):
     station.save() 
 
     html = "/your-sites.html"
-    if (t == "old"):
-      html = "/your-stuff.html"
       
     reply = {
       'page': { 'html': server_url(html) },
-        'info': {
-          'instances': cap(instances_url(station.key)),
-          'instanceBase': instance_url(station.key, ''),
-          # TODO: does this need porting?
-          #'defaultTools': defaultTools(),
-          # TODO: implement CapHandler, SectionHandler
-          #'section': bcap.regrant(SectionHandler, station)
+      'info': {
+        'instances': cap(instances_url(station.key)),
+        'instanceBase': instance_url(station.key, '')
       }
     }
 
@@ -78,3 +72,9 @@ def launch(request):
     params = bcap.bcapRequest()
     return do_launch(params.get('version', 'new'))
   return HttpResponseNotAllowed(['GET', 'POST'])
+
+def instances(request):
+  return HttpResponse("Getting instances NYI")
+
+def instance(request):
+  return HttpResponse("Getting instance NYI")
