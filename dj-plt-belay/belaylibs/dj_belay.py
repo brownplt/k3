@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Abstractions for writing Belay servers for AppEngine."""
+"""Abstractions for writing Belay servers for Django."""
 
 import logging
 import os
@@ -23,7 +23,11 @@ import re
 import httplib
 import settings
 
-logger = logging.getLogger(__name__)
+from django.http import HttpResponse, HttpRequest
+
+from models import Grant
+
+logger = logging.getLogger('default')
 
 #TODO(joe): make this programmatic rather than a constant setting
 def this_server_url_prefix():
@@ -169,7 +173,7 @@ def bcapResponse(content):
 
 
 path_to_handler = {}
-default_prefix = '/caps/'
+default_prefix = '/cap/'
 prefix_strip_length = len(default_prefix)
 
 def set_handlers(cap_prefix, path_map):
@@ -194,8 +198,9 @@ def proxyHandler(request):
   grants = Grant.objects.filter(cap_id=cap_id)
 
   if len(grants) == 0:
-    response = xhr_content("proxyHandler: " + \
-                           "Cap not found: %s\n" % cap_id)
+    response = HttpResponse()
+    content = dataPreProcess("proxyHandler: Cap not found: %s" % cap_id)
+    xhr_content(response, content, "text/plain;charset=UTF-8")
     response.status_code = 404
     return response
 
@@ -220,10 +225,12 @@ def proxyHandler(request):
   elif method == 'PUT':
     return handler.put(args, item)
   else:
-    response = xhr_content("proxyHandler: " + \
-                           "Bad method: %s\n" % request.method)
+    response = HttpResponse()
+    content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
+    xhr_content(response, content, "text/plain;charset=UTF-8")
     response.status_code = 404
     return response
+
 
 def get_path(path_or_handler):
   if isinstance(path_or_handler, str):
