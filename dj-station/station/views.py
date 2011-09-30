@@ -1,5 +1,5 @@
 from django.http import HttpResponse, HttpRequest
-from station.models import StationData, InstanceData, SectionData
+from station.models import StationData, SectionData
 import os
 import logging
 import uuid
@@ -8,38 +8,73 @@ import belaylibs.dj_belay as bcap
 
 logger = logging.getLogger('default')
 
-def cap(url):
-  return { '@': url }
-
-def server_url(path):
-  return bcap.this_server_url_prefix() + path
-
-def keyName(key):
-  if isinstance(key, str):
-    return key
-  if isinstance(key, unicode):
-    return key
-  return key.name()
-
-def launch_url(stationKey):
-  return server_url('/belay/launch?s=' + keyName(stationKey))
-
-def instances_url(stationKey):
-  return server_url('/instances?s=' + keyName(stationKey))
-
-def instance_url(stationKey, instanceKey):
-  return server_url('/instance?s=' + keyName(stationKey)
-    + '&i=' + keyName(instanceKey))
+# Django middleware class to set handlers on every request
+class StationInit():
+  def process_request(self, request):
+    bcap.set_handlers(bcap.default_prefix, \
+        {'launch' : LaunchHandler, \
+          'new_instance' : NewInstanceHandler, \
+          'instance' : InstanceHandler, \
+          'instances' : InstancesHandler})
+    return None
 
 def generate(request):
   if request.method == 'GET':
     station_uuid = uuid.uuid4()
     station_id = str(station_uuid)
-    return bcap.bcapResponse(cap(launch_url(station_id)))
+    station = StationData(sid=station_id)
+    station.save()
 
-  # only GET is allowed
-  return HttpResponseNotAllowed(['GET'])
+    cap = bcap.grant('launch', station)
+    return bcap.bcapResponse(cap)
+  else:
+    return HttpResponseNotAllowed(['GET'])
 
+class LaunchHandler(bcap.CapHandler):
+  def get(self, station):
+    responses = {}
+    responses['ni_cap'] = bcap.grant('new_instance', station)
+    responses['i_cap'] = bcap.grant('instance', station)
+    responses['is_cap'] = bcap.grant('instances', station)
+    return bcap.bcapResponse(responses)
+
+  def post(self, station, args):
+    return HttpResponse('LaunchHandler POST NYI')
+
+class NewInstanceHandler(bcap.CapHandler):
+  def get(self, station):
+    return HttpResponse('NewInstanceHandler GET NYI')
+
+  def post(self, station, args):
+    domain = urlparse.urlparse(bcap.this_server_url_prefix()).netloc
+    url = request.path_info
+    private_data = request.POST['private_data']
+    launch_info = LaunchInfo(domain=domain, url=url, private_data=private_data)
+    launch_info.save()
+
+    instance_uuid = uuid.uuid4()
+    instance_id = str(instance_uuid)
+
+    r = Relationship(station=station, \
+        instance_id =instance_id, \
+        launch_info = launch_info)
+    r.save()
+
+    return HttpResponse('NewInstanceHandler finished')
+
+class InstanceHandler(bcap.CapHandler):
+  def get(self, item):
+    return HttpResponse('InstanceHandler GET NYI') 
+  def post(self, item, args):
+    return HttpResponse('InstanceHandler POST NYI') 
+
+class InstancesHandler(bcap.CapHandler):
+  def get(self, item):
+    return HttpResponse('InstancesHandler GET NYI') 
+  def post(self, item, args):
+    return HttpResponse('InstancesHandler POST NYI') 
+
+"""
 def validate_station(request):
   station_uuid = uuid.UUID(request.GET['s'])
   station_id = str(station_uuid)
@@ -72,9 +107,4 @@ def launch(request):
     params = bcap.bcapRequest()
     return do_launch(params.get('version', 'new'))
   return HttpResponseNotAllowed(['GET', 'POST'])
-
-def instances(request):
-  return HttpResponse("Getting instances NYI")
-
-def instance(request):
-  return HttpResponse("Getting instance NYI")
+"""

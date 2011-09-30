@@ -85,6 +85,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'station.views.StationInit'
 )
 
 ROOT_URLCONF = 'urls'

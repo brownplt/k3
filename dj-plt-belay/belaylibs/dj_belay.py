@@ -150,6 +150,10 @@ def dataPostProcess(serialized):
 class BcapHandler(object):
   pass
 
+# Base class for handlers that process capability invocations.
+class CapHandler(BcapHandler):
+  pass
+
 def xhr_response(response):
   response['Access-Control-Allow-Origin'] = '*'
 
@@ -184,11 +188,12 @@ def set_handlers(cap_prefix, path_map):
   
   prefix_strip_length = len(cap_prefix)
   default_prefix = this_server_url_prefix() + cap_prefix
-  for (url, handler) in path_map:
-    set_handler(url, handler)
+  for url in path_map:
+    set_handler(url, path_map[url])
 
 def get_handler(path):
   return path_to_handler[path]
+
 def set_handler(path, handler):
   path_to_handler[path] = handler
 
@@ -209,7 +214,7 @@ def proxyHandler(request):
     raise BelayException('%s, %s' % (self.request.path_info, cap_id))
   
   grant = grants[0]   
-  handler_class = path_to_handler[grant.internal_path]
+  handler_class = path_to_handler[str(grant.internal_path)]
   handler = handler_class()
 
   method = request.method
@@ -231,38 +236,22 @@ def proxyHandler(request):
     response.status_code = 404
     return response
 
-
-def get_path(path_or_handler):
-  if isinstance(path_or_handler, str):
-    return path_or_handler
-  elif issubclass(path_or_handler, CapHandler):
-    return path_or_handler.default_internal_url
-  else:
-    raise BelayException('CapServer:get_path::expected string or CapHandler')
-     
-
-def grant(path_or_handler, entity):
-  path = get_path(path_or_handler)
+def grant(path, entity):
   cap_id = str(uuid.uuid4())
   item = Grant(cap_id=cap_id, internal_path=path, db_entity=entity)
-  item.put()
-  return Capability(ProxyHandler.default_prefix + cap_id)
+  item.save()
+  return Capability(default_prefix + cap_id)
 
-def regrant(path_or_handler, entity):
-  path = get_path(path_or_handler)
-  items = Grant.all().filter("internal_path = ", path) \
-                     .filter("db_entity = ", entity) \
-                     .fetch(2)
+def regrant(path, entity):
+  items = Grant.objects.filter(internal_path=path, db_entity=entity)
   if(len(items) > 1):
     raise BelayException('CapServer:regrant::ambiguous internal_path in regrant')
-  
-  if len(items) == 1:
+  elif len(items) == 1:
     return Capability(ProxyHandler.default_prefix + items[0].cap_id)
   else:
     return grant(path_or_handler, entity)
 
 def revoke(path_or_handler, entity):
-  path = get_path(path_or_handler)
   entity.grant_set.filter(internal_path=path).delete()
 
 def revokeEntity(entity):
