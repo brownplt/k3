@@ -147,12 +147,10 @@ def dataPostProcess(serialized):
     logging.debug(str(exn))
     logging.debug("Unloadable: " + str(serialized))
 
-class BcapHandler(object):
-  pass
-
 # Base class for handlers that process capability invocations.
-class CapHandler(BcapHandler):
-  pass
+class CapHandler(object):
+  def __init__(self, request):
+    self.request = request
 
 def xhr_response(response):
   response['Access-Control-Allow-Origin'] = '*'
@@ -215,7 +213,7 @@ def proxyHandler(request):
   
   grant = grants[0]   
   handler_class = path_to_handler[str(grant.internal_path)]
-  handler = handler_class()
+  handler = handler_class(request)
 
   method = request.method
   item = grant.db_entity
@@ -224,11 +222,11 @@ def proxyHandler(request):
   if method == 'GET':
     return handler.get(item)
   elif method == 'POST':
-    return handler.post(args, item)
+    return handler.post(item)
   elif method == 'DELETE':
     return handler.delete(item)
   elif method == 'PUT':
-    return handler.put(args, item)
+    return handler.put(item)
   else:
     response = HttpResponse()
     content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)

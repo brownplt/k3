@@ -11,7 +11,7 @@ class LaunchInfo(bcap.Grantable):
   private_data = models.TextField()
 
 class Relationship(bcap.Grantable):
-  station = models.ForeignKey(StationData)
+  station = models.ForeignKey(bcap.Grantable, related_name="station")
   instance_id = models.CharField(max_length=200)
   launch_info = models.ForeignKey(LaunchInfo)
 
