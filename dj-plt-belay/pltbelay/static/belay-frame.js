@@ -1,4 +1,5 @@
 $(function() {
+  var capServer = new CapServer(newUUIDv4());
   function get_station(k) {
     $.ajax('/get_station', {
       type: 'GET',
@@ -18,6 +19,7 @@ $(function() {
         $(document.body).append($("<div>Logged in</div>"));
         get_station(function(station) {
           $(document.body).append($("<div>" + station + "</div>"));
+          go(station_url);
         });
       } else {
       }
@@ -26,4 +28,14 @@ $(function() {
       console.log("Getting logged in status failed: ", {d: data, s: status});
     }
   });
+
+  function go(station_url) {
+    var port = makePostMessagePort(window.parent, "belay");
+    var tunnel = new CapTunnel(port);
+    tunnel.sendOutpost({
+      becomeInstance: capServer.grant(function(launchInfo) {
+        // TODO: becomeAnInstance
+      });
+    });
+  }
 });
