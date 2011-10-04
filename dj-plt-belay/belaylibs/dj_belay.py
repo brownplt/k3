@@ -149,8 +149,7 @@ def dataPostProcess(serialized):
 
 # Base class for handlers that process capability invocations.
 class CapHandler(object):
-  def __init__(self, request):
-    self.request = request
+  pass
 
 def xhr_response(response):
   response['Access-Control-Allow-Origin'] = '*'
@@ -173,30 +172,40 @@ def bcapResponse(content):
   xhr_content(response, content, "text/plain;charset=UTF-8")
   return response
 
+default_prefix = '/cap'
 
-path_to_handler = {}
-default_prefix = '/cap/'
-prefix_strip_length = len(default_prefix)
+handler_data = {\
+  "path_to_handler" : {},\
+  "prefix" : '',\
+  "prefix_strip_length" : 0,\
+  "is_set" : False\
+}
 
 def set_handlers(cap_prefix, path_map):
+  global handler_data
+  if handler_data["is_set"]:
+    return
+
   if not cap_prefix.startswith('/'):
     cap_prefix = '/' + cap_prefix
   if not cap_prefix.endswith('/'):
     cap_prefix += '/'
   
-  prefix_strip_length = len(cap_prefix)
-  default_prefix = this_server_url_prefix() + cap_prefix
+  handler_data["prefix_strip_length"] = len(cap_prefix)
+  handler_data["prefix"] = this_server_url_prefix() + cap_prefix
+  handler_data["is_set"] = True
+
   for url in path_map:
     set_handler(url, path_map[url])
 
 def get_handler(path):
-  return path_to_handler[path]
+  return handler_data["path_to_handler"][path]
 
 def set_handler(path, handler):
-  path_to_handler[path] = handler
-
+  handler_data["path_to_handler"][path] = handler
 
 def proxyHandler(request):
+  prefix_strip_length = handler_data["prefix_strip_length"]
   cap_id = request.path_info[prefix_strip_length:]
   grants = Grant.objects.filter(cap_id=cap_id)
 
@@ -212,8 +221,8 @@ def proxyHandler(request):
     raise BelayException('%s, %s' % (self.request.path_info, cap_id))
   
   grant = grants[0]   
-  handler_class = path_to_handler[str(grant.internal_path)]
-  handler = handler_class(request)
+  handler_class = get_handler(str(grant.internal_path))
+  handler = handler_class()
 
   method = request.method
   item = grant.db_entity
@@ -222,11 +231,11 @@ def proxyHandler(request):
   if method == 'GET':
     return handler.get(item)
   elif method == 'POST':
-    return handler.post(item)
+    return handler.post(item, args)
   elif method == 'DELETE':
     return handler.delete(item)
   elif method == 'PUT':
-    return handler.put(item)
+    return handler.put(item, args)
   else:
     response = HttpResponse()
     content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
@@ -238,14 +247,14 @@ def grant(path, entity):
   cap_id = str(uuid.uuid4())
   item = Grant(cap_id=cap_id, internal_path=path, db_entity=entity)
   item.save()
-  return Capability(default_prefix + cap_id)
+  return Capability(handler_data["prefix"] + cap_id)
 
 def regrant(path, entity):
   items = Grant.objects.filter(internal_path=path, db_entity=entity)
   if(len(items) > 1):
     raise BelayException('CapServer:regrant::ambiguous internal_path in regrant')
   elif len(items) == 1:
-    return Capability(ProxyHandler.default_prefix + items[0].cap_id)
+    return Capability(handler_data["prefix"] + items[0].cap_id)
   else:
     return grant(path_or_handler, entity)
 

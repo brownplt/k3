@@ -38,7 +38,7 @@ TIME_ZONE = 'America/Chicago'
 LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
-SITE_NAME = "http://localhost:8002"
+SITE_NAME = "http://66.228.37.176:8002"
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -91,6 +91,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
+    '/home/apply/src/k3/dj-station/station/static',
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.

@@ -1,0 +1,110 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+<script type="text/javascript" src ="http://66.228.37.176:8002/jscaps/"></script>
+<script>
+$(function() {
+  var capServer = new CapServer(newUUIDv4());
+
+  var instanceDataOne = { 
+    domain : "http://instance1.com", 
+    url : "/blah/blah/", 
+    private_data : { x : 1, y : 2}
+  };
+
+  var instanceDataTwo = {
+    domain : "http://instance2.net",
+    url : "/blarg/blarg/",
+    private_data : { z : 3, a : 4}
+  };
+
+  $.ajax("http://66.228.37.176:8002/generate/", {
+    type : 'GET',
+    dataType : 'json',
+    success : function(data, status, xhr) {
+      var launchCap = capServer.restore(data.value["@"]);
+      launchCap.get(
+        function(responseCaps) { 
+          var newInstanceCap = responseCaps.newInstance;
+          var instancesCap = responseCaps.instances;
+
+          var cap2Invoked = function(cap2) {
+            cap2.get(
+              function(cap2Data) {
+                console.log('cap2 get success');
+                console.log(cap2Data);
+
+                var iGet = function(data) {
+                  console.log('GET success on inst. from instances');
+                  console.log(data);
+                };
+
+                var iFail = function() { 
+                  console.log('GET fail for instance from instances cap'); 
+                };
+
+                instancesCap.get(
+                  function(instances) {
+                    instances.forEach(function(instance, indx) {
+                      instance.get(iGet, iFail);
+                    });
+                  },
+                  function() { console.log ('instances cap fail'); }
+                );
+
+                /*
+
+                instancesCap.get(
+                  function(instances) {
+                    instances.forEach(function(i) {
+                      i.get(iGet, iFail);
+                  },
+                  function() { console.log('instances get fail'); }
+                );
+                */
+              },
+              function() { console.log('cap2 get fail'); }
+            );
+          };
+
+          var cap1Invoked = function(cap1) {
+            cap1.get(
+              function(cap1Data) {
+                console.log('cap1 get success');
+                console.log(cap1Data);
+
+                newInstanceCap.post(instanceDataTwo,
+                  cap2Invoked,
+                  function() { console.log('creating cap2 fail'); }
+                );
+              },
+              function() { console.log('cap1 get fail'); }
+            );
+          };
+
+          newInstanceCap.post(instanceDataOne,
+            cap1Invoked,
+            function() { console.log('creating cap1 fail'); }
+          );
+
+        },
+        function(response) { console.log('launchCap get failure'); }
+      );
+    },
+    failure : function(data, status, xhr) {
+      console.log('generate get failure');
+    }
+  });
+});
+</script>
+</head>
+<body>
+
+  <!--
+<div>
+Cap-Url: <input type="text" id="capurl" value=""></input>
+<button id="submit" value="Submit">Submit</button>
+</div>
+-->
+
+</body>
