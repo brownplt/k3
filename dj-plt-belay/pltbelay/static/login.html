@@ -9,7 +9,7 @@ $(function() {
 
     function login() {
       console.log("attempting plt account login");
-      $.ajax("/plt_login", {
+      $.ajax("/plt_login/", {
         type: 'POST',
         data: {username: username, password: password},
         success: function(data, status, xhr) {

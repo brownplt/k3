@@ -17,10 +17,10 @@ from django.http import HttpResponse, HttpRequest
 from django.template.loader import render_to_string
 
 from pltbelay.models import BelaySession, PltCredentials, BelayAccount
+import settings
 
 logger = logging.getLogger('default')
 
-GENERATE_STATION = "http://localhost:9001/belay/generate"
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
   logging.debug('checking')
@@ -76,7 +76,9 @@ def create_plt_account(request):
   salt = str(uuid.uuid4())
   hashed_password = get_hashed(rawpassword, salt)
 
-  station_cap = bcap.Capability(GENERATE_STATION).invoke('GET')
+  generate_url = settings.STATION_DOMAIN + '/generate/'
+  generated = urllib2.urlopen(generate_url)
+  station_cap = bcap.dataPostProcess(generated.read())
 
   account = BelayAccount(station_url=station_cap.serialize())
   account.save()

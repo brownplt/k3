@@ -1,5 +1,7 @@
 # Django settings for plt-belay project.
 
+STATION_DOMAIN = 'http://66.228.37.176:8002'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
