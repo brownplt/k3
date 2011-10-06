@@ -151,6 +151,13 @@ def dataPostProcess(serialized):
 class CapHandler(object):
   pass
 
+class HandlerData(object):
+  def __init__(self, d):
+    self.path_to_handler = d["path_to_handler"]
+    self.prefix = d["prefix"]
+    self.prefix_strip_length = d["prefix_strip_length"]
+    self.is_set = d["is_set"]
+
 def xhr_response(response):
   response['Access-Control-Allow-Origin'] = '*'
 
@@ -174,16 +181,18 @@ def bcapResponse(content):
 
 default_prefix = '/cap'
 
-handler_data = {\
+defaults = {\
   "path_to_handler" : {},\
   "prefix" : '',\
   "prefix_strip_length" : 0,\
   "is_set" : False\
 }
 
+handlerData = HandlerData(defaults)
+
 def set_handlers(cap_prefix, path_map):
   global handler_data
-  if handler_data["is_set"]:
+  if handlerData.is_set:
     return
 
   if not cap_prefix.startswith('/'):
@@ -191,21 +200,21 @@ def set_handlers(cap_prefix, path_map):
   if not cap_prefix.endswith('/'):
     cap_prefix += '/'
   
-  handler_data["prefix_strip_length"] = len(cap_prefix)
-  handler_data["prefix"] = this_server_url_prefix() + cap_prefix
-  handler_data["is_set"] = True
+  handlerData.prefix_strip_length = len(cap_prefix)
+  handlerData.prefix = this_server_url_prefix() + cap_prefix
+  handlerData.is_set = True
 
   for url in path_map:
     set_handler(url, path_map[url])
 
 def get_handler(path):
-  return handler_data["path_to_handler"][path]
+  return handlerData.path_to_handler[path]
 
 def set_handler(path, handler):
-  handler_data["path_to_handler"][path] = handler
+  handlerData.path_to_handler[path] = handler
 
 def proxyHandler(request):
-  prefix_strip_length = handler_data["prefix_strip_length"]
+  prefix_strip_length = handlerData.prefix_strip_length
   cap_id = request.path_info[prefix_strip_length:]
   grants = Grant.objects.filter(cap_id=cap_id)
 
@@ -247,14 +256,14 @@ def grant(path, entity):
   cap_id = str(uuid.uuid4())
   item = Grant(cap_id=cap_id, internal_path=path, db_entity=entity)
   item.save()
-  return Capability(handler_data["prefix"] + cap_id)
+  return Capability(handlerData.prefix + cap_id)
 
 def regrant(path, entity):
   items = Grant.objects.filter(internal_path=path, db_entity=entity)
   if(len(items) > 1):
     raise BelayException('CapServer:regrant::ambiguous internal_path in regrant')
   elif len(items) == 1:
-    return Capability(handler_data["prefix"] + items[0].cap_id)
+    return Capability(handlerData.prefix + items[0].cap_id)
   else:
     return grant(path_or_handler, entity)
 

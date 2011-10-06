@@ -1,110 +1,107 @@
 <html>
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
-<script type="text/javascript" src ="http://66.228.37.176:8002/jscaps/"></script>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js'></script>
+<script type='text/javascript' src ='http://66.228.37.176:8002/static/caps.js'></script>
 <script>
 $(function() {
+  $('.test').css('background-color', 'red');
   var capServer = new CapServer(newUUIDv4());
 
   var instanceDataOne = { 
-    domain : "http://instance1.com", 
-    url : "/blah/blah/", 
+    domain : 'http://instance1.com', 
+    url : '/blah/blah/', 
     private_data : { x : 1, y : 2}
   };
 
   var instanceDataTwo = {
-    domain : "http://instance2.net",
-    url : "/blarg/blarg/",
+    domain : 'http://instance2.net',
+    url : '/blarg/blarg/',
     private_data : { z : 3, a : 4}
   };
 
-  $.ajax("http://66.228.37.176:8002/generate/", {
-    type : 'GET',
-    dataType : 'json',
-    success : function(data, status, xhr) {
-      var launchCap = capServer.restore(data.value["@"]);
-      launchCap.get(
-        function(responseCaps) { 
-          var newInstanceCap = responseCaps.newInstance;
-          var instancesCap = responseCaps.instances;
+  var dataMatches = function(o1, o2) {
+    return o1.domain === o2.domain &&
+      o1.url === o2.url &&
+      o1.private_data.x === o2.private_data.x &&
+      o1.private_data.y === o2.private_data.y;
+  };
 
-          var cap2Invoked = function(cap2) {
-            cap2.get(
-              function(cap2Data) {
-                console.log('cap2 get success');
-                console.log(cap2Data);
+  var setSuccess = function(node) {
+    node.html(node.html() + ' success!!!!');
+    node.css('background-color', 'lime');
+  };
 
-                var iGet = function(data) {
-                  console.log('GET success on inst. from instances');
-                  console.log(data);
-                };
+  var generate = capServer.restore('http://66.228.37.176:8002/generate/');
+  generate.get(function(launchCap) {
+    launchCap.get(
+      function(responseCaps) { 
+        var newInstanceCap = responseCaps.newInstance;
+        var instancesCap = responseCaps.instances;
 
-                var iFail = function() { 
-                  console.log('GET fail for instance from instances cap'); 
-                };
+        var cap2Invoked = function(cap2) {
+          cap2.get(
+            function(cap2Data) {
+              if (dataMatches(cap2Data, instanceDataTwo)) {
+                setSuccess($('#test2'));
+              }
 
-                instancesCap.get(
-                  function(instances) {
-                    instances.forEach(function(instance, indx) {
-                      instance.get(iGet, iFail);
-                    });
-                  },
-                  function() { console.log ('instances cap fail'); }
-                );
+              var foundInstances = 0;
 
-                /*
+              var iGet = function() {
+                foundInstances += 1;
+                if (foundInstances === 2) {
+                  setSuccess($('#test3'));
+                }
+              };
 
-                instancesCap.get(
-                  function(instances) {
-                    instances.forEach(function(i) {
-                      i.get(iGet, iFail);
-                  },
-                  function() { console.log('instances get fail'); }
-                );
-                */
-              },
-              function() { console.log('cap2 get fail'); }
-            );
-          };
+              var iFail = function() { 
+                console.log('GET fail for instance from instances cap'); 
+              };
 
-          var cap1Invoked = function(cap1) {
-            cap1.get(
-              function(cap1Data) {
-                console.log('cap1 get success');
-                console.log(cap1Data);
+              instancesCap.get(
+                function(instances) {
+                  instances.forEach(function(instance) {
+                    instance.get(iGet, iFail);
+                  });
+                },
+                function() { console.log ('instances cap fail'); }
+              );
 
-                newInstanceCap.post(instanceDataTwo,
-                  cap2Invoked,
-                  function() { console.log('creating cap2 fail'); }
-                );
-              },
-              function() { console.log('cap1 get fail'); }
-            );
-          };
-
-          newInstanceCap.post(instanceDataOne,
-            cap1Invoked,
-            function() { console.log('creating cap1 fail'); }
+            },
+            function() { console.log('cap2 get fail'); }
           );
+        };
 
-        },
-        function(response) { console.log('launchCap get failure'); }
-      );
-    },
-    failure : function(data, status, xhr) {
-      console.log('generate get failure');
-    }
+        var cap1Invoked = function(cap1) {
+          cap1.get(
+            function(cap1Data) {
+              if (dataMatches(cap1Data, instanceDataOne)) {
+                setSuccess($('#test1'));
+              }
+
+              newInstanceCap.post(instanceDataTwo,
+                cap2Invoked,
+                function() { console.log('creating cap2 fail'); }
+              );
+            },
+            function() { console.log('cap1 get fail'); }
+          );
+        };
+
+        newInstanceCap.post(instanceDataOne,
+          cap1Invoked,
+          function() { console.log('creating cap1 fail'); }
+        );
+
+      },
+      function(response) { console.log('launchCap get failure'); }
+    );
   });
 });
 </script>
 </head>
 <body>
-
-  <!--
-<div>
-Cap-Url: <input type="text" id="capurl" value=""></input>
-<button id="submit" value="Submit">Submit</button>
-</div>
--->
-
+<div class='test' id='test1'>Test 1: </div> <br />
+<div class='test' id='test2'>Test 2: </div> <br />
+<div class='test' id='test3'>Test 3: </div> <br />
 </body>

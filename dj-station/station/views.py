@@ -75,7 +75,7 @@ class InstanceHandler(bcap.CapHandler):
     response = {}
     response['domain'] = launch_info.domain
     response['url'] = launch_info.url
-    response['private_data'] = launch_info.private_data
+    response['private_data'] = bcap.dataPostProcess(launch_info.private_data)
     return bcap.bcapResponse(response)
   def post(self, granted, args):
     return HttpResponse('InstanceHandler POST NYI') 
