@@ -152,11 +152,11 @@ class CapHandler(object):
   pass
 
 class HandlerData(object):
-  def __init__(self, d):
-    self.path_to_handler = d["path_to_handler"]
-    self.prefix = d["prefix"]
-    self.prefix_strip_length = d["prefix_strip_length"]
-    self.is_set = d["is_set"]
+  def __init__(self):
+    self.path_to_handler = {}
+    self.prefix = ''
+    self.prefix_strip_length = 0
+    self.is_set = False
 
 def xhr_response(response):
   response['Access-Control-Allow-Origin'] = '*'
@@ -181,14 +181,7 @@ def bcapResponse(content):
 
 default_prefix = '/cap'
 
-defaults = {\
-  "path_to_handler" : {},\
-  "prefix" : '',\
-  "prefix_strip_length" : 0,\
-  "is_set" : False\
-}
-
-handlerData = HandlerData(defaults)
+handlerData = HandlerData()
 
 def set_handlers(cap_prefix, path_map):
   global handler_data
