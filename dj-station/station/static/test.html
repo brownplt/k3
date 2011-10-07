@@ -1,7 +1,7 @@
 <html>
 <head>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js'></script>
-<script type='text/javascript' src ='http://66.228.37.176:8002/static/caps.js'></script>
+<script type='text/javascript' src ='/static/caps.js'></script>
 <script>
 $(function() {
   $('.test').css('background-color', 'red');
@@ -31,7 +31,7 @@ $(function() {
     node.css('background-color', 'lime');
   };
 
-  var generate = capServer.restore('http://66.228.37.176:8002/generate/');
+  var generate = capServer.restore(window.location.origin + '/generate/');
   generate.get(function(launchCap) {
     launchCap.get(
       function(responseCaps) { 

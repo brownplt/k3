@@ -38,7 +38,7 @@ TIME_ZONE = 'America/Chicago'
 LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
-SITE_NAME = "http://66.228.37.176:8002"
+SITE_NAME = "http://localhost:8002"
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.

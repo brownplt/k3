@@ -128,8 +128,8 @@ def glogin(request):
       'openid.ns' : 'http://specs.openid.net/auth/2.0',
       'openid.claimed_id' : 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
-      'openid.return_to' : 'http://66.228.37.176:8000/glogin_landing/',
-      'openid.realm' : 'http://66.228.37.176:8000',
+      'openid.return_to' : '%s/glogin_landing/' % settings.SITE_NAME,
+      'openid.realm' : settings.SITE_NAME,
       'openid.mode' : 'checkid_setup'
   }
   params = encode_for_get(param_obj)

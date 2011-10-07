@@ -12,14 +12,14 @@ $(function() {
     });
   }
 
-  $.ajax('/check_login', {
+  $.ajax('/check_login/', {
     type: 'GET',
     success: function(data, status, xhr) {
       if(data === 'true') {
         $(document.body).append($("<div>Logged in</div>"));
         get_station(function(station) {
-          $(document.body).append($("<div>" + station + "</div>"));
-          go(station_url);
+          console.log('Logged in: ', station);
+          go(station);
         });
       } else {
       }
@@ -32,10 +32,13 @@ $(function() {
   function go(station_url) {
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
-    tunnel.sendOutpost({
+    tunnel.sendOutpost('foo');
+    capServer.dataPreProcess({
       becomeInstance: capServer.grant(function(launchInfo) {
+        console.log('launchInfo: ', launchInfo);
+        return 'why hello to you to!';
         // TODO: becomeAnInstance
-      });
+      })
     });
   }
 });

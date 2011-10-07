@@ -21,15 +21,16 @@ window.addEventListener('load', function() {
   var capServer = new CapServer(newUUIDv4());
   var port = makePostMessagePort(null, "belay");
   var tunnel = new CapTunnel(port);
-  tunnel.setLocalResolver(capServer
   var becomeInstance;
-  port.setOutpostHandler(function(data) {
-    var belayWindow = window.frames["belay"];
-    port.setTarget(belayWindow);
-    becomeInstance = capServer.restore(data.becomeInstance);
-    showAccountChoice();
+  var frame = makeBelayFrame();
+  tunnel.setOutpostHandler(function(outpost) {
+    port.setTarget(frame.contentWindow);  
+    capServer.dataPostProcess(outpost).becomInstance.
+      post('hello!', function(response) {
+        console.log('Got a response: ', response);
+      });
   });
 
-  var frame = makeBelayFrame();
+
   addFrame(frame);
 });
