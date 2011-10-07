@@ -32,13 +32,18 @@ $(function() {
   function go(station_url) {
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
-    tunnel.sendOutpost('foo');
-    capServer.dataPreProcess({
+    capServer.setResolver(function(instanceID) {
+      if(instanceID !== this.instanceID) {
+        return tunnel.sendInterface;
+      }
+    });
+    tunnel.setLocalResolver(function() { return capServer.publicInterface; });
+    tunnel.sendOutpost(capServer.dataPreProcess({
       becomeInstance: capServer.grant(function(launchInfo) {
         console.log('launchInfo: ', launchInfo);
         return 'why hello to you to!';
         // TODO: becomeAnInstance
       })
-    });
+    }));
   }
 });
