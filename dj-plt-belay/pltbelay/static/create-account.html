@@ -1,8 +1,11 @@
 <html>
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+<script type='text/javascript' src ='http://66.228.37.176:8002/static/caps.js'></script>
 <script>
 $(function() {
+  var capServer = new CapServer(newUUIDv4());
+
   $('#submit').click(function(e) {
     var uname = $('#username').val();
     var password1 = $('#password1').val();
@@ -32,8 +35,8 @@ $(function() {
         type: 'POST',
         data: {username: uname, password: password1},
         success: function(data, status, xhr) {
-          window.location = "http://localhost:8000/static/belay-frame.html";
-          return;
+          var o = capServer.dataPostProcess(data);
+          window.location = 'http://' + o.redirectTo
         },
         failure: failure
       });

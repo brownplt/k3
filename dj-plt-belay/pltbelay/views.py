@@ -27,6 +27,8 @@ def unameExists(uname):
   return len(q) == 1
 
 HASH_ITERATIONS = 20
+# TODO: non-ASCII characters can break this
+# need to sanitize raw password
 def get_hashed(rawpassword, salt):
   salted = rawpassword + salt
   for i in range(HASH_ITERATIONS):
@@ -55,6 +57,10 @@ def get_station(request):
 
   return HttpResponse(acct.station_url)
 
+def newStationCap():
+  generated = urllib2.urlopen(settings.STATION_DOMAIN + '/generate/')
+  return bcap.dataPostProcess(generated.read())
+
 def create_plt_account(request):
   if request.method != 'POST':
     return HttpResponse("only POST is implemented", status=500)
@@ -76,10 +82,7 @@ def create_plt_account(request):
   salt = str(uuid.uuid4())
   hashed_password = get_hashed(rawpassword, salt)
 
-  generate_url = settings.STATION_DOMAIN + '/generate/'
-  generated = urllib2.urlopen(generate_url)
-  station_cap = bcap.dataPostProcess(generated.read())
-
+  station_cap = newStationCap()
   account = BelayAccount(station_url=station_cap.serialize())
   account.save()
   credentials = PltCredentials(username=username, \
@@ -96,6 +99,11 @@ def create_plt_account(request):
   response = HttpResponse()
   cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
   response['Set-Cookie'] = cstr
+
+  logger.info(request)
+  redirect_url = request.get_host() + '/belay_frame/'
+  content = bcap.dataPreProcess({ "redirectTo" : redirect_url })
+  bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
   return response
 
 # TODO : fix intermediate page (to get on google's domain)
@@ -139,9 +147,8 @@ def glogin_landing(request):
 
   q = GoogleCredentials.objects.filter(identity=identity)
   if len(q) == 0:
-    # TODO: call station.  for now, account has a dummy station_url
-    dummy_url = str(uuid.uuid4())
-    account = BelayAccount(station_url=dummy_url)
+    station_cap = newStationCap()
+    account = BelayAccount(station_url=station_cap.serialize())
     account.save()
 
     gc = GoogleCredentials(account=account, identity=identity)
