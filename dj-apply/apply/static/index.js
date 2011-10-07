@@ -28,7 +28,7 @@ window.addEventListener('load', function() {
     }
   });
 
-  tunnel.setLocalResolver(function() { capServer.publicInterface; })
+  tunnel.setLocalResolver(function() { capServer.publicInterface; });
 
   var becomeInstance;
   var frame = makeBelayFrame();
