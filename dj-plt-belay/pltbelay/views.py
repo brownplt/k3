@@ -212,7 +212,7 @@ def make_stash(request):
 
   session = sessions[0]
   args = bcap.dataPostProcess(request.read())
-  stashed_content = bcap.dataPreProcess(args['launchInfo'])
+  stashed_content = bcap.dataPreProcess(args)
   stash = Stash(stash_key=stash_key, session=session, stashed_content=stashed_content)
   stash.save()
 
@@ -225,3 +225,4 @@ class GetStashHandler(bcap.CapHandler):
     return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
   def post(self, stash, args):
     return HttpResponseNotAllowed(['GET'])
+
