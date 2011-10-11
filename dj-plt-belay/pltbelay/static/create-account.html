@@ -33,9 +33,7 @@ $(function() {
 
     function create() {
       console.log("Creating account");
-      var createAccount = capServer.restore(
-        urlPrefix + '/create_plt_account/'
-      );
+      var createAccount = capServer.restore(urlPrefix + '/create_plt_account/');
       createAccount.post(
         { username : uname, password : password1 }, 
         function(response) {
@@ -45,15 +43,16 @@ $(function() {
       );
     }
 
-    $.ajax("/check_uname/", {
-      type: 'POST',
-      data: {username: uname},
-      success: function(data, status, xhr) {
-        if (data === 'Available') { create(); }
+    var checkUname = capServer.restore(urlPrefix + '/check_uname/');
+    checkUname.post(
+      { username : uname },
+      function(response) {
+        if (response.available) { create(); }
         else { alert("That username is taken, please try another."); }
       },
-      failure: failure
-    });
+      failure
+    );
+
   });
 });
 </script>

@@ -180,11 +180,12 @@ def plt_login(request):
   return HttpResponse("PLT Login NYI", status=500)
 
 def check_uname(request):
-  uname = request.POST['username']
-  if unameExists(uname):
-    return HttpResponse('Taken', status=200)
-  else:
-    return HttpResponse('Available', status=200)
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+  args = bcap.dataPostProcess(request.read())
+  uname = args['username']
+  available = not unameExists(uname)
+  return bcap.bcapResponse({ "available" : available }) 
 
 def check_login(request):
   if not ('session' in request.COOKIES):
