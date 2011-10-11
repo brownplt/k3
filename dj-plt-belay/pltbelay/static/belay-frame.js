@@ -46,6 +46,15 @@ $(function() {
       becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
         station_info.newInstance.post(launchInfo, function(launched) {
           // TODO(joe): navigate to launchInfo.domain + url
+          capServer.restore('http://' + window.location.host + '/make-stash/').post(launchInfo.private_data,
+            function(restoreCap, status, xhr) {
+              var nav = launchInfo.domain +
+                        launchInfo.url +
+                        "#" +
+                        encodeURI(restoreCap.serialize());
+              console.log('Nav: ', nav);
+//              window.parent.location.href = nav;
+            });
           sk('success');
         },
         function(err) {

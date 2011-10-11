@@ -10,11 +10,6 @@ import belaylibs.dj_belay as bcap
 
 logger = logging.getLogger('default')
 
-def jscaps(request):
-  return render_to_response('caps.js')
-def testpost(request):
-  return render_to_response('test.html')
-
 # Django middleware class to set handlers on every request
 class StationInit():
   def process_request(self, request):

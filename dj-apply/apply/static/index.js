@@ -37,9 +37,9 @@ window.addEventListener('load', function() {
     becomeNewInstance = capServer.dataPostProcess(outpost).becomeInstance;
     // TODO(joe): fix this up
     launchInfo = {
-      domain: 'http://fakefornow',
-      url: 'path/to/thingie',
-      private_data: 'private!'
+      domain: 'http://localhost:8001/',
+      url: 'applicant/',
+      private_data: 'hello from apply!'
     };
     becomeNewInstance.post(launchInfo, function(response) {
         // NOTE(joe): this shouldn't happen, because the belay-frame
@@ -54,3 +54,4 @@ window.addEventListener('load', function() {
 
   addFrame(frame);
 });
+

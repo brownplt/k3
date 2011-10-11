@@ -206,8 +206,8 @@ def make_stash(request):
   if not (args.has_key('sessionID')):
     logger.info("make_stash: request didn't pass sessionID arg")
     return HttpResponseNotFound()
-  if not (args.has_key('launchInfo')):
-    logger.info("make_stash: request didn't pass launchInfo arg")
+  if not (args.has_key('private_data')):
+    logger.info("make_stash: request didn't pass private_data arg")
     return HttpResponseNotFound()
 
   stash_uuid = uuid.uuid4()
@@ -229,7 +229,7 @@ def make_stash(request):
     return HttpResponseNotFound()
 
   session = sessions[0]
-  stashed_content = bcap.dataPreProcess(args['launchInfo'])
+  stashed_content = bcap.dataPreProcess(args['private_data'])
   stash = Stash(session=session, stashed_content=stashed_content)
   stash.save()
 
@@ -248,3 +248,9 @@ class GetStashHandler(bcap.CapHandler):
       return HttpResponseNotFound()
 
     return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
+<<<<<<< HEAD
+=======
+  def post(self, stash, args):
+    return HttpResponseNotAllowed(['GET'])
+
+>>>>>>> eae9468538f46f09b1d697c829dc1078983c8762

@@ -2,3 +2,6 @@
 *.swp
 *.pyc
 */.db/*
+*/settings.py
+*~
+
