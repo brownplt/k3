@@ -19,3 +19,7 @@ class BelaySession(bcap.Grantable):
   session_id = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
 
+class Stash(bcap.Grantable):
+  stash_key = models.CharField(max_length=200)
+  session = models.ForeignKey(BelaySession)
+  stashed_content = models.CharField(max_length=200)

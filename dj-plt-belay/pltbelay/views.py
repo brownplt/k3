@@ -1,6 +1,6 @@
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpRequest
 from django.template.loader import render_to_string
-from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials
+from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash
 from xml.dom import minidom
 import logging
 import uuid
@@ -20,6 +20,11 @@ from pltbelay.models import BelaySession, PltCredentials, BelayAccount
 import settings
 
 logger = logging.getLogger('default')
+
+class BelayInit():
+  def process_request(self, request):
+    bcap.set_handlers(bcap.default_prefix, {'get-stash' : GetStashHandler})
+    return None
 
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
@@ -63,7 +68,7 @@ def newStationCap():
 
 def create_plt_account(request):
   if request.method != 'POST':
-    return HttpResponse("only POST is implemented", status=500)
+    return HttpResponseNotAllowed(['POST'])
 
   keys = request.POST.keys()
   if not ('username' in keys and 'password' in keys):
@@ -187,3 +192,36 @@ def check_login(request):
   if len(sessions) == 0:
     return HttpResponse("false")
   return HttpResponse("true")
+
+def make_stash(request):
+  if not ('session' in request.COOKIES):
+    return HttpResponseNotFound()
+
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+
+  stash_uuid = uuid.uuid4()
+  stash_key = str(stash_uuid)
+  session_id = request.COOKIES['session']
+
+  sessions = BelaySession.objects.filter(session_id=session_id)
+  if len(sessions) == 0:
+    return HttpResponseNotFound()
+  if len(sessions) != 1:
+    raise "Fatal: duplicate BelaySessions!"
+
+  session = sessions[0]
+  args = bcap.dataPostProcess(request.read())
+  stashed_content = bcap.dataPreProcess(args['launchInfo'])
+  stash = Stash(stash_key=stash_key, session=session, stashed_content=stashed_content)
+  stash.save()
+
+  cap = bcap.grant('get-stash', stash)
+  return bcap.bcapResponse(cap)
+
+class GetStashHandler(bcap.CapHandler):
+  def get(self, grantable):
+    stash = grantable.stash
+    return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
+  def post(self, stash, args):
+    return HttpResponseNotAllowed(['GET'])
