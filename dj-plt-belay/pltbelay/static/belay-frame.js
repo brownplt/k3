@@ -16,10 +16,14 @@ $(function() {
     type: 'GET',
     success: function(data, status, xhr) {
       if(data === 'true') {
-        $(document.body).append($("<div>Logged in</div>"));
+        console.log('Logged in');
         get_station(function(station) {
-          console.log('Logged in: ', station);
-          go(station);
+          capServer.restore(station).get(function(station_info) {
+            go(station_info);
+          },
+          function(err) {
+            console.log('Couldn\'t get station info: ', err);
+          });
         });
       } else {
       }
@@ -29,7 +33,7 @@ $(function() {
     }
   });
 
-  function go(station_url) {
+  function go(station_info) {
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
     capServer.setResolver(function(instanceID) {
@@ -39,10 +43,18 @@ $(function() {
     });
     tunnel.setLocalResolver(function() { return capServer.publicInterface; });
     tunnel.sendOutpost(capServer.dataPreProcess({
-      becomeInstance: capServer.grant(function(launchInfo) {
-        console.log('launchInfo: ', launchInfo);
-        return 'why hello to you to!';
-        // TODO: becomeAnInstance
+      becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
+        station_info.newInstance.post(launchInfo, function(launched) {
+          // TODO(joe): navigate to launchInfo.domain + url
+          sk('success');
+        },
+        function(err) {
+          console.log('belay_frame: Failed to create new instance: ', err);
+          fk('failed');
+        });
+      }),
+      notifyLocation: capServer.grant(function(url) {
+        // TODO: get fragment, load private_data
       })
     }));
   }

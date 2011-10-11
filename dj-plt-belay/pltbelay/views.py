@@ -106,7 +106,7 @@ def create_plt_account(request):
   response['Set-Cookie'] = cstr
 
   logger.info(request)
-  redirect_url = request.get_host() + '/belay_frame/'
+  redirect_url = request.get_host() + '/static/belay-frame.html'
   content = bcap.dataPreProcess({ "redirectTo" : redirect_url })
   bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
   return response

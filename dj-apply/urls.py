@@ -5,13 +5,7 @@ from django.conf.urls.defaults import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'dj_apply.views.home', name='home'),
-    # url(r'^dj_apply/', include('dj_apply.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
+  (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
+  (r'applicant/', 'apply.views.applicant_handler')
 )
+
