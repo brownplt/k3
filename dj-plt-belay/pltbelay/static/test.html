@@ -18,12 +18,8 @@ $(function() {
     }
     var sessionID = matchInfo[1];
 
-    var launchInfo = {
-      domain : 'http://instance2.net',
-      url : '/blarg/blarg/',
-      private_data : { z : 3, a : 4}
-    };
-    var dataToPass = { launchInfo : launchInfo, sessionID : sessionID };
+    var privateData = { a : 1, b : 2 };
+    var dataToPass = { 'private_data' : privateData, sessionID : sessionID };
 
 
     var makeStash = capServer.restore(
@@ -31,10 +27,7 @@ $(function() {
     );
     makeStash.post(dataToPass, function(getStash) {
       getStash.post({ sessionID : sessionID }, function(stashed) {
-        if (stashed.domain === launchInfo.domain &&
-            stashed.url === launchInfo.url &&
-            stashed.private_data.z === launchInfo.private_data.z &&
-            stashed.private_data.a === launchInfo.private_data.a) {
+        if (stashed.a === privateData.a && stashed.b === privateData.b) {
               var node = $('#test1');
               node.css('background-color', 'lime')
                 .html(node.html() + ' success!!!!');

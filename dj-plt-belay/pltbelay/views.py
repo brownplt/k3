@@ -248,9 +248,3 @@ class GetStashHandler(bcap.CapHandler):
       return HttpResponseNotFound()
 
     return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
-<<<<<<< HEAD
-=======
-  def post(self, stash, args):
-    return HttpResponseNotAllowed(['GET'])
-
->>>>>>> eae9468538f46f09b1d697c829dc1078983c8762
