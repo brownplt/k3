@@ -207,6 +207,24 @@ def set_handler(path, handler):
   handlerData.path_to_handler[path] = handler
 
 def proxyHandler(request):
+
+  # Allow cross-origin requests on capablities
+  def options():
+    response = HttpResponse()
+
+    m = request.META['HTTP_ACCESS_CONTROL_REQUEST_METHOD']
+    h = request.META['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']
+
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Max-Age"] = 2592000
+    response["Access-Control-Allow-Methods"] = 'POST' 
+    if h:
+      response["Access-Control-Allow-Headers"] = h
+    else:
+      pass
+    xhr_content(response, "", "text/plain;charset=UTF-8")
+    return response
+
   prefix_strip_length = handlerData.prefix_strip_length
   cap_id = request.path_info[prefix_strip_length:]
   grants = Grant.objects.filter(cap_id=cap_id)
@@ -238,6 +256,8 @@ def proxyHandler(request):
     return handler.delete(item)
   elif method == 'PUT':
     return handler.put(item, args)
+  elif method == 'OPTIONS':
+    return options()
   else:
     response = HttpResponse()
     content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)

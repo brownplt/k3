@@ -34,8 +34,16 @@ window.addEventListener('load', function() {
   var frame = makeBelayFrame();
   tunnel.setOutpostHandler(function(outpost) {
     port.setTarget(frame[0].contentWindow);  
-    becomeInstance = capServer.dataPostProcess(outpost).becomeInstance;
-    becomeInstance.post('hello!', function(response) {
+    becomeNewInstance = capServer.dataPostProcess(outpost).becomeInstance;
+    // TODO(joe): fix this up
+    launchInfo = {
+      domain: 'http://fakefornow',
+      url: 'path/to/thingie',
+      private_data: 'private!'
+    };
+    becomeNewInstance.post(launchInfo, function(response) {
+        // NOTE(joe): this shouldn't happen, because the belay-frame
+        // will navigate the window to start the instance
         console.log('Got a response: ', response);
       },
       function(err) {
