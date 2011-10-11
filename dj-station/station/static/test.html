@@ -31,7 +31,9 @@ $(function() {
     node.css('background-color', 'lime');
   };
 
-  var generate = capServer.restore('http://' + window.location.host + '/generate/');
+  var generate = capServer.restore(
+    window.location.protocol + '//' + window.location.host + '/generate/'
+  );
   generate.get(function(launchCap) {
     launchCap.get(
       function(responseCaps) { 

@@ -195,25 +195,42 @@ def check_login(request):
 
 def make_stash(request):
   if not ('session' in request.COOKIES):
+    logger.info('make_stash: no session cookie')
     return HttpResponseNotFound()
 
   if request.method != 'POST':
+    logger.info("make_stash: request wasn't POST")
     return HttpResponseNotAllowed(['POST'])
 
+  args = bcap.dataPostProcess(request.read())
+  if not (args.has_key('sessionID')):
+    logger.info("make_stash: request didn't pass sessionID arg")
+    return HttpResponseNotFound()
+  if not (args.has_key('launchInfo')):
+    logger.info("make_stash: request didn't pass launchInfo arg")
+    return HttpResponseNotFound()
+
   stash_uuid = uuid.uuid4()
-  stash_key = str(stash_uuid)
   session_id = request.COOKIES['session']
+  req_session_id = args['sessionID']
+
+  if req_session_id != session_id:
+    logger.info("make_stash: request session_id %s didn't match cookie\
+        session_id %s" % (req_session_id, session_id))
+    return HttpResponseNotFound()
 
   sessions = BelaySession.objects.filter(session_id=session_id)
   if len(sessions) == 0:
+    logger.info("make_stash: request session_id: %s didn't match any sessions"\
+        % session_id)
     return HttpResponseNotFound()
   if len(sessions) != 1:
-    raise "Fatal: duplicate BelaySessions!"
+    logger.warn('make_stash: found duplicate BelaySessions')
+    return HttpResponseNotFound()
 
   session = sessions[0]
-  args = bcap.dataPostProcess(request.read())
   stashed_content = bcap.dataPreProcess(args['launchInfo'])
-  stash = Stash(stash_key=stash_key, session=session, stashed_content=stashed_content)
+  stash = Stash(session=session, stashed_content=stashed_content)
   stash.save()
 
   cap = bcap.grant('get-stash', stash)
@@ -221,7 +238,13 @@ def make_stash(request):
 
 class GetStashHandler(bcap.CapHandler):
   def get(self, grantable):
+    return HttpResponseNotAllowed(['POST'])
+  def post(self, grantable, args):
     stash = grantable.stash
+    req_session_id = args['sessionID']
+
+    if stash.session.session_id != req_session_id:
+      logger.info("GetStashHandler: request session_id didn't match")
+      return HttpResponseNotFound()
+
     return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
-  def post(self, stash, args):
-    return HttpResponseNotAllowed(['GET'])

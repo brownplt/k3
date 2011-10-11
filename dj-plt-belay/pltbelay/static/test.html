@@ -1,0 +1,52 @@
+<html>
+<head>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js'></script>
+<script type='text/javascript' src ='/static/lib/js/caps.js'></script>
+<script>
+$(function() {
+  $('.test').css('background-color', 'red');
+  var capServer = new CapServer(newUUIDv4());
+
+  var stashTest = function() {
+    var node = $('#test1');
+    var re = /.*session=([\-0-9a-zA-Z]+).*/;
+    var matchInfo = re.exec(document.cookie);
+    
+    if (matchInfo === null) {
+      node.html(node.html() + ' fail: not logged in');
+      return;
+    }
+    var sessionID = matchInfo[1];
+
+    var launchInfo = {
+      domain : 'http://instance2.net',
+      url : '/blarg/blarg/',
+      private_data : { z : 3, a : 4}
+    };
+    var dataToPass = { launchInfo : launchInfo, sessionID : sessionID };
+
+
+    var makeStash = capServer.restore(
+      window.location.protocol + '//' + window.location.host + '/make-stash/'
+    );
+    makeStash.post(dataToPass, function(getStash) {
+      getStash.post({ sessionID : sessionID }, function(stashed) {
+        if (stashed.domain === launchInfo.domain &&
+            stashed.url === launchInfo.url &&
+            stashed.private_data.z === launchInfo.private_data.z &&
+            stashed.private_data.a === launchInfo.private_data.a) {
+              var node = $('#test1');
+              node.css('background-color', 'lime')
+                .html(node.html() + ' success!!!!');
+        }
+      });
+    });
+  };
+
+  stashTest();
+});
+</script>
+</head>
+<body>
+<div class='test' id='test1'>Stash Test: </div> <br />
+</body>
