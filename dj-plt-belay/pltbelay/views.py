@@ -62,6 +62,7 @@ def get_station(request):
 
   return HttpResponse(acct.station_url)
 
+# TODO(matt): restore instead of urlopen?
 def newStationCap():
   generated = urllib2.urlopen(settings.STATION_DOMAIN + '/generate/')
   return bcap.dataPostProcess(generated.read())
@@ -70,19 +71,25 @@ def create_plt_account(request):
   if request.method != 'POST':
     return HttpResponseNotAllowed(['POST'])
 
-  keys = request.POST.keys()
-  if not ('username' in keys and 'password' in keys):
-    logger.error('create_plt_account: post data missing username or password')
-    return HttpResponse(status=500)
+  args = bcap.dataPostProcess(request.read())
+  if not args.has_key('username'):
+    logger.info('create_plt_account: post data missing username')
+    return HttpResponseNotFound()
 
-  username = request.POST['username']
-  rawpassword = request.POST['password']
+  if not args.has_key('password'):
+    logger.info('create_plt_account: post data missing password')
+    return HttpResponseNotFound()
+
+  username = args['username']
+  rawpassword = args['password']
 
   if len(username) > 20:
-    return HttpResponse('Failed: Bad uname')
+    logger.info('create_plt_account: bad username')
+    return HttpResponseNotFound()
 
   if len(rawpassword) < 8:
-    return HttpResponse('Failed: Bad password')
+    logger.info('create_plt_account: bad password')
+    return HttpResponseNotFound()
 
   salt = str(uuid.uuid4())
   hashed_password = get_hashed(rawpassword, salt)
@@ -105,8 +112,7 @@ def create_plt_account(request):
   cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
   response['Set-Cookie'] = cstr
 
-  logger.info(request)
-  redirect_url = request.get_host() + '/static/belay-frame.html'
+  redirect_url = '/static/belay-frame.html'
   content = bcap.dataPreProcess({ "redirectTo" : redirect_url })
   bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
   return response
@@ -172,10 +178,6 @@ def glogin_landing(request):
 
 def plt_login(request):
   return HttpResponse("PLT Login NYI", status=500)
-
-def belay_frame(request):
-  rendered = render_to_string("belay-frame.html", {})
-  return HttpResponse(rendered)
 
 def check_uname(request):
   uname = request.POST['username']

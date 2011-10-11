@@ -21,7 +21,6 @@ $(function() {
     var privateData = { a : 1, b : 2 };
     var dataToPass = { 'private_data' : privateData, sessionID : sessionID };
 
-
     var makeStash = capServer.restore(
       window.location.protocol + '//' + window.location.host + '/make-stash/'
     );

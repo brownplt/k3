@@ -5,6 +5,7 @@
 <script>
 $(function() {
   var capServer = new CapServer(newUUIDv4());
+  var urlPrefix = window.location.protocol + '//' + window.location.host;
 
   $('#submit').click(function(e) {
     var uname = $('#username').val();
@@ -29,17 +30,19 @@ $(function() {
             "Please contact the site administrator " + 
             "(link at the bottom of the page).")
     }
+
     function create() {
       console.log("Creating account");
-      $.ajax("/create_plt_account/", {
-        type: 'POST',
-        data: {username: uname, password: password1},
-        success: function(data, status, xhr) {
-          var o = capServer.dataPostProcess(data);
-          window.location = 'http://' + o.redirectTo
+      var createAccount = capServer.restore(
+        urlPrefix + '/create_plt_account/'
+      );
+      createAccount.post(
+        { username : uname, password : password1 }, 
+        function(response) {
+          window.location = urlPrefix + response.redirectTo;
         },
-        failure: failure
-      });
+        failure
+      );
     }
 
     $.ajax("/check_uname/", {
