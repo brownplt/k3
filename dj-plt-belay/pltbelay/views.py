@@ -26,6 +26,22 @@ class BelayInit():
     bcap.set_handlers(bcap.default_prefix, {'get-stash' : GetStashHandler})
     return None
 
+def logWith404(msg, level='info'):
+  if level == 'debug':
+    logger.debug(msg)
+  if level == 'info':
+    logger.info(msg)
+  elif level == 'warn':
+    logger.warn(msg)
+  elif level == 'error':
+    logger.error(msg)
+  elif level == 'critical':
+    logger.critical(msg)
+  else:
+    logger.warn('logWith404: invalid log level %s' % level)
+    logger.warn('message was: ' % msg)
+  return HttpResponseNotFound()
+
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
   logging.debug('checking')
@@ -73,23 +89,19 @@ def create_plt_account(request):
 
   args = bcap.dataPostProcess(request.read())
   if not args.has_key('username'):
-    logger.info('create_plt_account: post data missing username')
-    return HttpResponseNotFound()
+    return logWith404('create_plt_account: post data missing username')
 
   if not args.has_key('password'):
-    logger.info('create_plt_account: post data missing password')
-    return HttpResponseNotFound()
+    return logWith404('create_plt_account: post data missing password')
 
   username = args['username']
   rawpassword = args['password']
 
   if len(username) > 20:
-    logger.info('create_plt_account: bad username')
-    return HttpResponseNotFound()
+    return logWith404('create_plt_account: bad username')
 
   if len(rawpassword) < 8:
-    logger.info('create_plt_account: bad password')
-    return HttpResponseNotFound()
+    return logWith404('create_plt_account: bad password')
 
   salt = str(uuid.uuid4())
   hashed_password = get_hashed(rawpassword, salt)
@@ -199,58 +211,48 @@ def check_login(request):
     return bcap.bcapResponse(response)
 
   if not (args.has_key('sessionID')):
-    logger.info("check_login: request didn't pass sessionID arg")
-    return HttpResponseNotFound()
+    return logWith404("check_login: request didn't pass sessionID arg") 
 
   session_id = request.COOKIES['session']
   req_session_id = args['sessionID']
   if req_session_id != session_id:
-    logger.info("check_login: request session_id %s didn't match cookie\
+    return logWith404("check_login: request session_id %s didn't match cookie\
         session_id %s" % (req_session_id, session_id))
-    return HttpResponseNotFound()
 
   sessions = BelaySession.objects.filter(session_id=session_id)
   if len(sessions) > 1:
-    logger.warn("check_login: fatal error, duplicate BelaySessions")
-    raise "check_login: fatal error, duplicate BelaySessions"
+    return logWith404("check_login: fatal error, duplicate BelaySessions", level='warn')
 
   response['loggedIn'] = (len(sessions) > 0)
   return bcap.bcapResponse(response)
 
 def make_stash(request):
   if not ('session' in request.COOKIES):
-    logger.info('make_stash: no session cookie')
-    return HttpResponseNotFound()
+    return logWith404('make_stash: no session cookie')
 
   if request.method != 'POST':
-    logger.info("make_stash: request wasn't POST")
     return HttpResponseNotAllowed(['POST'])
 
   args = bcap.dataPostProcess(request.read())
   if not (args.has_key('sessionID')):
-    logger.info("make_stash: request didn't pass sessionID arg")
-    return HttpResponseNotFound()
+    return logWith404("make_stash: request didn't pass sessionID arg")
   if not (args.has_key('private_data')):
-    logger.info("make_stash: request didn't pass private_data arg")
-    return HttpResponseNotFound()
+    return logWith404("make_stash: request didn't pass private_data arg")
 
   stash_uuid = uuid.uuid4()
   session_id = request.COOKIES['session']
   req_session_id = args['sessionID']
 
   if req_session_id != session_id:
-    logger.info("make_stash: request session_id %s didn't match cookie\
+    return logWith404("make_stash: request session_id %s didn't match cookie\
         session_id %s" % (req_session_id, session_id))
-    return HttpResponseNotFound()
 
   sessions = BelaySession.objects.filter(session_id=session_id)
   if len(sessions) == 0:
-    logger.info("make_stash: request session_id: %s didn't match any sessions"\
+    return logWith404("make_stash: request session_id: %s didn't match any sessions"\
         % session_id)
-    return HttpResponseNotFound()
   if len(sessions) != 1:
-    logger.warn('make_stash: found duplicate BelaySessions')
-    return HttpResponseNotFound()
+    return logWith404('make_stash: found duplicate BelaySessions', level='warn')
 
   session = sessions[0]
   stashed_content = bcap.dataPreProcess(args['private_data'])
@@ -268,7 +270,6 @@ class GetStashHandler(bcap.CapHandler):
     req_session_id = args['sessionID']
 
     if stash.session.session_id != req_session_id:
-      logger.info("GetStashHandler: request session_id didn't match")
-      return HttpResponseNotFound()
+      return logWith404("GetStashHandler: request session_id didn't match")
 
     return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
