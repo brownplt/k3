@@ -6,10 +6,34 @@
 $(function() {
   $('.test').css('background-color', 'red');
   var capServer = new CapServer(newUUIDv4());
+  var re = /.*session=([\-0-9a-zA-Z]+).*/;
+  var urlPrefix = window.location.protocol + '//' + window.location.host;
+
+  var setSuccess = function(node) {
+    node.css('background-color', 'lime')
+      .html(node.html() + ' success!!!!');
+  }
+
+  var checkLoginTest = function() {
+    var matchInfo = re.exec(document.cookie);
+    var sessionID;
+    var checkLogin;
+    if (matchInfo !== null) {
+      sessionID = matchInfo[1];
+      checkLogin = capServer.restore(urlPrefix + '/check_login/');
+      checkLogin.post(
+        { sessionID : sessionID },
+        function(response) {
+          if (response.loggedIn === true) {
+            setSuccess($('#test2'));
+          }
+        }
+      );
+    }
+  };
 
   var stashTest = function() {
     var node = $('#test1');
-    var re = /.*session=([\-0-9a-zA-Z]+).*/;
     var matchInfo = re.exec(document.cookie);
     
     if (matchInfo === null) {
@@ -21,24 +45,22 @@ $(function() {
     var privateData = { a : 1, b : 2 };
     var dataToPass = { 'private_data' : privateData, sessionID : sessionID };
 
-    var makeStash = capServer.restore(
-      window.location.protocol + '//' + window.location.host + '/make-stash/'
-    );
+    var makeStash = capServer.restore(urlPrefix + '/make-stash/');
     makeStash.post(dataToPass, function(getStash) {
       getStash.post({ sessionID : sessionID }, function(stashed) {
         if (stashed.a === privateData.a && stashed.b === privateData.b) {
-              var node = $('#test1');
-              node.css('background-color', 'lime')
-                .html(node.html() + ' success!!!!');
+          setSuccess($('#test1'));
         }
       });
     });
   };
 
   stashTest();
+  checkLoginTest();
 });
 </script>
 </head>
 <body>
 <div class='test' id='test1'>Stash Test: </div> <br />
+<div class='test' id='test2'>Check Login Test: </div> <br />
 </body>

@@ -188,13 +188,34 @@ def check_uname(request):
   return bcap.bcapResponse({ "available" : available }) 
 
 def check_login(request):
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+
+  args = bcap.dataPostProcess(request.read())
+  response = {}
+
   if not ('session' in request.COOKIES):
-    return HttpResponse("false")
+    response['loggedIn'] = False
+    return bcap.bcapResponse(response)
+
+  if not (args.has_key('sessionID')):
+    logger.info("check_login: request didn't pass sessionID arg")
+    return HttpResponseNotFound()
+
   session_id = request.COOKIES['session']
+  req_session_id = args['sessionID']
+  if req_session_id != session_id:
+    logger.info("check_login: request session_id %s didn't match cookie\
+        session_id %s" % (req_session_id, session_id))
+    return HttpResponseNotFound()
+
   sessions = BelaySession.objects.filter(session_id=session_id)
-  if len(sessions) == 0:
-    return HttpResponse("false")
-  return HttpResponse("true")
+  if len(sessions) > 1:
+    logger.warn("check_login: fatal error, duplicate BelaySessions")
+    raise "check_login: fatal error, duplicate BelaySessions"
+
+  response['loggedIn'] = (len(sessions) > 0)
+  return bcap.bcapResponse(response)
 
 def make_stash(request):
   if not ('session' in request.COOKIES):

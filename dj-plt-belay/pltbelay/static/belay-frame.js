@@ -1,5 +1,8 @@
 $(function() {
   var capServer = new CapServer(newUUIDv4());
+  var re = /.*session=([\-0-9a-zA-Z]+).*/;
+  var urlPrefix = window.location.protocol + '//' + window.location.host;
+
   function get_station(k) {
     $.ajax('/get_station', {
       type: 'GET',
@@ -12,26 +15,31 @@ $(function() {
     });
   }
 
-  $.ajax('/check_login/', {
-    type: 'GET',
-    success: function(data, status, xhr) {
-      if(data === 'true') {
-        console.log('Logged in');
-        get_station(function(station) {
-          capServer.restore(station).get(function(station_info) {
-            go(station_info);
-          },
-          function(err) {
-            console.log('Couldn\'t get station info: ', err);
+  var sessionID, checkLogin;
+  var matchInfo = re.exec(document.cookie);
+  if (matchInfo !== null) {
+    sessionID = matchInfo[1];
+    checkLogin = capServer.restore(urlPrefix + '/check_login/');
+    checkLogin.post(
+      { sessionID : sessionID },
+      function(response) {
+        if(response.loggedIn) {
+          console.log('Logged in');
+          get_station(function(station) {
+            capServer.restore(station).get(function(station_info) {
+              go(station_info);
+            },
+            function(err) {
+              console.log('Couldn\'t get station info: ', err);
+            });
           });
-        });
-      } else {
+        } 
+      },
+      function(response) {
+        console.log("Getting logged in status failed: ", {r : response});
       }
-    },
-    error: function(data, status, xhr) {
-      console.log("Getting logged in status failed: ", {d: data, s: status});
-    }
-  });
+    );
+  }
 
   function go(station_info) {
     var port = makePostMessagePort(window.parent, "belay");
