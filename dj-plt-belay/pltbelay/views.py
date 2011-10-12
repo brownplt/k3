@@ -129,6 +129,44 @@ def create_plt_account(request):
   bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
   return response
 
+def plt_login(request):
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+
+  args = bcap.dataPostProcess(request.read())
+  if not args.has_key('username'):
+    return logWith404('plt_login: post data missing username')
+  if not args.has_key('password'):
+    return logWith404('plt_login: post data missing password')
+
+  username = args['username']
+  rawpassword = args['password']
+
+  credentials = PltCredentials.objects.filter(username=username)
+  if len(credentials) > 1:
+    return logWith404('plt_login: fatal error: duplicate credentials', level='error')
+
+  if len(credentials) == 0:
+    return bcap.bcapResponse({'loggedIn' : False})
+  c = credentials[0]
+
+  hashed_password = get_hashed(rawpassword, c.salt)
+  if hashed_password != c.hashed_password:
+    return bcap.bcapResponse({'loggedIn' : False})
+
+  session_id = str(uuid.uuid4())
+  session = BelaySession(session_id=session_id, account=c.account)
+  session.save()
+
+  response = HttpResponse()
+  cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
+  response['Set-Cookie'] = cstr
+
+  redirect_url = '/static/belay-frame.html'
+  content = bcap.dataPreProcess({'loggedIn' : True, 'redirectTo' : redirect_url})
+  bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
+  return response
+
 # TODO : fix intermediate page (to get on google's domain)
 def glogin(request):
   # I tried to use urllib.urlencode, but it translates slashes into escape sequences
@@ -188,9 +226,6 @@ def glogin_landing(request):
   response['Set-Cookie'] = cstr
   return response
 
-def plt_login(request):
-  return HttpResponse("PLT Login NYI", status=500)
-
 def check_uname(request):
   if request.method != 'POST':
     return HttpResponseNotAllowed(['POST'])
@@ -221,7 +256,7 @@ def check_login(request):
 
   sessions = BelaySession.objects.filter(session_id=session_id)
   if len(sessions) > 1:
-    return logWith404("check_login: fatal error, duplicate BelaySessions", level='warn')
+    return logWith404("check_login: fatal error, duplicate BelaySessions", level='error')
 
   response['loggedIn'] = (len(sessions) > 0)
   return bcap.bcapResponse(response)
@@ -252,7 +287,7 @@ def make_stash(request):
     return logWith404("make_stash: request session_id: %s didn't match any sessions"\
         % session_id)
   if len(sessions) != 1:
-    return logWith404('make_stash: found duplicate BelaySessions', level='warn')
+    return logWith404('make_stash: found duplicate BelaySessions', level='error')
 
   session = sessions[0]
   stashed_content = bcap.dataPreProcess(args['private_data'])

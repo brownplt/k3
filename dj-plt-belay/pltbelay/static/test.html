@@ -13,6 +13,20 @@ $(function() {
       .html(node.html() + ' success!!!!');
   }
 
+  var loginTest = function() {
+    var username = "matt", password = "matt1234";
+    var pltLogin = capServer.restore(COMMON.urlPrefix + '/plt_login/');
+    pltLogin.post(
+      { username : username, password : password },
+      function(response) {
+        if (response.loggedIn === true) {
+          setSuccess($('#test3'));
+          checkLoginTest();
+        }
+      }
+    );
+  }
+
   var checkLoginTest = function() {
     var matchInfo = COMMON.sessionRegExp.exec(document.cookie);
     var sessionID;
@@ -25,6 +39,7 @@ $(function() {
         function(response) {
           if (response.loggedIn === true) {
             setSuccess($('#test2'));
+            stashTest();
           }
         }
       );
@@ -54,12 +69,12 @@ $(function() {
     });
   };
 
-  stashTest();
-  checkLoginTest();
+  loginTest();
 });
 </script>
 </head>
 <body>
 <div class='test' id='test1'>Stash Test: </div> <br />
 <div class='test' id='test2'>Check Login Test: </div> <br />
+<div class='test' id='test3'>PLT Login Test: </div> <br />
 </body>

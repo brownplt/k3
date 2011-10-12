@@ -12,16 +12,21 @@ $(function() {
     var password1 = $('#password1').val();
     var password2 = $('#password2').val();
 
-    if(uname.length > 20) {
-      alert("We require usernames to be less than 20 characters.");
-      return;
-    }
     if(password1 !== password2) {
       alert("Passwords did not agree.");
       return;
     }
-    if(password1.length < 8) {
-      alert("Please use at least 8 characters for your password.");
+
+    if (!COMMON.validateLoginInfo(uname, password1)) {
+      if(uname.length > 20) {
+        alert("We require usernames to be less than 20 characters.");
+        return;
+      }
+      if(password1.length < 8) {
+        alert("Please use at least 8 characters for your password.");
+        return;
+      }
+      alert("Invalid username or password");
       return;
     }
     
