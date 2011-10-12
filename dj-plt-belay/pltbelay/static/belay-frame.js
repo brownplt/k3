@@ -1,7 +1,5 @@
 $(function() {
   var capServer = new CapServer(newUUIDv4());
-  var re = /.*session=([\-0-9a-zA-Z]+).*/;
-  var urlPrefix = window.location.protocol + '//' + window.location.host;
 
   function get_station(k) {
     $.ajax('/get_station', {
@@ -16,10 +14,10 @@ $(function() {
   }
 
   var sessionID, checkLogin;
-  var matchInfo = re.exec(document.cookie);
+  var matchInfo = COMMON.sessionRegExp.exec(document.cookie);
   if (matchInfo !== null) {
     sessionID = matchInfo[1];
-    checkLogin = capServer.restore(urlPrefix + '/check_login/');
+    checkLogin = capServer.restore(COMMON.urlPrefix + '/check_login/');
     checkLogin.post(
       { sessionID : sessionID },
       function(response) {

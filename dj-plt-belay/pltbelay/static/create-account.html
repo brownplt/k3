@@ -2,10 +2,10 @@
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
 <script type='text/javascript' src='/static/lib/js/caps.js'></script>
+<script type='text/javascript' src='/static/lib/js/common.js'></script>
 <script>
 $(function() {
   var capServer = new CapServer(newUUIDv4());
-  var urlPrefix = window.location.protocol + '//' + window.location.host;
 
   $('#submit').click(function(e) {
     var uname = $('#username').val();
@@ -33,17 +33,17 @@ $(function() {
 
     function create() {
       console.log("Creating account");
-      var createAccount = capServer.restore(urlPrefix + '/create_plt_account/');
+      var createAccount = capServer.restore(COMMON.urlPrefix + '/create_plt_account/');
       createAccount.post(
         { username : uname, password : password1 }, 
         function(response) {
-          window.location = urlPrefix + response.redirectTo;
+          window.location = COMMON.urlPrefix + response.redirectTo;
         },
         failure
       );
     }
 
-    var checkUname = capServer.restore(urlPrefix + '/check_uname/');
+    var checkUname = capServer.restore(COMMON.urlPrefix + '/check_uname/');
     checkUname.post(
       { username : uname },
       function(response) {
