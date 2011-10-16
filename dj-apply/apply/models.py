@@ -2,6 +2,75 @@ import belaylibs.models as bcap
 from django.db import models
 
 
+# TODO(matt): if these *Image fields represent file paths or URLs, 
+# can we instead have ImageFields to store them in the DB as binary
+# blobs?
+class Department(bcap.Grantable):
+  name = models.TextField()
+  shortname = models.TextField()
+  lastChange = models.IntegerField()
+  headerImage = models.TextField()
+  logoImage = models.TextField()
+  resumeImage = models.TextField()
+  headerBgImage = models.TextField()
+  brandColor = models.TextField()
+  contactName = models.TextField()
+  contactEmail = models.EmailField()
+  techEmail = models.EmailField()
+
+class AuthInfo(bcap.Grantable):
+  roles = [\
+    ('applicant', 'applicant'),\
+    ('reviewer', 'reviewer'),\
+    ('admin', 'admin')\
+  ]
+  username = models.TextField()
+  password_hash = models.CharField(max_length=200)
+  email = models.EmailField()
+  name = models.TextField()
+  role = models.TextField(choices=roles)
+  verify = models.IntegerField(default=0)
+  department = models.ForeignKey(Department)
+
+class ApplicantPosition(bcap.Grantable):
+  department = models.ForeignKey(Department)
+  name = models.TextField()
+  shortform = models.TextField()
+  autoemail = models.BooleanField()
+
+class Applicant(bcap.Grantable):
+  genders = [\
+    ('Unknown', 'Unknown'),\
+    ('Male', 'Male'),\
+    ('Female', 'Female')\
+  ]
+  ethnicities = [
+    ('am','American Indian or Alaskan Native'),\
+    ('as','Asian or Pacific Islander'),\
+    ('b','Black, non-Hispanic'),\
+    ('h','Hispanic'),\
+    ('w','White, non-Hispanic'),\
+    ('zo','Other'),\
+    ('zu','Unknown')\
+  ]
+  json = models.TextField(default='')
+  auth = models.ForeignKey(AuthInfo)
+  gender = models.TextField(choices=genders, default='Unknown')
+  ethnicities = models.TextField(choices=ethnicities, default='zu')
+  rejected = models.BooleanField(default=False)
+  accepted = models.BooleanField(default=True)
+  rtime = models.IntegerField(default=0)
+  firstname = models.TextField()
+  lastname = models.TextField()
+  country = models.TextField()
+  department = models.ForeignKey(Department)
+  position = models.ForeignKey(ApplicantPosition)
+
+class Degree(bcap.Grantable):
+  name = models.TextField()
+  shortform = models.TextField()
+  department = models.ForeignKey(Department)
+
 class ApplicantInstitution(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)
   name = models.TextField()
@@ -16,11 +85,6 @@ class ApplicantInstitution(bcap.Grantable):
   transcript_file = models.TextField()
   transcript_official = models.BooleanField(default=False)
 
-class Degree(bcap.Grantable):
-  name = models.TextField()
-  shortform = models.TextField()
-  department = models.ForeignKey(Department)
-
 class ScoreCategory(bcap.Grantable):
   name = models.TextField()
   shortform = models.TextField()
@@ -32,31 +96,10 @@ class ScoreValue(bcap.Grantable):
   explanation = models.TextField()
   department = models.ForeignKey(Department)
 
-class Score(bcap.Grantable):
-  value = models.ForeignKey(ScoreValue)
-  review = models.ForeignKey(Review)
+class Reviewer(bcap.Grantable):
+  auth = models.ForeignKey(AuthInfo)
+  committee = models.BooleanField()
   department = models.ForeignKey(Department)
-
-class ApplicantPosition(bcap.Grantable):
-  department = models.ForeignKey(Department)
-  name = models.TextField()
-  shortform = models.TextField()
-  autoemail = models.BooleanField()
-
-class Area(bcap.Grantable):
-  name = models.TextField()
-  abbr = models.TextField()
-  department = models.ForeignKey(Department)
-
-class Highlight(bcap.Grantable):
-  applicant = models.ForeignKey(Applicant)
-  highlightee = models.ForeignKey(Reviewer)
-  department = models.ForeignKey(Department)
-
-class PendingHighlight(bcap.Grantable):
-  applicant = models.ForeignKey(Applicant)
-  highlightee = models.ForeignKey(UnverifiedUser)
-  department = ForeignKey(Department)
 
 class Review(bcap.Grantable):
   advocate_choices = [\
@@ -75,9 +118,36 @@ class Review(bcap.Grantable):
   draft = models.BooleanField()
   department = models.ForeignKey(Department)
 
-class Reviewer(bcap.Grantable):
-  auth = models.ForeignKey(AuthInfo)
-  committee = models.BooleanField()
+class Score(bcap.Grantable):
+  value = models.ForeignKey(ScoreValue)
+  review = models.ForeignKey(Review)
+  department = models.ForeignKey(Department)
+
+class Area(bcap.Grantable):
+  name = models.TextField()
+  abbr = models.TextField()
+  department = models.ForeignKey(Department)
+
+class Highlight(bcap.Grantable):
+  applicant = models.ForeignKey(Applicant)
+  highlightee = models.ForeignKey(Reviewer)
+  department = models.ForeignKey(Department)
+
+class UnverifiedUser(bcap.Grantable):
+  roles = [\
+    ('applicant', 'applicant'),\
+    ('reviewer', 'reviewer'),\
+    ('admin', 'admin')\
+  ]
+  email = models.EmailField()
+  name = models.TextField()
+  role = models.TextField(choices=roles)
+  verify = models.IntegerField()
+  department = models.ForeignKey(Department)
+
+class PendingHighlight(bcap.Grantable):
+  applicant = models.ForeignKey(Applicant)
+  highlightee = models.ForeignKey(UnverifiedUser)
   department = models.ForeignKey(Department)
 
 class Reference(bcap.Grantable):
@@ -115,78 +185,8 @@ class Component(bcap.Grantable):
   verified = models.BooleanField(default=False)
   date = models.DateField()
 
-class Applicant(bcap.Grantable):
-  genders = [\
-    ('Unknown', 'Unknown'),\
-    ('Male', 'Male'),\
-    ('Female', 'Female')\
-  ]
-  ethnicities = [
-    ('am','American Indian or Alaskan Native'),\
-    ('as','Asian or Pacific Islander',)\
-    ('b','Black, non-Hispanic',)\
-    ('h','Hispanic',)\
-    ('w','White, non-Hispanic',)\
-    ('zo','Other',)\
-    ('zu','Unknown')\
-  ]
-  json = models.TextField(default='')
-  auth = models.ForeignKey(AuthInfo)
-  gender = models.TextField(choices=genders, default='Unknown')
-  ethnicities = models.TextField(choices=ethnicities, default='zu')
-  rejected = models.BooleanField(default=False)
-  accepted = models.BooleanField(default=True)
-  rtime = models.IntegerField(default=0)
-  firstname = models.TextField()
-  lastname = models.TextField()
-  country = models.TextField()
-  department = models.ForeignKey(Department)
-  position = models.ForeignKey(ApplicantPosition)
-
-class UnverifiedUser(bcap.Grantable):
-  roles = [\
-    ('applicant', 'applicant'),\
-    ('reviewer', 'reviewer'),\
-    ('admin', 'admin')\
-  ]
-  email = models.EmailField()
-  name = models.TextField()
-  role = models.TextField(choices=roles)
-  verify = models.IntegerField()
-  department = models.ForeignKey(Department)
-
-class AuthInfo(bcap.Grantable):
-  roles = [\
-    ('applicant', 'applicant'),\
-    ('reviewer', 'reviewer'),\
-    ('admin', 'admin')\
-  ]
-  username = models.TextField()
-  password_hash = models.CharField()
-  email = models.EmailField()
-  name = models.TextField()
-  role = models.TextField(choices=roles)
-  verify = models.IntegerField(default=0)
-  department = models.ForeignKey(Department)
-
 class AuthCookie(bcap.Grantable):
   value = models.TextField()
   ipaddr = models.IPAddressField()
   user = models.ForeignKey(AuthInfo)
   expires = models.IntegerField()
-
-# TODO(matt): if these *Image fields represent file paths or URLs, 
-# can we instead have ImageFields to store them in the DB as binary
-# blobs?
-class Department(bcap.Grantable):
-  name = models.TextField()
-  shortname = models.TextField()
-  lastChange = models.IntegerField()
-  headerImage = models.TextField()
-  logoImage = models.TextField()
-  resumeImage = models.TextField()
-  headerBgImage = models.TextField()
-  brandColor = models.TextField()
-  contactName = models.TextField()
-  contactEmail = models.EmailField()
-  techEmail = models.EmailField()
