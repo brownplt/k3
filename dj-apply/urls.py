@@ -6,6 +6,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('',
   (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
-  (r'applicant/', 'apply.views.applicant_handler')
+  (r'applicant/', 'apply.views.applicant_handler'),
+  #(r'scorecategory/', 'apply.views.scorecategory_test')
 )
 
