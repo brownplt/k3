@@ -9,10 +9,10 @@ class Department(bcap.Grantable):
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()
-  headerImage = models.TextField()
-  logoImage = models.TextField()
-  resumeImage = models.TextField()
-  headerBgImage = models.TextField()
+  headerImage = models.FilePathField(blank=True)
+  logoImage = models.FilePathField(blank=True)
+  resumeImage = models.FilePathField(blank=True)
+  headerBgImage = models.FilePathField(blank=True)
   brandColor = models.TextField()
   contactName = models.TextField()
   contactEmail = models.EmailField()
@@ -56,7 +56,7 @@ class Applicant(bcap.Grantable):
   json = models.TextField(default='')
   auth = models.ForeignKey(AuthInfo)
   gender = models.TextField(choices=genders, default='Unknown')
-  ethnicities = models.TextField(choices=ethnicities, default='zu')
+  ethnicity = models.TextField(choices=ethnicities, default='zu')
   rejected = models.BooleanField(default=False)
   accepted = models.BooleanField(default=True)
   rtime = models.IntegerField(default=0)
@@ -64,6 +64,8 @@ class Applicant(bcap.Grantable):
   lastname = models.TextField()
   country = models.TextField()
   department = models.ForeignKey(Department)
+  # TODO(matt): does the department of the ApplicantPosition have to be the same
+  # as the department of this Applicant?
   position = models.ForeignKey(ApplicantPosition)
 
 class Degree(bcap.Grantable):
@@ -82,7 +84,7 @@ class ApplicantInstitution(bcap.Grantable):
   gpa_max = models.FloatField()
   department = models.ForeignKey(Department)
   lastSubmitted = models.IntegerField()
-  transcript_file = models.TextField()
+  transcript_file = models.TextField(blank=True)
   transcript_official = models.BooleanField(default=False)
 
 class ScoreCategory(bcap.Grantable):
