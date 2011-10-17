@@ -1,4 +1,6 @@
 $(function() {
+  var stationInfo;
+  var clientLocation;
   var capServer = new CapServer(newUUIDv4());
 
   function get_station(k) {
@@ -25,7 +27,8 @@ $(function() {
           console.log('Logged in');
           get_station(function(station) {
             capServer.restore(station).get(function(station_info) {
-              go(station_info);
+              stationInfo = station;
+              if(clientLocation) go();
             },
             function(err) {
               console.log('Couldn\'t get station info: ', err);
@@ -39,7 +42,17 @@ $(function() {
     );
   }
 
-  function go(station_info) {
+  $(window).bind('message', function(e) {
+    $(window).unbind('message');
+    clientLocation = e.originalEvent.data.clientLocation;
+    if(!clientLocation) {
+      console.log("Unexpected message from client: ", e);
+      return;
+    }
+    if(stationInfo) go();
+  });
+
+  function go() {
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
     capServer.setResolver(function(instanceID) {
@@ -49,28 +62,27 @@ $(function() {
     });
     tunnel.setLocalResolver(function() { return capServer.publicInterface; });
     tunnel.sendOutpost(capServer.dataPreProcess({
-      becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
-        station_info.newInstance.post(launchInfo, function(launched) {
-          // TODO(joe): navigate to launchInfo.domain + url
-          capServer.restore('http://' + window.location.host + '/make-stash/').post(launchInfo.private_data,
-            function(restoreCap, status, xhr) {
-              var nav = launchInfo.domain +
-                        launchInfo.url +
-                        "#" +
-                        encodeURI(restoreCap.serialize());
-              console.log('Nav: ', nav);
-//              window.parent.location.href = nav;
-            });
-          sk('success');
-        },
-        function(err) {
-          console.log('belay_frame: Failed to create new instance: ', err);
-          fk('failed');
-        });
-      }),
-      notifyLocation: capServer.grant(function(url) {
-        // TODO: get fragment, load private_data
-      })
+      services: {
+        becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
+          stationInfo.newInstance.post(launchInfo, function(launched) {
+            capServer.restore('http://' + window.location.host + '/make-stash/').post(launchInfo.private_data,
+              function(restoreCap, status, xhr) {
+                var nav = launchInfo.domain +
+                          launchInfo.url +
+                          "#" +
+                          encodeURI(restoreCap.serialize());
+                console.log('Nav: ', nav);
+                window.parent.location.href = nav;
+              });
+            sk('success');
+          },
+          function(err) {
+            console.log('belay_frame: Failed to create new instance: ', err);
+            fk('failed');
+          });
+        })
+      }
     }));
   }
 });
+
