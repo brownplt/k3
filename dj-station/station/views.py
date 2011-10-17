@@ -50,7 +50,11 @@ class NewInstanceHandler(bcap.CapHandler):
     domain = args['domain']
     url = args['url']
     private_data = bcap.dataPreProcess(args['private_data'])
-    launch_info = LaunchInfo(domain=domain, url=url, private_data=private_data)
+    public_data = bcap.dataPreProcess(args['public_data'])
+    launch_info = LaunchInfo(domain=domain, \
+                             url=url, \
+                             private_data=private_data, \
+                             public_data=public_data)
     launch_info.save()
 
     instance_uuid = uuid.uuid4()
@@ -71,6 +75,7 @@ class InstanceHandler(bcap.CapHandler):
     response['domain'] = launch_info.domain
     response['url'] = launch_info.url
     response['private_data'] = bcap.dataPostProcess(launch_info.private_data)
+    response['public_data'] = bcap.dataPostProcess(launch_info.public_data)
     return bcap.bcapResponse(response)
   def post(self, granted, args):
     return HttpResponse('InstanceHandler POST NYI') 
