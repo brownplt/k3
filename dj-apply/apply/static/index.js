@@ -1,4 +1,4 @@
-window.addEventListener('load', function() {
+$(function() {
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
     frame.attr({
@@ -15,43 +15,22 @@ window.addEventListener('load', function() {
   }
   function addFrame(frame) {
     var right = $('.right-part');
+    console.log('Adding frame');
     right.append(frame);
   }
 
-  var capServer = new CapServer(newUUIDv4());
-  var port = makePostMessagePort(null, "belay");
-  var tunnel = new CapTunnel(port);
+  window.belay.belayInit(makeBelayFrame, addFrame);
 
-  capServer.setResolver(function(instanceID) {
-    if(instanceID !== capServer.instanceID) {
-      return tunnel.sendInterface;
-    }
+  onBelayReady(function() {
+    console.log('Belay is ready: ', belayBrowser);
+    belayBrowser.becomeInstance.post({
+      domain: 'http://localhost:8001',
+      url: '/static/applicant.html',
+      private_data: 'hello world!'
+    });
+    // expect capServer, storage, launchInfo, belayBrowser
+    // use belayBrowser.become(New)Instance
   });
 
-  tunnel.setLocalResolver(function() { capServer.publicInterface; });
-
-  var becomeInstance;
-  var frame = makeBelayFrame();
-  tunnel.setOutpostHandler(function(outpost) {
-    port.setTarget(frame[0].contentWindow);  
-    becomeNewInstance = capServer.dataPostProcess(outpost).becomeInstance;
-    // TODO(joe): fix this up
-    launchInfo = {
-      domain: 'http://localhost:8001/',
-      url: 'applicant/',
-      private_data: 'hello from apply!'
-    };
-    becomeNewInstance.post(launchInfo, function(response) {
-        // NOTE(joe): this shouldn't happen, because the belay-frame
-        // will navigate the window to start the instance
-        console.log('Got a response: ', response);
-      },
-      function(err) {
-        console.log('Error: ', err);
-      });
-  });
-
-
-  addFrame(frame);
 });
 
