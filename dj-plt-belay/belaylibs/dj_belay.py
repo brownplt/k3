@@ -23,7 +23,7 @@ import re
 import httplib
 import settings
 
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest
 
 from models import Grant
 
@@ -149,7 +149,17 @@ def dataPostProcess(serialized):
 
 # Base class for handlers that process capability invocations.
 class CapHandler(object):
-  pass
+  methods = ['get', 'put', 'post', 'delete']
+  def allowedMethods(self):
+    return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
+  def get(self, grantable):
+    return HttpResponseNotAllowed(self.allowedMethods())
+  def put(self, grantable, args):
+    return HttpResponseNotAllowed(self.allowedMethods())
+  def post(self, grantable, args):
+    return HttpResponseNotAllowed(self.allowedMethods())
+  def delete(self, grantable):
+    return HttpResponseNotAllowed(self.allowedMethods())
 
 class HandlerData(object):
   def __init__(self):

@@ -79,41 +79,14 @@ def scorecategory_test(request):
   return bcap.bcapResponse(caps)
 
 class SCDeleteHandler(bcap.CapHandler):
-  def get(self, grantable):
-    return HttpResponseNotAllowed(['DELETE'])
-
-  def put(self, grantable, args):
-    return HttpResponseNotAllowed(['DELETE'])
-
-  def post(self, grantable, args):
-    return HttpResponseNotAllowed(['DELETE'])
-
   def delete(self, grantable):
     Grant.objects.filter(db_entity=grantable).delete()
     return bcap.bcapNullResponse()
 
 class SCChangeHandler(bcap.CapHandler):
-  def get(self, grantable):
-    return HttpResponseNotAllowed(['POST'])
-
-  def put(self, grantable, args):
-    return HttpResponseNotAllowed(['POST'])
-
   def post(self, grantable, args):
     return bcap.bcapNullResponse() 
-
-  def delete(self, grantable):
-    return HttpResponseNotAllowed(['POST'])
 
 class SCAddHandler(bcap.CapHandler):
-  def get(self, grantable):
-    return HttpResponseNotAllowed(['POST'])
-
-  def put(self, grantable, args):
-    return HttpResponseNotAllowed(['POST'])
-
   def post(self, grantable, args):
     return bcap.bcapNullResponse() 
-
-  def delete(self, grantable):
-    return HttpResponseNotAllowed(['POST'])
