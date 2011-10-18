@@ -4,14 +4,6 @@ from apply.views import *
 
 import belaylibs.dj_belay as bcap
 
-class UselessTest(unittest.TestCase):
-  def setUp(self):
-    pass
-
-  def testUseless(self):
-    self.assertEqual('true', 'true')
-
-
 class TestNewReviewer(unittest.TestCase):
   def setUp(self):
     department = Department(
@@ -24,9 +16,12 @@ class TestNewReviewer(unittest.TestCase):
       techEmail="fake@bar")
     department.save()
     self.department = department
+    init = ApplyInit()
+    init.process_request(None)
 
   def testReviewerRequest(self):
     request_cap = bcap.grant('request-new-reviewer', self.department)    
+
     create_cap = request_cap.post({
       'name': 'Fake Reviewer',
       'email': 'reviewer@fake',
@@ -34,9 +29,16 @@ class TestNewReviewer(unittest.TestCase):
     })
     create_cap.post({})
     info = AuthInfo.objects.filter(email="reviewer@fake")
-    assertEqual(len(info), 1)
+    self.assertEqual(len(info), 1)
     revs = Reviewer.objects.filter(auth=info[0])
-    assertEqual(revs[0].committee, True)
+    self.assertEqual(revs[0].committee, False)
+
+    # The capability to create shouldn't work twice
+    try:
+      create_cap.post({})
+      self.assertTrue(False)
+    except:
+      self.assertTrue(True)
 
 class TestScoreCategory(unittest.TestCase):
   def setUp(self):
@@ -48,6 +50,8 @@ class TestScoreCategory(unittest.TestCase):
         techEmail='tech@example.com')
       cs.save()
       self.department = cs
+      init = ApplyInit()
+      init.process_request(None)
 
   def testScoreCategory(self):
     args = {\
@@ -56,14 +60,31 @@ class TestScoreCategory(unittest.TestCase):
       'department' : 'Computer Science'\
     }
 
-    addHandler = SCAddHandler()
-    response = bcap.dataPostProcess(addHandler.post(None, args).content)
+    addCap = bcap.grant('sc-add', None)
+    response = addCap.post(args)
 
     hasChange = response.has_key('change')
     hasDelete = response.has_key('delete')
     self.assertTrue(hasChange and hasDelete and response['success'])
-
     
     cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
       department=self.department)
     self.assertEqual(len(cats), 1)
+
+    changeCap = response['change']
+    changeCap.post({\
+      'name' : 'Category Dos',\
+      'shortform' : 'CD'\
+    })
+    cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
+      department=self.department)
+    self.assertEqual(len(cats), 0)
+    cats = ScoreCategory.objects.filter(name='Category Dos', shortform='CD',\
+      department=self.department)
+    self.assertEqual(len(cats), 1)
+
+    delCap = response['delete']
+    delResponse = delCap.delete()
+    cats = ScoreCategory.objects.filter(name='Category Dos', shortform='CD',\
+      department=self.department)
+    self.assertEqual(len(cats), 0)

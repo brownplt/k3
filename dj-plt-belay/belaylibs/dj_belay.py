@@ -32,6 +32,12 @@ logger = logging.getLogger('default')
 #TODO(joe): make this programmatic rather than a constant setting
 def this_server_url_prefix():
   return settings.SITE_NAME
+
+def cap_url(cap):
+  return '%s%s' % (handlerData.prefix, cap)
+
+def cap_id_from_url(capURL):
+  return capURL[handlerData.prefix_strip_length:]
  
 class BelayException(Exception):
   pass
@@ -41,26 +47,7 @@ class BelayException(Exception):
 #
 # Capabilities
 #
-def invokeLocalCap(capURL, method, data=""):
-  """Invoke a locally defined cap using ProxyHandler"""
-  handler = ProxyHandler()
-  req = webapp.Request.blank(capURL)
-  req.body = data
-  handler.initialize(req, webapp.Response())
 
-  if method == 'GET':
-    handler.get()
-  elif method == 'PUT':
-    handler.put()
-  elif method == 'POST':
-    handler.post()
-  elif method == 'DELETE':
-    handler.delete()
-  else:
-    raise BelayException("invokeLocalCap: Bad method: " + method)
-
-  return handler.response
-  
 # NOTE(jpolitz): BcapHandlers and urlfetch.fetch() return different data
 # structures.  invokeCapURL() needs to handle both, since it simulates a
 # local HTTP cap invocation through ProxyHandler.
@@ -75,9 +62,9 @@ def invokeCapURL(capURL, meth, data=""):
   parsed_prefix = parsed.scheme + "://" + parsed.netloc
 
   if parsed_prefix == prefix:
-    result = invokeLocalCap(parsed.path, meth, data)
+    result = handle(cap_id_from_url(capURL), meth, data)
     # TODO(jpolitz): other Content-Types
-    if re.match('image/.*', result.headers['Content-Type']):
+    if re.match('image/.*', result['Content-Type']):
       # TODO(jpolitz): is this sufficient wrapping?
       class Wrapper(object):
         def read(self):
@@ -91,7 +78,9 @@ def invokeCapURL(capURL, meth, data=""):
 
       return Wrapper()
     else:
-      return dataPostProcess(result.out.getvalue())
+      if result.status_code >= 400:
+        raise BelayException('invokeCapURL Failed')
+      return dataPostProcess(result.content)
   else:
     # TODO: https
     conn = httplib.HTTPConnection(parsed.netloc)
@@ -112,11 +101,20 @@ class Capability(object):
   def invoke(self, method, data = None):
     #TODO(jpolitz): separate impls in python---all are essentially implURLSync
     if data != None:
-      response = invokeCapURL(self.ser, method, data=dataPreProcess(data))
+      response = invokeCapURL(self.ser, method, data=data)
     else:
       response = invokeCapURL(self.ser, method)
 
     return response
+
+  def get(self):
+    return self.invoke('GET')
+  def put(self, data):
+    return self.invoke('PUT', data)
+  def post(self, data=None):
+    return self.invoke('POST', data)
+  def delete(self):
+    return self.invoke('DELETE')
      
   def serialize(self):
     return self.ser
@@ -161,6 +159,8 @@ class CapHandler(object):
   def delete(self, grantable):
     return HttpResponseNotAllowed(self.allowedMethods())
 
+default_prefix = '/cap/'
+
 class HandlerData(object):
   def __init__(self):
     self.path_to_handler = {}
@@ -189,8 +189,6 @@ def bcapResponse(content):
   xhr_content(response, content, "text/plain;charset=UTF-8")
   return response
 
-default_prefix = '/cap'
-
 handlerData = HandlerData()
 
 def set_handlers(cap_prefix, path_map):
@@ -203,8 +201,8 @@ def set_handlers(cap_prefix, path_map):
   if not cap_prefix.endswith('/'):
     cap_prefix += '/'
   
-  handlerData.prefix_strip_length = len(cap_prefix)
   handlerData.prefix = this_server_url_prefix() + cap_prefix
+  handlerData.prefix_strip_length = len(handlerData.prefix)
   handlerData.is_set = True
 
   for url in path_map:
@@ -215,6 +213,42 @@ def get_handler(path):
 
 def set_handler(path, handler):
   handlerData.path_to_handler[path] = handler
+
+
+def handle(cap_id, method, args):
+  grants = Grant.objects.filter(cap_id=cap_id)
+
+  if len(grants) == 0:
+    response = HttpResponse()
+    content = dataPreProcess("proxyHandler: Cap not found: %s" % cap_id)
+    xhr_content(response, content, "text/plain;charset=UTF-8")
+    response.status_code = 404
+    return response
+
+  if len(grants) > 1:
+    # TODO(arjun.guha@gmail.com): appropriate error in response
+    raise BelayException('%s, %s' % (self.request.path_info, cap_id))
+  
+  grant = grants[0]   
+  handler_class = get_handler(str(grant.internal_path))
+  handler = handler_class()
+
+  item = grant.db_entity
+
+  if method == 'GET':
+    return handler.get(item)
+  elif method == 'PUT':
+    return handler.put(item, args)
+  elif method == 'POST':
+    return handler.post(item, args)
+  elif method == 'DELETE':
+    return handler.delete(item)
+  else:
+    response = HttpResponse()
+    content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
+    xhr_content(response, content, "text/plain;charset=UTF-8")
+    response.status_code = 404
+    return response
 
 def proxyHandler(request):
 
@@ -235,58 +269,25 @@ def proxyHandler(request):
     xhr_content(response, "", "text/plain;charset=UTF-8")
     return response
 
-  prefix_strip_length = handlerData.prefix_strip_length
-  cap_id = request.path_info[prefix_strip_length:]
-  grants = Grant.objects.filter(cap_id=cap_id)
-
-  if len(grants) == 0:
-    response = HttpResponse()
-    content = dataPreProcess("proxyHandler: Cap not found: %s" % cap_id)
-    xhr_content(response, content, "text/plain;charset=UTF-8")
-    response.status_code = 404
-    return response
-
-  if len(grants) > 1:
-    # TODO(arjun.guha@gmail.com): appropriate error in response
-    raise BelayException('%s, %s' % (self.request.path_info, cap_id))
-  
-  grant = grants[0]   
-  handler_class = get_handler(str(grant.internal_path))
-  handler = handler_class()
-
-  method = request.method
-  item = grant.db_entity
   args = dataPostProcess(request.read())
 
-  if method == 'GET':
-    return handler.get(item)
-  elif method == 'POST':
-    return handler.post(item, args)
-  elif method == 'DELETE':
-    return handler.delete(item)
-  elif method == 'PUT':
-    return handler.put(item, args)
-  elif method == 'OPTIONS':
+  if request.method == 'OPTIONS':
     return options()
   else:
-    response = HttpResponse()
-    content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
-    xhr_content(response, content, "text/plain;charset=UTF-8")
-    response.status_code = 404
-    return response
+    return handle(request.path_info, request.method, args)
 
 def grant(path, entity):
   cap_id = str(uuid.uuid4())
   item = Grant(cap_id=cap_id, internal_path=path, db_entity=entity)
   item.save()
-  return Capability(handlerData.prefix + cap_id)
+  return Capability(cap_url(cap_id))
 
 def regrant(path, entity):
   items = Grant.objects.filter(internal_path=path, db_entity=entity)
   if(len(items) > 1):
     raise BelayException('CapServer:regrant::ambiguous internal_path in regrant')
   elif len(items) == 1:
-    return Capability(handlerData.prefix + items[0].cap_id)
+    return Capability(cap_url(items[0].cap_id))
   else:
     return grant(path_or_handler, entity)
 
