@@ -8,6 +8,5 @@ urlpatterns = patterns('',
   (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
   (r'applicant/', 'apply.views.applicant_handler'),
   #(r'generate_data/', 'apply.generate.generate'),
-  #(r'scorecategory/', 'apply.views.scorecategory_test')
 )
 

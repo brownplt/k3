@@ -75,41 +75,6 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
     granted.delete()
     return bcapNullResponse()
 
-# Create a ScoreCategory and return caps for its handlers
-def scorecategory_test(request):
-  if request.method != 'POST':
-    return HttpResponseNotAllowed(['POST'])
-
-  args = bcap.dataPostProcess(request.read())
-  if not (args.has_key('name')):
-    return logWith404(logger, 'scorecategory_test: post args missing name')
-  if not (args.has_key('shortform')):
-    return logWith404(logger, 'scorecategory_test: post args missing shortform')
-  if not (args.has_key('department')):
-    return logWith404(logger, 'scorecategory_test: post args missing department')
-
-  depts = Department.objects.filter(name=args['department'])
-  if len(depts) > 1:
-    return logWith404(logger, 'scorecategory_test: fatal error: multiple departments \
-        with name = %s' % args['department'], level='error')
-  if len(depts) == 0:
-    department = Department(name=args['department'], shortname=args['department'],\
-      lastChange=0, headerImage='', logoImage='', resumeImage='', headerBgImage='',\
-      brandColor='', contactName='', contactEmail='name@example.com',\
-      techEmail='name@example.com')
-    department.save()
-  else:
-    department = depts[0]
-
-  sc = ScoreCategory(name=args['name'], \
-      shortform=args['shortform'], \
-      department=department)
-  sc.save()
-
-  cap_names = ['sc-delete', 'sc-change', 'sc-add']
-  caps = dict([(nm[3:], bcap.grant(nm, sc)) for nm in cap_names])
-  return bcap.bcapResponse(caps)
-
 class SCDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
     Grant.objects.filter(db_entity=grantable).delete()
@@ -117,8 +82,57 @@ class SCDeleteHandler(bcap.CapHandler):
 
 class SCChangeHandler(bcap.CapHandler):
   def post(self, grantable, args):
+    if not args.has_key('name'):
+      return logWith404(logger, 'SCChangeHandler: post args missing name')
+    if not args.has_key('shortform'):
+      return logWith404(logger, 'SCChangeHandler: post args missing shortform')
+    sc = grantable.scorecategory
+    sc.name = args['name']
+    sc.shortform = args['shortform']
+    sc.save()
     return bcap.bcapNullResponse() 
 
 class SCAddHandler(bcap.CapHandler):
   def post(self, grantable, args):
-    return bcap.bcapNullResponse() 
+    if not args.has_key('name'):
+      return logWith404(logger, 'SCChangeHandler: post args missing name')
+    if not args.has_key('shortform'):
+      return logWith404(logger, 'SCChangeHandler: post args missing shortform')
+    if not args.has_key('department'):
+      return logWith404(logger, 'SCChangeHandler: post args missing department')
+
+    name = args['name'] 
+    short = args['shortform']
+    depts = Department.objects.filter(name=name)
+    if len(depts) > 1:
+      return logWith404(logger, 'SCChangeHandler fatal error: duplicate departments',\
+        level='error')
+    if len(depts) == 0:
+      resp = { \
+        "success" : False, \
+        "message" : "no department named %s" % args['department']\
+      }
+      return bcap.bcapResponse(resp)
+    dept = depts[0]
+
+    categories = ScoreCategory.objects.filter(department=dept, name=name, \
+      shortform=short)
+    if len(categories) > 0:
+      resp = {\
+        "success" : False,\
+        "message" : "category already exists"\
+      }
+      return bcap.bcapResponse(resp)
+
+    sc = ScoreCategory(department=dept, name=name, shortform=short)
+    sc.save()
+
+    delCap = bcap.grant('sc-delete', sc)
+    changeCap = bcap.grant('sc-change', sc)
+
+    resp = {\
+      "success" : True,\
+      "change" : changeCap,\
+      "delete" : delCap\
+    }
+    return bcap.bcapResponse(resp)

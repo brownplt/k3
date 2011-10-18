@@ -6,8 +6,8 @@ from django.db import models
 # can we instead have ImageFields to store them in the DB as binary
 # blobs?
 class Department(bcap.Grantable):
-  name = models.TextField()
-  shortname = models.TextField()
+  name = models.TextField(unique=True)
+  shortname = models.TextField(unique=True)
   lastChange = models.IntegerField()
   headerImage = models.FilePathField(blank=True)
   logoImage = models.FilePathField(blank=True)
