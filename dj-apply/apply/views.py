@@ -40,8 +40,57 @@ class ApplyInit():
     bcap.set_handlers(bcap.default_prefix, \
       { 'sc-delete' : SCDeleteHandler, \
         'sc-change' : SCChangeHandler, \
-        'sc-add' : SCAddHandler })
+        'sc-add' : SCAddHandler,
+        'add-reviewer': AddReviewerRelationshipHandler,
+        'request-new-reviewer': AddReviewerRequestHandler })
     return None
+
+# Gets a capability that is handed off to will-be reviewers.
+# It will be included in the fragment on a page that asks them
+# for information and creates their relationship.
+# This is a relatively powerful capability --- it should only
+# be accessible from Admin views.
+class AddReviewerRequestHandler(bcap.CapHandler):
+  # granted: DepartmentInfo
+  # args: { 'name': str, 'email': str, 'committee': {'true', 'false'}}
+  def post(granted, args):
+    unverified_reviewer = UnverifiedUser( \
+      role='reviewer', \
+      name=args['name'], \
+      email=args['email'], \
+      committee=args['committee'] == 'true', \
+      department=granted)
+
+    unverified_user.save()
+    create_account = bcap.grant('add-reviewer', unverified_reviewer)
+    return bcapResponse(create_account)
+
+# Adds a new relationship with a reviewer
+# One-shot capability
+class AddReviewerRelationshipHandler(bcap.CapHandler):
+  # granted: UnverifiedUser
+  # args: any
+  # (args are ignored, but post makes sense because of side-effects)
+  def post(granted, args):
+    if granted is None:
+      return HttpResponseNotFound()
+
+    auth_info = AuthInfo(
+      email=granted.email, \
+      name=granted.name, \
+      role='reviewer', \
+      department=granted.department)
+    auth_info.save()
+
+    reviewer = Reviewer(
+      auth=auth_info, \
+      committee=granted.committee, \
+      department=granted.department)
+    reviewer.save()
+
+    # Remove the unverified_user---this is a one-shot request
+    granted.delete()
+    return bcapNullResponse()
 
 # Create a ScoreCategory and return caps for its handlers
 def scorecategory_test(request):

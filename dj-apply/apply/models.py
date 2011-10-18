@@ -24,12 +24,9 @@ class AuthInfo(bcap.Grantable):
     ('reviewer', 'reviewer'),\
     ('admin', 'admin')\
   ]
-  username = models.TextField()
-  password_hash = models.CharField(max_length=200)
   email = models.EmailField()
   name = models.TextField()
   role = models.TextField(choices=roles)
-  verify = models.IntegerField(default=0)
   department = models.ForeignKey(Department)
 
 class ApplicantPosition(bcap.Grantable):

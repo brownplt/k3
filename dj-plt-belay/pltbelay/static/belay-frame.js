@@ -17,14 +17,24 @@ $(function() {
     });
   }
 
+  function notLoggedIn() {
+    $('#login-frame').show();
+  }
+
+
   var sessionID, checkLogin;
   var matchInfo = COMMON.sessionRegExp.exec(document.cookie);
-  if (matchInfo !== null) {
+  if (matchInfo === null) {
+    notLoggedIn();
+  }
+  else {
     sessionID = matchInfo[1];
     checkLogin = capServer.restore(COMMON.urlPrefix + '/check_login/');
+    console.log('Request to: ' + checkLogin.serialize());
     checkLogin.post(
       { sessionID : sessionID },
       function(response) {
+        console.log('Got login response');
         if(response.loggedIn) {
           console.log('Logged in');
           get_station(function(station) {
@@ -37,9 +47,7 @@ $(function() {
             });
           });
         }
-        else {
-          $('#login-frame').show();
-        }
+        else { notLoggedIn(); }
       },
       function(response) {
         console.log("Getting logged in status failed: ", {r : response});
