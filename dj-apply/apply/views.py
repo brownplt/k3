@@ -25,6 +25,7 @@ class ApplyInit():
         'sc-change' : SCChangeHandler, \
         'sc-add' : SCAddHandler,\
         'sv-change' : SVChangeHandler,\
+        'ap-add' : APAddHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
         'request-new-reviewer': AddReviewerRequestHandler })
     return None
@@ -158,3 +159,44 @@ class SVChangeHandler(bcap.CapHandler):
     sv.explanation = explanation
     sv.save()
     return bcap.bcapNullResponse()
+
+class APAddHandler(bcap.CapHandler):
+  def post(self, grantable, args):
+    if not args.has_key('department'):
+      return logWith404(logger, 'APAddHandler: post args missing department')
+    if not args.has_key('name'):
+      return logWith404(logger, 'APAddHandler: post args missing name')
+    if not args.has_key('shortform'):
+      return logWith404(logger, 'APAddHandler: post args missing shortform')
+    if not args.has_key('autoemail'):
+      return logWith404(logger, 'APAddHandler: post args missing autoemail')
+
+    deptname = args['department']
+    name = args['name']
+    shortform = args['shortform']
+    autoemail = args['autoemail']
+
+    depts = Department.objects.filter(name=deptname)
+    if len(depts) > 1:
+      return logWith404(logger, 'APAddHandler fatal error: duplicate departments',\
+        level='error')
+    if len(depts) == 0:
+      resp = { \
+        "success" : False, \
+        "message" : "no department named %s" % deptname\
+      }
+      return bcap.bcapResponse(resp)
+    dept = depts[0]
+
+    positions = ApplicantPosition.objects.filter(department=dept, name=name)
+    if len(positions) > 0:
+      resp = {\
+        "success" : False,\
+        "message" : "position already exists"\
+      }
+      return bcap.bcapResponse(resp)
+
+    ap = ApplicantPosition(department=dept, name=name, shortform=shortform,\
+      autoemail=autoemail)
+    ap.save()
+    return bcap.bcapResponse({'success' : True})

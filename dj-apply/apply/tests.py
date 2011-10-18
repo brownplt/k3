@@ -5,6 +5,13 @@ from apply.views import *
 import belaylibs.dj_belay as bcap
 
 class ApplyTest(unittest.TestCase):
+  def makeCSDept(self):
+    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+      techEmail='tech@example.com')
+    cs.save()
+    self.department = cs
   def setUp(self):
     init = ApplyInit()
     init.process_request(None)
@@ -47,12 +54,7 @@ class TestNewReviewer(ApplyTest):
 class TestScoreCategory(ApplyTest):
   def setUp(self):
     super(TestScoreCategory, self).setUp()
-    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
-      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
-      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
-      techEmail='tech@example.com')
-    cs.save()
-    self.department = cs
+    self.makeCSDept()
 
   def testScoreCategory(self):
     args = {\
@@ -96,12 +98,7 @@ class TestScoreCategory(ApplyTest):
 class TestScoreValue(ApplyTest):
   def setUp(self):
     super(TestScoreValue, self).setUp()
-    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
-      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
-      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
-      techEmail='tech@example.com')
-    cs.save()
-    self.department = cs
+    self.makeCSDept()
     cat = ScoreCategory(name='TheCat', shortform='TC', department=self.department)
     cat.save()
     self.category = cat
@@ -124,3 +121,20 @@ class TestScoreValue(ApplyTest):
   def tearDown(self):
     self.department.delete()
     self.category.delete()
+
+class TestApplicantPosition(ApplyTest):
+  def setUp(self):
+    super(TestApplicantPosition, self).setUp()
+    self.makeCSDept()
+  
+  def testApplicantPosition(self):
+    addCap = bcap.grant('ap-add', None)
+    response = addCap.post({'department' : 'Computer Science', 'name' : 'Chairman',\
+      'shortform' : 'CH', 'autoemail' : False})
+    positions = ApplicantPosition.objects.filter(department=self.department,\
+      name='Chairman', shortform='CH', autoemail=False)
+    self.assertEquals(len(positions), 1)
+    positions.delete()
+
+  def tearDown(self):
+    self.department.delete()
