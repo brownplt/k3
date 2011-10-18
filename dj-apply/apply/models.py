@@ -141,7 +141,6 @@ class UnverifiedUser(bcap.Grantable):
   email = models.EmailField()
   name = models.TextField()
   role = models.TextField(choices=roles)
-  verify = models.IntegerField()
   department = models.ForeignKey(Department)
 
 class PendingHighlight(bcap.Grantable):

@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpR
 import os
 import logging
 import uuid
-from apply.models import ScoreCategory, ScoreValue, Score, Department
+from apply.models import *
 
 import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
@@ -34,19 +34,19 @@ class ApplyInit():
 # This is a relatively powerful capability --- it should only
 # be accessible from Admin views.
 class AddReviewerRequestHandler(bcap.CapHandler):
-  # granted: DepartmentInfo
-  # args: { 'name': str, 'email': str, 'committee': {'true', 'false'}}
-  def post(granted, args):
+  # granted: Department
+  # args: { 'name': str, 'email': str }
+  def post(self, granted, args):
+    department = granted.department
     unverified_reviewer = UnverifiedUser( \
       role='reviewer', \
       name=args['name'], \
       email=args['email'], \
-      committee=args['committee'] == 'true', \
-      department=granted)
+      department=department)
 
-    unverified_user.save()
+    unverified_reviewer.save()
     create_account = bcap.grant('add-reviewer', unverified_reviewer)
-    return bcapResponse(create_account)
+    return bcap.bcapResponse(create_account)
 
 # Adds a new relationship with a reviewer
 # One-shot capability
@@ -54,26 +54,27 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
   # granted: UnverifiedUser
   # args: any
   # (args are ignored, but post makes sense because of side-effects)
-  def post(granted, args):
+  def post(self, granted, args):
+    unverified_user = granted.unverifieduser
     if granted is None:
       return HttpResponseNotFound()
 
     auth_info = AuthInfo(
-      email=granted.email, \
-      name=granted.name, \
+      email=unverified_user.email, \
+      name=unverified_user.name, \
       role='reviewer', \
-      department=granted.department)
+      department=unverified_user.department)
     auth_info.save()
 
     reviewer = Reviewer(
       auth=auth_info, \
-      committee=granted.committee, \
-      department=granted.department)
+      committee=False, \
+      department=unverified_user.department)
     reviewer.save()
 
     # Remove the unverified_user---this is a one-shot request
     granted.delete()
-    return bcapNullResponse()
+    return bcap.bcapNullResponse()
 
 # Create a ScoreCategory and return caps for its handlers
 def scorecategory_test(request):

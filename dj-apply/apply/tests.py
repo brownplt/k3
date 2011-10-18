@@ -4,14 +4,6 @@ from apply.views import *
 
 import belaylibs.dj_belay as bcap
 
-class UselessTest(unittest.TestCase):
-  def setUp(self):
-    pass
-
-  def testUseless(self):
-    self.assertEqual('true', 'true')
-
-
 class TestNewReviewer(unittest.TestCase):
   def setUp(self):
     department = Department(
@@ -24,9 +16,12 @@ class TestNewReviewer(unittest.TestCase):
       techEmail="fake@bar")
     department.save()
     self.department = department
+    init = ApplyInit()
+    init.process_request(None)
 
   def testReviewerRequest(self):
     request_cap = bcap.grant('request-new-reviewer', self.department)    
+
     create_cap = request_cap.post({
       'name': 'Fake Reviewer',
       'email': 'reviewer@fake',
@@ -34,6 +29,13 @@ class TestNewReviewer(unittest.TestCase):
     })
     create_cap.post({})
     info = AuthInfo.objects.filter(email="reviewer@fake")
-    assertEqual(len(info), 1)
+    self.assertEqual(len(info), 1)
     revs = Reviewer.objects.filter(auth=info[0])
-    assertEqual(revs[0].committee, True)
+    self.assertEqual(revs[0].committee, False)
+
+    # The capability to create shouldn't work twice
+    try:
+      create_cap.post({})
+      self.assertTrue(False)
+    except:
+      self.assertTrue(True)
