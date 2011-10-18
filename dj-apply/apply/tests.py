@@ -47,14 +47,12 @@ class TestNewReviewer(ApplyTest):
 class TestScoreCategory(ApplyTest):
   def setUp(self):
     super(TestScoreCategory, self).setUp()
-    depts = Department.objects.filter(name='Computer Science')
-    if len(depts) == 0:
-      cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
-        headerImage='', logoImage='', resumeImage='', headerBgImage='',\
-        brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
-        techEmail='tech@example.com')
-      cs.save()
-      self.department = cs
+    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+      techEmail='tech@example.com')
+    cs.save()
+    self.department = cs
 
   def testScoreCategory(self):
     args = {\
@@ -91,3 +89,38 @@ class TestScoreCategory(ApplyTest):
     cats = ScoreCategory.objects.filter(name='Category Dos', shortform='CD',\
       department=self.department)
     self.assertEqual(len(cats), 0)
+
+  def tearDown(self):
+    self.department.delete()
+
+class TestScoreValue(ApplyTest):
+  def setUp(self):
+    super(TestScoreValue, self).setUp()
+    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+      techEmail='tech@example.com')
+    cs.save()
+    self.department = cs
+    cat = ScoreCategory(name='TheCat', shortform='TC', department=self.department)
+    cat.save()
+    self.category = cat
+    val = ScoreValue(category=self.category, number=0, explanation='because',\
+      department=self.department)
+    val.save()
+    self.value = val
+
+  def testScoreValue(self):
+    changeCap = bcap.grant('sv-change', self.value)
+    changeCap.post({'explanation' : 'because i said so'})
+    vals = ScoreValue.objects.filter(category=self.category, number=0,\
+      explanation='because')
+    self.assertEqual(len(vals), 0)
+    vals = ScoreValue.objects.filter(category=self.category, number=0,\
+      explanation='because i said so')
+    self.assertEqual(len(vals), 1)
+    vals.delete()
+
+  def tearDown(self):
+    self.department.delete()
+    self.category.delete()

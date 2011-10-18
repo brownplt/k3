@@ -23,7 +23,8 @@ class ApplyInit():
     bcap.set_handlers(bcap.default_prefix, \
       { 'sc-delete' : SCDeleteHandler, \
         'sc-change' : SCChangeHandler, \
-        'sc-add' : SCAddHandler,
+        'sc-add' : SCAddHandler,\
+        'sv-change' : SVChangeHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
         'request-new-reviewer': AddReviewerRequestHandler })
     return None
@@ -147,3 +148,13 @@ class SCAddHandler(bcap.CapHandler):
       "delete" : delCap\
     }
     return bcap.bcapResponse(resp)
+
+class SVChangeHandler(bcap.CapHandler):
+  def post(self, grantable, args):
+    if not args.has_key('explanation'):
+      return logWith404(logger, 'SVChangeHandler: post args missing explanation')
+    sv = grantable.scorevalue
+    explanation = args['explanation']
+    sv.explanation = explanation
+    sv.save()
+    return bcap.bcapNullResponse()
