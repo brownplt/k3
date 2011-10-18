@@ -6,25 +6,8 @@ import uuid
 from apply.models import ScoreCategory, ScoreValue, Score, Department
 
 import belaylibs.dj_belay as bcap
+from lib.py.common import logWith404
 from belaylibs.models import Grant
-
-logger = logging.getLogger('default')
-
-def logWith404(msg, level='info'):
-  if level == 'debug':
-    logger.debug(msg)
-  if level == 'info':
-    logger.info(msg)
-  elif level == 'warn':
-    logger.warn(msg)
-  elif level == 'error':
-    logger.error(msg)
-  elif level == 'critical':
-    logger.critical(msg)
-  else:
-    logger.warn('logWith404: invalid log level %s' % level)
-    logger.warn('message was: ' % msg)
-  return HttpResponseNotFound()
 
 logger = logging.getLogger('default')
 
@@ -50,15 +33,15 @@ def scorecategory_test(request):
 
   args = bcap.dataPostProcess(request.read())
   if not (args.has_key('name')):
-    return logWith404('scorecategory_test: post args missing name')
+    return logWith404(logger, 'scorecategory_test: post args missing name')
   if not (args.has_key('shortform')):
-    return logWith404('scorecategory_test: post args missing shortform')
+    return logWith404(logger, 'scorecategory_test: post args missing shortform')
   if not (args.has_key('department')):
-    return logWith404('scorecategory_test: post args missing department')
+    return logWith404(logger, 'scorecategory_test: post args missing department')
 
   depts = Department.objects.filter(name=args['department'])
   if len(depts) > 1:
-    return logWith404('scorecategory_test: fatal error: multiple departments \
+    return logWith404(logger, 'scorecategory_test: fatal error: multiple departments \
         with name = %s' % args['department'], level='error')
   if len(depts) == 0:
     department = Department(name=args['department'], shortname=args['department'],\
