@@ -37,3 +37,33 @@ class TestNewReviewer(unittest.TestCase):
     assertEqual(len(info), 1)
     revs = Reviewer.objects.filter(auth=info[0])
     assertEqual(revs[0].committee, True)
+
+class TestScoreCategory(unittest.TestCase):
+  def setUp(self):
+    depts = Department.objects.filter(name='Computer Science')
+    if len(depts) == 0:
+      cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+        headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+        brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+        techEmail='tech@example.com')
+      cs.save()
+      self.department = cs
+
+  def testScoreCategory(self):
+    args = {\
+      'name' : 'Category Uno',\
+      'shortform' : 'CU',\
+      'department' : 'Computer Science'\
+    }
+
+    addHandler = SCAddHandler()
+    response = bcap.dataPostProcess(addHandler.post(None, args).content)
+
+    hasChange = response.has_key('change')
+    hasDelete = response.has_key('delete')
+    self.assertTrue(hasChange and hasDelete and response['success'])
+
+    
+    cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
+      department=self.department)
+    self.assertEqual(len(cats), 1)

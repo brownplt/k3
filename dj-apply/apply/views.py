@@ -103,14 +103,15 @@ class SCAddHandler(bcap.CapHandler):
 
     name = args['name'] 
     short = args['shortform']
-    depts = Department.objects.filter(name=name)
+    deptname = args['department']
+    depts = Department.objects.filter(name=deptname)
     if len(depts) > 1:
       return logWith404(logger, 'SCChangeHandler fatal error: duplicate departments',\
         level='error')
     if len(depts) == 0:
       resp = { \
         "success" : False, \
-        "message" : "no department named %s" % args['department']\
+        "message" : "no department named %s" % deptname\
       }
       return bcap.bcapResponse(resp)
     dept = depts[0]
