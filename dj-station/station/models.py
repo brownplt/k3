@@ -9,6 +9,7 @@ class LaunchInfo(bcap.Grantable):
   domain = models.CharField(max_length=200)
   url = models.CharField(max_length=200)
   private_data = models.TextField()
+  public_data = models.TextField()
 
 class Relationship(bcap.Grantable):
   station = models.ForeignKey(bcap.Grantable, related_name="station")

@@ -6,8 +6,16 @@
 <script src="lib/js/caps.js"></script>
 <script src="lib/js/common.js"></script>
 <script src="belay-frame.js"></script>
+<style>
+#login-frame {
+  display: none;
+}
+#account-frame {
+  display: none;
+}
+</style>
 <body>
-<div id="belay-frame">
+<div id="login-frame">
 <p>
 <a href="/glogin"><button id="glogin" style="width:20em;height:5em;font-size:larger">Log in with Google</button></a>
 </p>
@@ -18,6 +26,11 @@
 </p>
 </div>
 </div>
+</div>
+<div id="account-frame">
+  <h2>
+    Your Existing Accounts:
+  </h2>
 </div>
 </body>
 </html>

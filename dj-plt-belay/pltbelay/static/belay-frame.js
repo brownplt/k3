@@ -1,7 +1,9 @@
 $(function() {
+  var stashURL = COMMON.urlPrefix + '/make-stash/';
   var stationInfo;
   var clientLocation;
   var capServer = new CapServer(newUUIDv4());
+  var stash = capServer.restore(stashURL);
 
   function get_station(k) {
     $.ajax('/get_station', {
@@ -27,14 +29,17 @@ $(function() {
           console.log('Logged in');
           get_station(function(station) {
             capServer.restore(station).get(function(station_info) {
-              stationInfo = station;
+              stationInfo = station_info;
               if(clientLocation) go();
             },
             function(err) {
               console.log('Couldn\'t get station info: ', err);
             });
           });
-        } 
+        }
+        else {
+          $('#login-frame').show();
+        }
       },
       function(response) {
         console.log("Getting logged in status failed: ", {r : response});
@@ -52,6 +57,46 @@ $(function() {
     if(stationInfo) go();
   });
 
+  function launch(launchInfo) {
+    console.log('Launching: ', launchInfo);
+    stash.post({
+      sessionID: sessionID,
+      private_data: launchInfo.private_data
+    },
+    function(restoreCap) {
+      var nav = launchInfo.domain +
+                launchInfo.url +
+                "#" +
+                encodeURI(restoreCap.serialize());
+      console.log('Nav: ', nav);
+      window.parent.location.href = nav;
+    },
+    function(err) { 
+      console.log('Make-stash failed: ', err);
+    });
+  }
+
+
+  function instanceChoice(instanceInfos) {
+    var accountsDiv = $('#account-frame');
+    console.log('choicing: ', instanceInfos);
+    accountsDiv.show();
+    instanceInfos.forEach(function(instance) {
+      instance.get(function(instanceInfo) {
+        var elt = $('<button></button>');
+        if(typeof instanceInfo.public_data === 'string') {
+          elt.html(instanceInfo.public_data);
+        }
+        else { return; } // Don't show the relationship
+        console.log('Appending: ', elt);
+        accountsDiv.append(elt);
+        elt.click(function() {
+          launch(instanceInfo);
+        });
+      });
+    });
+  }
+
   function go() {
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
@@ -61,20 +106,20 @@ $(function() {
       }
     });
     tunnel.setLocalResolver(function() { return capServer.publicInterface; });
+    console.log('StationInfo: ', stationInfo);
+
+    stationInfo.instances.get(function(instanceInfos) {
+      console.log(instanceInfos);
+      if(instanceInfos.length > 0) {
+        instanceChoice(instanceInfos);
+      }
+    });
+
     tunnel.sendOutpost(capServer.dataPreProcess({
       services: {
         becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
           stationInfo.newInstance.post(launchInfo, function(launched) {
-            capServer.restore('http://' + window.location.host + '/make-stash/').post(launchInfo.private_data,
-              function(restoreCap, status, xhr) {
-                var nav = launchInfo.domain +
-                          launchInfo.url +
-                          "#" +
-                          encodeURI(restoreCap.serialize());
-                console.log('Nav: ', nav);
-                window.parent.location.href = nav;
-              });
-            sk('success');
+            launch(launchInfo);
           },
           function(err) {
             console.log('belay_frame: Failed to create new instance: ', err);
