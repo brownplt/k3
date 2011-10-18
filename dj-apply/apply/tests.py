@@ -4,8 +4,14 @@ from apply.views import *
 
 import belaylibs.dj_belay as bcap
 
-class TestNewReviewer(unittest.TestCase):
+class ApplyTest(unittest.TestCase):
   def setUp(self):
+    init = ApplyInit()
+    init.process_request(None)
+
+class TestNewReviewer(ApplyTest):
+  def setUp(self):
+    super(TestNewReviewer, self).setUp()
     department = Department(
       name="Brown Department of Horticulture", \
       shortname="bhort", \
@@ -16,8 +22,6 @@ class TestNewReviewer(unittest.TestCase):
       techEmail="fake@bar")
     department.save()
     self.department = department
-    init = ApplyInit()
-    init.process_request(None)
 
   def testReviewerRequest(self):
     request_cap = bcap.grant('request-new-reviewer', self.department)    
@@ -40,8 +44,9 @@ class TestNewReviewer(unittest.TestCase):
     except:
       self.assertTrue(True)
 
-class TestScoreCategory(unittest.TestCase):
+class TestScoreCategory(ApplyTest):
   def setUp(self):
+    super(TestScoreCategory, self).setUp()
     depts = Department.objects.filter(name='Computer Science')
     if len(depts) == 0:
       cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
@@ -50,8 +55,6 @@ class TestScoreCategory(unittest.TestCase):
         techEmail='tech@example.com')
       cs.save()
       self.department = cs
-      init = ApplyInit()
-      init.process_request(None)
 
   def testScoreCategory(self):
     args = {\
