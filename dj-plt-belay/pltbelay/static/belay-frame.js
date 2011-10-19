@@ -6,7 +6,7 @@ $(function() {
   var stash = capServer.restore(stashURL);
 
   function get_station(k) {
-    $.ajax('/get_station', {
+    $.ajax('/get_station/', {
       type: 'GET',
       success: function(data, status, xhr) {
         k(data);
