@@ -26,9 +26,15 @@ class ApplyInit():
         'sc-add' : SCAddHandler,\
         'sv-change' : SVChangeHandler,\
         'ap-add' : APAddHandler,\
-        'add-reviewer': AddReviewerRelationshipHandler,
+        'add-reviewer': AddReviewerRelationshipHandler,\
         'request-new-reviewer': AddReviewerRequestHandler })
     return None
+
+def checkPostArgs(classname, args, keys):
+  for k in keys:
+    if not args.has_key(k):
+      return logWith404(classname + ' error: post args missing ' + k)
+  return 'OK'
 
 # Gets a capability that is handed off to will-be reviewers.
 # It will be included in the fragment on a page that asks them
@@ -106,12 +112,10 @@ class SCChangeHandler(bcap.CapHandler):
 
 class SCAddHandler(bcap.CapHandler):
   def post(self, grantable, args):
-    if not args.has_key('name'):
-      return logWith404(logger, 'SCChangeHandler: post args missing name')
-    if not args.has_key('shortform'):
-      return logWith404(logger, 'SCChangeHandler: post args missing shortform')
-    if not args.has_key('department'):
-      return logWith404(logger, 'SCChangeHandler: post args missing department')
+    postkeys = ['name', 'shortform', 'department']
+    response = checkPostArgs('SCChangeHandler', args, postkeys)
+    if response != 'OK':
+      return response
 
     name = args['name'] 
     short = args['shortform']
@@ -162,14 +166,10 @@ class SVChangeHandler(bcap.CapHandler):
 
 class APAddHandler(bcap.CapHandler):
   def post(self, grantable, args):
-    if not args.has_key('department'):
-      return logWith404(logger, 'APAddHandler: post args missing department')
-    if not args.has_key('name'):
-      return logWith404(logger, 'APAddHandler: post args missing name')
-    if not args.has_key('shortform'):
-      return logWith404(logger, 'APAddHandler: post args missing shortform')
-    if not args.has_key('autoemail'):
-      return logWith404(logger, 'APAddHandler: post args missing autoemail')
+    postkeys = ['department', 'name', 'shortform', 'autoemail']
+    response = checkPostArgs('APAddHandler', args, postkeys)
+    if response != 'OK':
+      return response
 
     deptname = args['department']
     name = args['name']
