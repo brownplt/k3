@@ -175,7 +175,6 @@ class SVChangeHandler(bcap.CapHandler):
     sv.save()
     return bcap.bcapNullResponse()
 
-<<<<<<< HEAD
 class APAddHandler(bcap.CapHandler):
   def post(self, grantable, args):
     if not args.has_key('department'):
@@ -216,5 +215,3 @@ class APAddHandler(bcap.CapHandler):
       autoemail=autoemail)
     ap.save()
     return bcap.bcapResponse({'success' : True})
-=======
->>>>>>> start getting a frontend working for new reviewers
