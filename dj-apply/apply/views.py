@@ -36,6 +36,23 @@ def checkPostArgs(classname, args, keys):
       return logWith404(classname + ' error: post args missing ' + k)
   return 'OK'
 
+# Search for a department with name=dept_name and handle errors
+# Returns (success, <department or response>)
+def findDepartment(class_name, dept_name):
+  depts = Department.objects.filter(name=dept_name)
+  if len(depts) > 1:
+    resp = logWith404(logger, class_name + ' fatal error: duplicate departments',\
+      level='error')
+    return (False, resp)
+  if len(depts) == 0:
+    resp = { \
+      "success" : False, \
+      "message" : "no department named %s" % deptname\
+    }
+    return (False, bcap.bcapResponse(resp))
+  dept = depts[0]
+  return (True, dept)
+
 # Gets a capability that is handed off to will-be reviewers.
 # It will be included in the fragment on a page that asks them
 # for information and creates their relationship.
@@ -120,17 +137,10 @@ class SCAddHandler(bcap.CapHandler):
     name = args['name'] 
     short = args['shortform']
     deptname = args['department']
-    depts = Department.objects.filter(name=deptname)
-    if len(depts) > 1:
-      return logWith404(logger, 'SCChangeHandler fatal error: duplicate departments',\
-        level='error')
-    if len(depts) == 0:
-      resp = { \
-        "success" : False, \
-        "message" : "no department named %s" % deptname\
-      }
-      return bcap.bcapResponse(resp)
-    dept = depts[0]
+    (success, dept_or_response) = findDepartment('SCAddHandler', deptname)
+    if not success:
+      return dept_or_response
+    dept = dept_or_response
 
     categories = ScoreCategory.objects.filter(department=dept, name=name, \
       shortform=short)
@@ -176,17 +186,10 @@ class APAddHandler(bcap.CapHandler):
     shortform = args['shortform']
     autoemail = args['autoemail']
 
-    depts = Department.objects.filter(name=deptname)
-    if len(depts) > 1:
-      return logWith404(logger, 'APAddHandler fatal error: duplicate departments',\
-        level='error')
-    if len(depts) == 0:
-      resp = { \
-        "success" : False, \
-        "message" : "no department named %s" % deptname\
-      }
-      return bcap.bcapResponse(resp)
-    dept = depts[0]
+    (success, dept_or_response) = findDepartment('APAddHandler', deptname)
+    if not success:
+      return dept_or_response
+    dept = dept_or_response
 
     positions = ApplicantPosition.objects.filter(department=dept, name=name)
     if len(positions) > 0:
