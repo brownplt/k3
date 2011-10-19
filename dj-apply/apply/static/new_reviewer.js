@@ -3,7 +3,7 @@ $(function() {
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
     frame.attr({
-      'src': 'http://localhost:8000/static/belay-frame.html',
+      'src': COMMON.belayFrame,
       'name': 'belay'
     });
     frame.css({

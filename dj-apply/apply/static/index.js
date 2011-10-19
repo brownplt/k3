@@ -3,7 +3,7 @@ $(function() {
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
     frame.attr({
-      'src': 'http://localhost:8000/static/belay-frame.html',
+      'src': COMMON.belayFrame,
       'name': 'belay'
     });
     frame.css({
@@ -25,7 +25,7 @@ $(function() {
   function createAccount(email) {
     console.log('Becoming instance');
     belayBrowser.becomeInstance.post({
-      domain: 'http://localhost:8001',
+      domain: COMMON.urlPrefix,
       url: '/static/application.html',
       private_data: 'hello world!',
       public_data: 'Application for ' + email
