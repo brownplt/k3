@@ -138,3 +138,30 @@ class TestApplicantPosition(ApplyTest):
 
   def tearDown(self):
     self.department.delete()
+
+class TestArea(ApplyTest):
+  def setUp(self):
+    super(TestArea, self).setUp()
+    self.makeCSDept()
+
+  def testArea(self):
+    addCap = bcap.grant('ar-add', None)
+    response = addCap.post({\
+      'name' : 'The Area',\
+      'abbr' : 'TA', \
+      'department' : 'Computer Science'\
+    })
+    self.assertTrue(response['success'] and response.has_key('delete'))
+    areas = Area.objects.filter(name='The Area', abbr='TA', \
+      department=self.department)
+    self.assertEqual(len(areas), 1)
+
+    delCap = response['delete']
+    delCap.delete()
+    areas = Area.objects.filter(name='The Area', abbr='TA', \
+      department=self.department)
+    self.assertEqual(len(areas), 0)
+
+  def tearDown(self):
+    self.department.delete()
+    

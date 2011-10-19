@@ -26,6 +26,8 @@ class ApplyInit():
         'sc-add' : SCAddHandler,\
         'sv-change' : SVChangeHandler,\
         'ap-add' : APAddHandler,\
+        'ar-add' : ARAddHandler,\
+        'ar-delete' : ARDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,\
         'request-new-reviewer': AddReviewerRequestHandler })
     return None
@@ -203,3 +205,43 @@ class APAddHandler(bcap.CapHandler):
       autoemail=autoemail)
     ap.save()
     return bcap.bcapResponse({'success' : True})
+
+class ARAddHandler(bcap.CapHandler):
+  def post(self, grantable, args):
+    postkeys = ['name', 'abbr', 'department']
+    response = checkPostArgs('ARAddHandler', args, postkeys)
+    if response != 'OK':
+      return response
+
+    name = args['name']
+    abbr = args['abbr']
+    deptname = args['department']
+
+    (success, dept_or_response) = findDepartment('ARAddHandler', deptname)
+    if not success:
+      return dept_or_response
+    dept = dept_or_response
+
+    areas = Area.objects.filter(department=dept, abbr=abbr, name=name)
+    if len(areas) > 0:
+      resp = {\
+        "success" : False,\
+        "message" : "area already exists"\
+      }
+      return bcap.bcapResponse(resp)
+
+    area = Area(department=dept, name=name, abbr=abbr)
+    area.save()
+
+    delCap = bcap.grant('ar-delete', area)
+    return bcap.bcapResponse({'success' : True, 'delete' : delCap})
+
+class ARDeleteHandler(bcap.CapHandler):
+  def delete(self, grantable):
+    grants = Grant.objects.filter(db_entity=grantable)
+    if len(grants) == 0:
+      return logWith404(logger, 'ARDeleteHandler fatal error: no grant')
+    area = grantable.area
+    area.delete()
+    grants.delete()
+    return bcap.bcapNullResponse()
