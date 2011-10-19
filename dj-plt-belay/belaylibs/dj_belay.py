@@ -24,6 +24,7 @@ import httplib
 import settings
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest
+from lib.py.common import logWith404
 
 from models import Grant
 
@@ -150,6 +151,17 @@ class CapHandler(object):
   methods = ['get', 'put', 'post', 'delete']
   def allowedMethods(self):
     return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
+
+  def post_arg_names(self):
+    return []
+  def name_str(self):
+    return 'CapHandler'
+  def checkPostArgs(self, args):
+    for k in self.post_arg_names():
+      if not args.has_key(k):
+        return logWith404(logger, self.name_str() + ' error: post args missing ' + k)
+    return 'OK'
+
   def get(self, grantable):
     return HttpResponseNotAllowed(self.allowedMethods())
   def put(self, grantable, args):

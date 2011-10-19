@@ -4,7 +4,7 @@ import os
 import logging
 import uuid
 from apply.models import *
-
+from django.db import IntegrityError
 import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
 from belaylibs.models import Grant
@@ -27,13 +27,13 @@ def new_reviewer_handler(request):
 class ApplyInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, \
-      { 'sc-delete' : SCDeleteHandler, \
-        'sc-change' : SCChangeHandler, \
-        'sc-add' : SCAddHandler,\
-        'sv-change' : SVChangeHandler,\
-        'ap-add' : APAddHandler,\
-        'ar-add' : ARAddHandler,\
-        'ar-delete' : ARDeleteHandler,\
+      { 'scorecategory-delete' : ScoreCategoryDeleteHandler, \
+        'scorecategory-change' : ScoreCategoryChangeHandler, \
+        'scorecategory-add' : ScoreCategoryAddHandler,\
+        'scorevalue-change' : ScoreValueChangeHandler,\
+        'applicantposition-add' : ApplicantPositionAddHandler,\
+        'area-add' : AreaAddHandler,\
+        'area-delete' : AreaDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
         'request-new-reviewer': AddReviewerRequestHandler,
         'launch-reviewer': ReviewerLaunchHandler })
@@ -118,135 +118,128 @@ class ReviewerLaunchHandler(bcap.CapHandler):
   def get(self, granted, args):
     return bcap.bcapNullResponse()
 
-class SCDeleteHandler(bcap.CapHandler):
+class ScoreCategoryDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
     grants = Grant.objects.filter(db_entity=grantable)
     if len(grants) == 0:
-      return logWith404(logger, 'SCDeleteHandler fatal error: no grant')
-    sc = grantable.scorecategory
-    sc.delete()
+      return logWith404(logger, 'ScoreCategoryDeleteHandler fatal error: no grant')
+    grantable.scorecategory.delete()
     return bcap.bcapNullResponse()
 
-class SCChangeHandler(bcap.CapHandler):
+class ScoreCategoryChangeHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'shortform']
+
+  def name_str(self):
+    return 'ScoreCategoryChangeHandler'
+
   def post(self, grantable, args):
-    if not args.has_key('name'):
-      return logWith404(logger, 'SCChangeHandler: post args missing name')
-    if not args.has_key('shortform'):
-      return logWith404(logger, 'SCChangeHandler: post args missing shortform')
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
     sc = grantable.scorecategory
     sc.name = args['name']
     sc.shortform = args['shortform']
     sc.save()
     return bcap.bcapNullResponse() 
 
-class SCAddHandler(bcap.CapHandler):
+class ScoreCategoryAddHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'shortform']
+
+  def name_str(self):
+    return 'ScoreCategoryAddHandler'
+
   def post(self, grantable, args):
-    postkeys = ['name', 'shortform', 'department']
-    response = checkPostArgs('SCChangeHandler', args, postkeys)
+    response = self.checkPostArgs(args)
     if response != 'OK':
       return response
 
-    name = args['name'] 
-    short = args['shortform']
-    deptname = args['department']
-    (success, dept_or_response) = findDepartment('SCAddHandler', deptname)
-    if not success:
-      return dept_or_response
-    dept = dept_or_response
-
-    categories = ScoreCategory.objects.filter(department=dept, name=name, \
-      shortform=short)
-    if len(categories) > 0:
-      resp = {\
-        "success" : False,\
-        "message" : "category already exists"\
-      }
+    name = args['name']
+    shortform = args['shortform']
+    
+    sc = ScoreCategory(department=grantable.department, name=name, \
+      shortform=shortform)
+    try:
+      sc.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'category already exists'}
       return bcap.bcapResponse(resp)
 
-    sc = ScoreCategory(department=dept, name=name, shortform=short)
-    sc.save()
+    delCap = bcap.grant('scorecategory-delete', sc)
+    changeCap = bcap.grant('scorecategory-change', sc)
 
-    delCap = bcap.grant('sc-delete', sc)
-    changeCap = bcap.grant('sc-change', sc)
-
-    resp = {\
-      "success" : True,\
-      "change" : changeCap,\
-      "delete" : delCap\
-    }
+    resp = {"success" : True, "change" : changeCap, "delete" : delCap}
     return bcap.bcapResponse(resp)
 
-class SVChangeHandler(bcap.CapHandler):
+class ScoreValueChangeHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['explanation']
+
+  def name_str(self):
+    return 'ScoreValueChangeHandler'
+
   def post(self, grantable, args):
-    if not args.has_key('explanation'):
-      return logWith404(logger, 'SVChangeHandler: post args missing explanation')
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
     sv = grantable.scorevalue
-    explanation = args['explanation']
-    sv.explanation = explanation
+    sv.explanation = args['explanation']
     sv.save()
     return bcap.bcapNullResponse()
 
-class APAddHandler(bcap.CapHandler):
+class ApplicantPositionAddHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'shortform', 'autoemail']
+
+  def name_str(self):
+    return 'ApplicantPositionAddHandler'
+
   def post(self, grantable, args):
-    postkeys = ['department', 'name', 'shortform', 'autoemail']
-    response = checkPostArgs('APAddHandler', args, postkeys)
+    response = self.checkPostArgs(args)
     if response != 'OK':
       return response
 
-    deptname = args['department']
     name = args['name']
     shortform = args['shortform']
     autoemail = args['autoemail']
 
-    (success, dept_or_response) = findDepartment('APAddHandler', deptname)
-    if not success:
-      return dept_or_response
-    dept = dept_or_response
-
-    positions = ApplicantPosition.objects.filter(department=dept, name=name)
-    if len(positions) > 0:
-      resp = {\
-        "success" : False,\
-        "message" : "position already exists"\
-      }
+    position = ApplicantPosition(department=grantable.department, name=name,\
+      shortform=shortform)
+    try:
+      position.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'position already exists'}
       return bcap.bcapResponse(resp)
 
-    ap = ApplicantPosition(department=dept, name=name, shortform=shortform,\
-      autoemail=autoemail)
-    ap.save()
     return bcap.bcapResponse({'success' : True})
 
-class ARAddHandler(bcap.CapHandler):
+class AreaAddHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'abbr']
+
+  def name_str(self):
+    return 'AreaAddHandler'
+
   def post(self, grantable, args):
-    postkeys = ['name', 'abbr', 'department']
-    response = checkPostArgs('ARAddHandler', args, postkeys)
+    response = self.checkPostArgs(args)
     if response != 'OK':
       return response
 
     name = args['name']
     abbr = args['abbr']
-    deptname = args['department']
-
-    (success, dept_or_response) = findDepartment('ARAddHandler', deptname)
-    if not success:
-      return dept_or_response
-    dept = dept_or_response
-
-    areas = Area.objects.filter(department=dept, abbr=abbr, name=name)
-    if len(areas) > 0:
-      resp = {\
-        "success" : False,\
-        "message" : "area already exists"\
-      }
+    
+    area = Area(department=grantable.department, name=name, abbr=abbr)
+    try:
+      area.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'area already exists'}
       return bcap.bcapResponse(resp)
 
-    area = Area(department=dept, name=name, abbr=abbr)
-    area.save()
-
-    delCap = bcap.grant('ar-delete', area)
+    delCap = bcap.grant('area-delete', area)
     return bcap.bcapResponse({'success' : True, 'delete' : delCap})
 
-class ARDeleteHandler(bcap.CapHandler):
+class AreaDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
     grants = Grant.objects.filter(db_entity=grantable)
     if len(grants) == 0:

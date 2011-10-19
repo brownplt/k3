@@ -64,10 +64,9 @@ class TestScoreCategory(ApplyTest):
     args = {\
       'name' : 'Category Uno',\
       'shortform' : 'CU',\
-      'department' : 'Computer Science'\
     }
 
-    addCap = bcap.grant('sc-add', None)
+    addCap = bcap.grant('scorecategory-add', self.department)
     response = addCap.post(args)
 
     hasChange = response.has_key('change')
@@ -112,7 +111,7 @@ class TestScoreValue(ApplyTest):
     self.value = val
 
   def testScoreValue(self):
-    changeCap = bcap.grant('sv-change', self.value)
+    changeCap = bcap.grant('scorevalue-change', self.value)
     changeCap.post({'explanation' : 'because i said so'})
     vals = ScoreValue.objects.filter(category=self.category, number=0,\
       explanation='because')
@@ -132,9 +131,9 @@ class TestApplicantPosition(ApplyTest):
     self.makeCSDept()
   
   def testApplicantPosition(self):
-    addCap = bcap.grant('ap-add', None)
-    response = addCap.post({'department' : 'Computer Science', 'name' : 'Chairman',\
-      'shortform' : 'CH', 'autoemail' : False})
+    addCap = bcap.grant('applicantposition-add', self.department)
+    response = addCap.post({'name' : 'Chairman', 'shortform' : 'CH',\
+      'autoemail' : False})
     positions = ApplicantPosition.objects.filter(department=self.department,\
       name='Chairman', shortform='CH', autoemail=False)
     self.assertEquals(len(positions), 1)
@@ -149,11 +148,10 @@ class TestArea(ApplyTest):
     self.makeCSDept()
 
   def testArea(self):
-    addCap = bcap.grant('ar-add', None)
+    addCap = bcap.grant('area-add', self.department)
     response = addCap.post({\
       'name' : 'The Area',\
       'abbr' : 'TA', \
-      'department' : 'Computer Science'\
     })
     self.assertTrue(response['success'] and response.has_key('delete'))
     areas = Area.objects.filter(name='The Area', abbr='TA', \
