@@ -124,12 +124,7 @@ class SCDeleteHandler(bcap.CapHandler):
     if len(grants) == 0:
       return logWith404(logger, 'SCDeleteHandler fatal error: no grant')
     sc = grantable.scorecategory
-    values = ScoreValue.objects.filter(category=sc)
-    for v in values:
-      Score.objects.filter(value=v).delete()
-      v.delete()
     sc.delete()
-    grants.delete()
     return bcap.bcapNullResponse()
 
 class SCChangeHandler(bcap.CapHandler):
@@ -258,5 +253,4 @@ class ARDeleteHandler(bcap.CapHandler):
       return logWith404(logger, 'ARDeleteHandler fatal error: no grant')
     area = grantable.area
     area.delete()
-    grants.delete()
     return bcap.bcapNullResponse()
