@@ -38,11 +38,15 @@ class TestNewReviewer(ApplyTest):
       'email': 'reviewer@fake',
       'committee': 'true'
     })
-    create_cap.post({})
+    reviewer_info = create_cap.post({})
     info = AuthInfo.objects.filter(email="reviewer@fake")
     self.assertEqual(len(info), 1)
     revs = Reviewer.objects.filter(auth=info[0])
     self.assertEqual(revs[0].committee, False)
+
+    self.assertTrue(isinstance(reviewer_info['launchCap'], bcap.Capability))
+    self.assertEqual(reviewer_info['name'], 'Fake Reviewer')
+    self.assertEqual(reviewer_info['email'], 'reviewer@fake')
 
     # The capability to create shouldn't work twice
     try:
