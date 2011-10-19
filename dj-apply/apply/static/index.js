@@ -17,7 +17,6 @@ $(function() {
   }
   function addFrame(frame) {
     var right = $('.right-part');
-    console.log('Adding frame');
     right.append(frame);
   }
 
