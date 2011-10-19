@@ -202,6 +202,7 @@ def set_handlers(cap_prefix, path_map):
     cap_prefix += '/'
   
   handlerData.prefix = this_server_url_prefix() + cap_prefix
+  handlerData.cap_prefix = cap_prefix
   handlerData.prefix_strip_length = len(handlerData.prefix)
   handlerData.is_set = True
 
@@ -274,7 +275,8 @@ def proxyHandler(request):
   if request.method == 'OPTIONS':
     return options()
   else:
-    return handle(request.path_info, request.method, args)
+    return handle(request.path_info[len(handlerData.cap_prefix):], \
+        request.method, args)
 
 def grant(path, entity):
   cap_id = str(uuid.uuid4())

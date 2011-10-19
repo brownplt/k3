@@ -17,6 +17,12 @@ def applicant_handler(request):
 
   return render_to_response('applicant.html', {})
 
+def new_reviewer_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllowed['GET']
+
+  return render_to_response('new_reviewer.html', {})
+
 # Django middleware class to set handlers on every request
 class ApplyInit():
   def process_request(self, request):
@@ -28,8 +34,9 @@ class ApplyInit():
         'ap-add' : APAddHandler,\
         'ar-add' : ARAddHandler,\
         'ar-delete' : ARDeleteHandler,\
-        'add-reviewer': AddReviewerRelationshipHandler,\
-        'request-new-reviewer': AddReviewerRequestHandler })
+        'add-reviewer': AddReviewerRelationshipHandler,
+        'request-new-reviewer': AddReviewerRequestHandler,
+        'launch-reviewer': ReviewerLaunchHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -79,8 +86,6 @@ class AddReviewerRequestHandler(bcap.CapHandler):
 # One-shot capability
 class AddReviewerRelationshipHandler(bcap.CapHandler):
   # granted: UnverifiedUser
-  # args: any
-  # (args are ignored, but post makes sense because of side-effects)
   def post(self, granted, args):
     unverified_user = granted.unverifieduser
     if granted is None:
@@ -101,6 +106,16 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
 
     # Remove the unverified_user---this is a one-shot request
     granted.delete()
+    # This is the capability to put in launch_info
+    launch = bcap.grant('launch-reviewer', reviewer)
+    return bcap.bcapResponse({
+      'name': auth_info.name,
+      'email': auth_info.email,
+      'launchCap': launch
+    })
+
+class ReviewerLaunchHandler(bcap.CapHandler):
+  def get(self, granted, args):
     return bcap.bcapNullResponse()
 
 class SCDeleteHandler(bcap.CapHandler):

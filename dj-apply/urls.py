@@ -7,6 +7,7 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('',
   (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
   (r'applicant/', 'apply.views.applicant_handler'),
-  #(r'generate_data/', 'apply.generate.generate'),
+  (r'new-reviewer/', 'apply.views.new_reviewer_handler'),
+  (r'common.js', 'lib.py.common_js.common_js_handler')
 )
 
