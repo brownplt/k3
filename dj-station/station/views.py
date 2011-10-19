@@ -15,9 +15,9 @@ class StationInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, \
         {'launch' : LaunchHandler, \
-          'new_instance' : NewInstanceHandler, \
-          'instance' : InstanceHandler, \
-          'instances' : InstancesHandler})
+         'new_instance' : NewInstanceHandler, \
+         'instance' : InstanceHandler, \
+         'instances' : InstancesHandler})
     return None
 
 def generate(request):
