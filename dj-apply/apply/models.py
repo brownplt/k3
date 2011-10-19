@@ -6,8 +6,8 @@ from django.db import models
 # can we instead have ImageFields to store them in the DB as binary
 # blobs?
 class Department(bcap.Grantable):
-  name = models.TextField(unique=True)
-  shortname = models.TextField(unique=True)
+  name = models.TextField()
+  shortname = models.TextField()
   lastChange = models.IntegerField()
   headerImage = models.FilePathField(blank=True)
   logoImage = models.FilePathField(blank=True)
@@ -30,6 +30,8 @@ class AuthInfo(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class ApplicantPosition(bcap.Grantable):
+  class Meta:
+    unique_together = (('department', 'name'))
   department = models.ForeignKey(Department)
   name = models.TextField()
   shortform = models.TextField()
@@ -85,6 +87,8 @@ class ApplicantInstitution(bcap.Grantable):
   transcript_official = models.BooleanField(default=False)
 
 class ScoreCategory(bcap.Grantable):
+  class Meta:
+    unique_together = (('department', 'name'))
   name = models.TextField()
   shortform = models.TextField()
   department = models.ForeignKey(Department)
@@ -123,6 +127,8 @@ class Score(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Area(bcap.Grantable):
+  class Meta:
+    unique_together = (('department', 'name'))
   name = models.TextField()
   abbr = models.TextField()
   department = models.ForeignKey(Department)
