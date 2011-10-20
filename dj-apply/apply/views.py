@@ -35,6 +35,7 @@ class ApplyInit():
         'area-add' : AreaAddHandler,\
         'area-delete' : AreaDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
+        'add-admin': AddAdminRelationshipHandler,
         'request-new-reviewer': AddReviewerRequestHandler,
         'launch-reviewer': ReviewerLaunchHandler })
     return None
@@ -82,6 +83,33 @@ class AddReviewerRequestHandler(bcap.CapHandler):
     create_account = bcap.grant('add-reviewer', unverified_reviewer)
     return bcap.bcapResponse(create_account)
 
+# Adds a new relationship with an admin
+# One-shot capability
+class AddAdminRelationshipHandler(bcap.CapHandler):
+  # granted: UnverifiedUser
+  def post(self, granted, args):
+    unverified_user = granted.unverifieduser
+    if granted is None:
+      return HttpResponseNotFound()
+
+    auth_info = AuthInfo(
+      email=unverified_user.email, \
+      name=unverified_user.name, \
+      role='admin', \
+      department=unverified_user.department)
+    auth_info.save()
+
+    # Remove the unverified_user---this is a one-shot request
+    unverified_user.delete()
+    # This is the capability to put in launch_info
+    launch = bcap.grant('launch-reviewer', auth_info)
+    return bcap.bcapResponse({
+      'public_data': 'Admin account for %s' % auth_info.name,
+      'private_data': launch,
+      'domain': bcap.this_server_url_prefix(),
+      'url': '/admin'
+    })
+
 # Adds a new relationship with a reviewer
 # One-shot capability
 class AddReviewerRelationshipHandler(bcap.CapHandler):
@@ -105,13 +133,14 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
     reviewer.save()
 
     # Remove the unverified_user---this is a one-shot request
-    granted.delete()
+    unverified_user.delete()
     # This is the capability to put in launch_info
     launch = bcap.grant('launch-reviewer', reviewer)
     return bcap.bcapResponse({
-      'name': auth_info.name,
-      'email': auth_info.email,
-      'launchCap': launch
+      'public_data': 'Reviewer account for %s' % auth_info.name,
+      'private_data': launch,
+      'domain': bcap.this_server_url_prefix(),
+      'url': '/review'
     })
 
 class ReviewerLaunchHandler(bcap.CapHandler):

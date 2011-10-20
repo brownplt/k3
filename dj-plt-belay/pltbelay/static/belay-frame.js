@@ -6,6 +6,7 @@ $(function() {
   var stash = capServer.restore(stashURL);
 
   function get_station(k) {
+    console.log('Getting station');
     $.ajax('/get_station/', {
       type: 'GET',
       success: function(data, status, xhr) {
@@ -21,6 +22,12 @@ $(function() {
     $('#login-frame').show();
   }
 
+  $('#createplt').click(function() {
+    console.log('ClientLocation: ', clientLocation);
+    $('#login-frame').hide();
+    $('#account-frame').hide();
+    $('#create-account').show();
+  });
 
   var sessionID, checkLogin;
   var matchInfo = COMMON.sessionRegExp.exec(document.cookie);
@@ -40,7 +47,8 @@ $(function() {
           get_station(function(station) {
             capServer.restore(station).get(function(station_info) {
               stationInfo = station_info;
-              if(clientLocation) go();
+              console.log('clientLocation was: ', clientLocation);
+              go();
             },
             function(err) {
               console.log('Couldn\'t get station info: ', err);
@@ -56,8 +64,10 @@ $(function() {
   }
 
   $(window).bind('message', function(e) {
+    console.log('Receiving page message: ', e);
     $(window).unbind('message');
     clientLocation = e.originalEvent.data.clientLocation;
+    console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
       console.log("Unexpected message from client: ", e);
       return;
@@ -84,6 +94,58 @@ $(function() {
     });
   }
 
+  $('#submit').click(function(e) {
+    var uname = $('#username').val();
+    var password1 = $('#password1').val();
+    var password2 = $('#password2').val();
+
+    if(password1 !== password2) {
+      alert("Passwords did not agree.");
+      return;
+    }
+
+    if (!COMMON.validateLoginInfo(uname, password1)) {
+      if(uname.length > 20) {
+        alert("We require usernames to be less than 20 characters.");
+        return;
+      }
+      if(password1.length < 8) {
+        alert("Please use at least 8 characters for your password.");
+        return;
+      }
+      alert("Invalid username or password");
+      return;
+    }
+    
+    function failure() {
+      alert("Something went wrong with your request." +
+            "Please contact the site administrator " + 
+            "(link at the bottom of the page).")
+    }
+
+    function create() {
+      console.log("Creating account");
+      var createAccount = capServer.restore(COMMON.urlPrefix + '/create_plt_account/');
+      createAccount.post(
+        { username : uname, password : password1 }, 
+        function(response) {
+          window.location = COMMON.urlPrefix + response.redirectTo;
+        },
+        failure
+      );
+    }
+
+    var checkUname = capServer.restore(COMMON.urlPrefix + '/check_uname/');
+    checkUname.post(
+      { username : uname },
+      function(response) {
+        if (response.available) { create(); }
+        else { alert("That username is taken, please try another."); }
+      },
+      failure
+    );
+
+  });
 
   function instanceChoice(instanceInfos) {
     var accountsDiv = $('#account-frame');
@@ -106,6 +168,8 @@ $(function() {
   }
 
   function go() {
+    // TODO(joe): need to make sure we have a reasonable clientLocation
+    // if we're going to launch here.
     var port = makePostMessagePort(window.parent, "belay");
     var tunnel = new CapTunnel(port);
     capServer.setResolver(function(instanceID) {

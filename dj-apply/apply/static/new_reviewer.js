@@ -21,7 +21,7 @@ $(function() {
   }
 
   // Snag the fragment off before initializing Belay
-  var hash = window.location.hash;
+  var hash = window.location.hash.substr(1);
   window.location.hash = "";
 
   window.belay.belayInit(makeBelayFrame, addFrame);
@@ -37,16 +37,14 @@ $(function() {
     left.append(msg);
   }
 
+  console.log('Belay callback ready');
   onBelayReady(function() {
+    console.log('Belay is ready');
     var createCap = capServer.restore(hash);
+    console.log('createCap is: ', createCap);
     createCap.post({},
-      function(launchCap) {
-        belayBrowser.becomeInstance.post({
-          domain: COMMON.urlPrefix,
-          url: '/static/reviewer.html',
-          private_data: launchCap,
-          public_data: 'Reviewer account'
-        });
+      function(launchInfo) {
+        belayBrowser.becomeInstance.post(launchInfo);
       },
       function(fail) {
         error('You may have reached this page in error.');

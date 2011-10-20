@@ -16,9 +16,9 @@ class ApplyTest(unittest.TestCase):
     init = ApplyInit()
     init.process_request(None)
 
-class TestNewReviewer(ApplyTest):
+class TestNewAccount(ApplyTest):
   def setUp(self):
-    super(TestNewReviewer, self).setUp()
+    super(TestNewAccount, self).setUp()
     department = Department(
       name="Brown Department of Horticulture", \
       shortname="bhort", \
@@ -44,9 +44,8 @@ class TestNewReviewer(ApplyTest):
     revs = Reviewer.objects.filter(auth=info[0])
     self.assertEqual(revs[0].committee, False)
 
-    self.assertTrue(isinstance(reviewer_info['launchCap'], bcap.Capability))
-    self.assertEqual(reviewer_info['name'], 'Fake Reviewer')
-    self.assertEqual(reviewer_info['email'], 'reviewer@fake')
+    self.assertTrue(isinstance(reviewer_info['private_data'], bcap.Capability))
+    self.assertEqual(reviewer_info['public_data'], 'Reviewer account for Fake Reviewer')
 
     # The capability to create shouldn't work twice
     try:
@@ -54,6 +53,29 @@ class TestNewReviewer(ApplyTest):
       self.assertTrue(False)
     except:
       self.assertTrue(True)
+
+def TestAdminAccount(ApplyTest):
+  def setUp(self):
+    super(TestAdminAccount, self).setUp()
+    self.makeCSDept()
+
+  def testAdminAccount(self):
+    unverified_user = UnverifiedUser( \
+      role='admin',
+      name='Default Admin',
+      email='default@fake',
+      department=self.department)
+    unverified_user.save()
+    create_cap = bcap.grant('add-admin', unverified_user)
+
+    admin_info = create_cap.post({})
+    info = AuthInfo.objects.filter(email='default@fake')
+
+    self.assertEqual(len(info), 1)
+    self.assertEqual(info[0].email, 'default@fake')
+    self.assertEqual(info[0].role, 'admin')
+
+    self.assertTrue(isinstance(admin_info['private_data'], bcap.Capability))
 
 class TestScoreCategory(ApplyTest):
   def setUp(self):
