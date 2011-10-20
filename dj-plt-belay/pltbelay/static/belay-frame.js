@@ -6,7 +6,6 @@ $(function() {
   var stash = capServer.restore(stashURL);
 
   function get_station(k) {
-    console.log('Getting station');
     $.ajax('/get_station/', {
       type: 'GET',
       success: function(data, status, xhr) {
@@ -23,7 +22,6 @@ $(function() {
   }
 
   $('#createplt').click(function() {
-    console.log('ClientLocation: ', clientLocation);
     $('#login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').show();
@@ -47,7 +45,6 @@ $(function() {
           get_station(function(station) {
             capServer.restore(station).get(function(station_info) {
               stationInfo = station_info;
-              console.log('clientLocation was: ', clientLocation);
               go();
             },
             function(err) {
