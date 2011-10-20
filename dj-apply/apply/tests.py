@@ -31,13 +31,14 @@ class TestNewAccount(ApplyTest):
     self.department = department
 
   def testReviewerRequest(self):
-    request_cap = bcap.grant('request-new-reviewer', self.department)    
+    unverified_user = UnverifiedUser( \
+      role='reviewer',
+      name='Fake Reviewer',
+      email='reviewer@fake',
+      department=self.department)
+    unverified_user.save()
+    create_cap = bcap.grant('add-reviewer', unverified_user)
 
-    create_cap = request_cap.post({
-      'name': 'Fake Reviewer',
-      'email': 'reviewer@fake',
-      'committee': 'true'
-    })
     reviewer_info = create_cap.post({})
     info = AuthInfo.objects.filter(email="reviewer@fake")
     self.assertEqual(len(info), 1)
@@ -206,7 +207,7 @@ class TestUnverifiedUser(ApplyTest):
     }
     rev2data = {\
       'email' : 'blah2@blah.com',\
-      'role' : 'applicant',\
+      'role' : 'admin',\
       'name' : 'Some Guy'\
     }
 
@@ -224,17 +225,17 @@ class TestUnverifiedUser(ApplyTest):
     self.assertEqual(len(users), 0)
 
     reviewerResponse = addRevCap.post(rev1data)
-    applicantResponse = addRevCap.post(rev2data)
+    adminResponse = addRevCap.post(rev2data)
     getPendingCap = bcap.grant('unverifieduser-getpending', self.department)
     pendingResponse = getPendingCap.get()
-    self.assertEqual(len(pendingResponse), 1)
+    self.assertEqual(len(pendingResponse), 2)
     rev1info = pendingResponse[0]
     for (k, v) in rev1data.iteritems():
       self.assertTrue(rev1info.has_key(k))
       self.assertEqual(rev1info[k], v)
     
     reviewerResponse['delete'].delete()
-    applicantResponse['delete'].delete()
+    adminResponse['delete'].delete()
   
   def tearDown(self):
     self.department.delete()
