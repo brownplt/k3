@@ -10,5 +10,5 @@ urlpatterns = patterns('',
   (r'^check_login/$', 'pltbelay.views.check_login'),
   (r'^make-stash/$', 'pltbelay.views.make_stash'),
   (r'^cap/.*', 'belaylibs.dj_belay.proxyHandler'),
-  (r'common.js', 'lib.py.common_js.common_js_handler')
+  (r'^common.js', 'lib.py.common_js.common_js_handler')
 )

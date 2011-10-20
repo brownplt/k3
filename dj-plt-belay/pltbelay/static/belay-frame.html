@@ -13,6 +13,9 @@
 #account-frame {
   display: none;
 }
+#create-account {
+  display: none;
+}
 </style>
 <body>
 <div id="login-frame">
@@ -21,8 +24,8 @@
 </p>
 <div style="font-size:small">
 <p>Don't have a Google Account?  Use Brown Apps instead.</br>
-<a href="/static/create-account.html" id="createplt">(Create an account)</a>
-<a href="/static/login.html" id="loginplt">(Log in with your Brown Apps account)</a>
+<a href="javascript:void(0);" id="createplt">(Create an account)</a>
+<a href="login.html" id="loginplt">(Log in with your Brown Apps account)</a>
 </p>
 </div>
 </div>
@@ -31,6 +34,12 @@
   <h2>
     Your Existing Accounts:
   </h2>
+</div>
+<div id="create-account">
+Username: <input type="text" id="username" value=""></input>
+Password: <input type="password" id="password1" value=""></input>
+Password again: <input type="password" id="password2" value=""></input>
+<button id="submit" value="Submit">Submit</button>
 </div>
 </body>
 </html>

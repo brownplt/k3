@@ -5,9 +5,11 @@ from django.conf.urls.defaults import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+  (r'^$', 'apply.views.index_handler'),
   (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
   (r'applicant/', 'apply.views.applicant_handler'),
-  (r'new-reviewer/', 'apply.views.new_reviewer_handler'),
-  (r'common.js', 'lib.py.common_js.common_js_handler')
+  (r'new-account/', 'apply.views.new_account_handler'),
+  (r'admin/', 'apply.views.admin_handler'),
+  (r'^common.js$', 'lib.py.common_js.common_js_handler')
 )
 
