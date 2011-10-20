@@ -11,6 +11,10 @@ from belaylibs.models import Grant
 
 logger = logging.getLogger('default')
 
+# TODO: implement
+def sendLogEmail(msg):
+  logger.info('send log email')
+
 def applicant_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed['GET']
@@ -36,7 +40,10 @@ class ApplyInit():
         'area-delete' : AreaDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
         'request-new-reviewer': AddReviewerRequestHandler,
-        'launch-reviewer': ReviewerLaunchHandler })
+        'launch-reviewer': ReviewerLaunchHandler,
+        'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
+        'unverifieduser-delete' : UnverifiedUserDeleteHandler,
+        'unverifieduser-getpending' : UnverifiedUserGetPendingHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -247,3 +254,80 @@ class AreaDeleteHandler(bcap.CapHandler):
     area = grantable.area
     area.delete()
     return bcap.bcapNullResponse()
+
+class UnverifiedUserAddRevHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['email', 'role', 'name']
+
+  def name_str(self):
+    return 'UnverifiedUserAddRevHandler'
+
+  def post(self, grantable, args):
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    email = args['email']
+    name = args['name']
+    role = args['role']
+    dept = grantable.department
+    try:
+      uu = UnverifiedUser(email=email, name=name, role=role, department=dept)
+      uu.save()
+    except:
+      resp = {'success' : False, 'message' : 'failed to create UnverifiedUser'}
+      return bcap.bcapResponse(resp)
+
+    # TODO: insert urls/name
+    if role == 'applicant':
+      emailstr = u"""Dear Applicant,
+
+In order to continue the application process with Apply, please visit the URL:
+
+<url>
+
+To return to your application once you have created an account, you must log in
+at:
+
+<url>
+
+If you have trouble with this procedure, visit
+<url>
+for information on contacting the server administrator.
+		
+[This message was generated automatically by the Apply application system.]
+
+"""
+    else:
+      emailstr = u"""Dear <name>,
+
+A new Apply account is being created for you. To select a username and password, please visit:
+
+<url>
+
+To login after your account has been created, you can go to:
+
+<url>
+
+[This message was generated automatically by the Apply application system.]
+
+"""
+    sendLogEmail(emailstr)
+
+    delCap = bcap.grant('unverifieduser-delete', uu)
+    resp = {'success' : True, 'delete' : delCap}
+    return bcap.bcapResponse(resp)
+
+class UnverifiedUserDeleteHandler(bcap.CapHandler):
+  def delete(self, grantable):
+    grants = Grant.objects.filter(db_entity=grantable)
+    if len(grants) == 0:
+      return logWith404(logger, 'UnverifiedUserDeleteHandler fatal error: no grant')
+    uu = grantable.unverifieduser
+    uu.delete()
+    return bcap.bcapNullResponse()
+
+class UnverifiedUserGetPendingHandler(bcap.CapHandler):
+  def get(self, grantable):
+    pending = grantable.department.getPending()
+    return bcap.bcapResponse(pending)

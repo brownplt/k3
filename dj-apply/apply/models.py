@@ -2,10 +2,10 @@ import belaylibs.models as bcap
 from django.db import models
 
 
-# TODO(matt): if these *Image fields represent file paths or URLs, 
-# can we instead have ImageFields to store them in the DB as binary
-# blobs?
 class Department(bcap.Grantable):
+  def getPending(self):
+    users = UnverifiedUser.objects.filter(department=self).exclude(role='applicant')
+    return [{'name' : u.name, 'role' : u.role, 'email' : u.email} for u in users]
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()

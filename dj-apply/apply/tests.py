@@ -167,3 +167,48 @@ class TestArea(ApplyTest):
   def tearDown(self):
     self.department.delete()
     
+class TestUnverifiedUser(ApplyTest):
+  def setUp(self):
+    super(TestUnverifiedUser, self).setUp()
+    self.makeCSDept()
+
+  def testUnverifiedUser(self):
+    rev1data = {\
+      'email' : 'blah@blah.com',\
+      'role' : 'reviewer',\
+      'name' : 'Matt'\
+    }
+    rev2data = {\
+      'email' : 'blah2@blah.com',\
+      'role' : 'applicant',\
+      'name' : 'Some Guy'\
+    }
+
+    addRevCap = bcap.grant('unverifieduser-addrev', self.department)
+    response = addRevCap.post(rev1data)
+    self.assertTrue(response['success'] and response.has_key('delete'))
+    users = UnverifiedUser.objects.filter(name='Matt', email='blah@blah.com',\
+      role='reviewer', department=self.department)
+    self.assertEqual(len(users), 1)
+
+    delCap = response['delete']
+    delCap.delete()
+    users = UnverifiedUser.objects.filter(name='Matt', email='blah@blah.com',\
+      role='reviewer', department=self.department)
+    self.assertEqual(len(users), 0)
+
+    reviewerResponse = addRevCap.post(rev1data)
+    applicantResponse = addRevCap.post(rev2data)
+    getPendingCap = bcap.grant('unverifieduser-getpending', self.department)
+    pendingResponse = getPendingCap.get()
+    self.assertEqual(len(pendingResponse), 1)
+    rev1info = pendingResponse[0]
+    for (k, v) in rev1data.iteritems():
+      self.assertTrue(rev1info.has_key(k))
+      self.assertEqual(rev1info[k], v)
+    
+    reviewerResponse['delete'].delete()
+    applicantResponse['delete'].delete()
+  
+  def tearDown(self):
+    self.department.delete()
