@@ -6,6 +6,12 @@ class Department(bcap.Grantable):
   def getPending(self):
     users = UnverifiedUser.objects.filter(department=self).exclude(role='applicant')
     return [{'name' : u.name, 'role' : u.role, 'email' : u.email} for u in users]
+  def getReviewers(self):
+    reviewers = Reviewer.objects.filter(department=self)
+    return [{ 'email' : r.auth.email,\
+      'name' : r.auth.name,\
+      'role' : r.auth.role,\
+      'committee' : r.committee } for r in reviewers]
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()

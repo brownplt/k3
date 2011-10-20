@@ -56,7 +56,8 @@ class ApplyInit():
         'launch-reviewer': ReviewerLaunchHandler,
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
-        'unverifieduser-getpending' : UnverifiedUserGetPendingHandler })
+        'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
+        'get-reviewers' : GetReviewersHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -372,3 +373,8 @@ class UnverifiedUserGetPendingHandler(bcap.CapHandler):
   def get(self, grantable):
     pending = grantable.department.getPending()
     return bcap.bcapResponse(pending)
+
+class GetReviewersHandler(bcap.CapHandler):
+  def get(self, grantable):
+    reviewers = grantable.department.getReviewers()
+    return bcap.bcapResponse(reviewers)

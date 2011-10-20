@@ -234,3 +234,32 @@ class TestUnverifiedUser(ApplyTest):
   
   def tearDown(self):
     self.department.delete()
+
+class TestGetReviewers(ApplyTest):
+  def setUp(self):
+    super(TestGetReviewers, self).setUp()
+    self.makeCSDept()
+    a = AuthInfo(email='blah@blah.com', name='Matt', role='admin', \
+      department=self.department)
+    a.save()
+    r = Reviewer(auth=a, committee=True, department=self.department)
+    r.save()
+    self.auth = a
+    self.reviewer = r
+
+  def testGetReviewers(self):
+    getReviewersCap = bcap.grant('get-reviewers', self.department)
+    reviewers = getReviewersCap.get()
+    self.assertEqual(len(reviewers), 1)
+    r = reviewers[0]
+    self.assertEqual(r['email'], self.auth.email)
+    self.assertEqual(r['name'], self.auth.name)
+    self.assertEqual(r['role'], self.auth.role)
+    self.assertEqual(r['committee'], self.reviewer.committee)
+
+    self.reviewer.delete()
+    reviewers = getReviewersCap.get()
+    self.assertEqual(len(reviewers), 0)
+
+  def tearDown(self):
+    self.department.delete()
