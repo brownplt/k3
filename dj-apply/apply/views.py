@@ -58,7 +58,8 @@ class ApplyInit():
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
         'get-reviewers' : GetReviewersHandler,
-        'change-contacts' : ChangeContactsHandler })
+        'change-contacts' : ChangeContactsHandler,\
+        'find-refs' : FindRefsHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -404,3 +405,18 @@ class ChangeContactsHandler(bcap.CapHandler):
 
     resp = {'success' : True}
     return bcap.bcapResponse(resp)
+
+class FindRefsHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['email']
+
+  def name_str(self):
+    return 'FindRefsHandler'
+
+  def post(self, grantable, args):
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    refs = grantable.department.findRefs(args['email'])
+    return bcap.bcapResponse(refs)

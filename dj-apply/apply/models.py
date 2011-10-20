@@ -8,10 +8,14 @@ class Department(bcap.Grantable):
     return [{'name' : u.name, 'role' : u.role, 'email' : u.email} for u in users]
   def getReviewers(self):
     reviewers = Reviewer.objects.filter(department=self)
-    return [{ 'email' : r.auth.email,\
+    return [{'email' : r.auth.email,\
       'name' : r.auth.name,\
       'role' : r.auth.role,\
       'committee' : r.committee } for r in reviewers]
+  def findRefs(self, email):
+    refs = Reference.objects.filter(department=self, email=email)
+    return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,
+      'appemail' : r.applicant.auth.email} for r in refs]
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()
@@ -166,7 +170,7 @@ class Reference(bcap.Grantable):
   submitted = models.IntegerField()
   filesize = models.IntegerField()
   name = models.TextField()
-  email = models.TextField()
+  email = models.EmailField()
   department = models.ForeignKey(Department)
   lastRequested = models.IntegerField()
 

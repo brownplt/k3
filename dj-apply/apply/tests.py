@@ -291,3 +291,33 @@ class TestChangeContacts(ApplyTest):
 
   def tearDown(self):
     self.department.delete()
+
+class TestFindRefs(ApplyTest):
+  def setUp(self):
+    super(TestFindRefs, self).setUp()
+    self.makeCSDept()
+    self.auth = AuthInfo(email='foo@foo.com', name='foo', role='applicant',\
+      department=self.department)
+    self.auth.save()
+    self.position = ApplicantPosition(department=self.department, name='thepos',\
+      shortform='tp', autoemail='auto@email.com')
+    self.position.save()
+    self.applicant = Applicant(auth=self.auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=self.position)
+    self.applicant.save()
+    self.reference = Reference(code=0, applicant=self.applicant, submitted=0,\
+      filesize=0, name='bar', email='bar@bar.com', department=self.department,\
+      lastRequested=0)
+    self.reference.save()
+
+  def testFindRefs(self):
+    findRefsCap = bcap.grant('find-refs', self.department)
+    response = findRefsCap.post({'email' : 'bar@bar.com'})
+    self.assertEqual(len(response), 1)
+    ref = response[0]
+    self.assertEqual(ref['appname'],\
+      self.applicant.firstname + ' ' + self.applicant.lastname)
+    self.assertEqual(ref['appemail'], self.applicant.auth.email)
+
+  def tearDown(self):
+    self.department.delete()
