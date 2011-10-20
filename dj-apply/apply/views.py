@@ -57,7 +57,8 @@ class ApplyInit():
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
-        'get-reviewers' : GetReviewersHandler })
+        'get-reviewers' : GetReviewersHandler,
+        'change-contacts' : ChangeContactsHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -378,3 +379,28 @@ class GetReviewersHandler(bcap.CapHandler):
   def get(self, grantable):
     reviewers = grantable.department.getReviewers()
     return bcap.bcapResponse(reviewers)
+
+class ChangeContactsHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['contactName', 'contactEmail', 'techEmail']
+
+  def name_str(self):
+    return 'ChangeContactsHandler'
+
+  def post(self, grantable, args):
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    dept = grantable.department
+    dept.contactName = args['contactName']
+    dept.contactEmail = args['contactEmail']
+    dept.techEmail = args['techEmail']
+    try:
+      dept.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'invalid arguments'}
+      return bcap.bcapResponse(resp)
+
+    resp = {'success' : True}
+    return bcap.bcapResponse(resp)

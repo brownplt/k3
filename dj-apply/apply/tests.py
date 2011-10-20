@@ -263,3 +263,31 @@ class TestGetReviewers(ApplyTest):
 
   def tearDown(self):
     self.department.delete()
+
+class TestChangeContacts(ApplyTest):
+  def setUp(self):
+    super(TestChangeContacts, self).setUp()
+    self.makeCSDept()
+
+  def testChangeContacts(self):
+    olddepts = Department.objects.filter(contactName='Donald Knuth',\
+      contactEmail='test@example.com', techEmail='tech@example.com')
+    self.assertEqual(len(olddepts), 1)
+
+    changeContactsCap = bcap.grant('change-contacts', self.department)
+    response = changeContactsCap.post({\
+      'contactName' : 'some dude',\
+      'contactEmail' : 'some@dude.com',\
+      'techEmail' : 'somedude@tech.com'\
+    })
+
+    self.assertTrue(response['success'])
+    olddepts = Department.objects.filter(contactName='Donald Knuth',\
+      contactEmail='test@example.com', techEmail='tech@example.com')
+    self.assertEqual(len(olddepts), 0)
+    newdepts = Department.objects.filter(contactName='some dude',\
+      contactEmail='some@dude.com', techEmail='somedude@tech.com')
+    self.assertEqual(len(newdepts), 1)
+
+  def tearDown(self):
+    self.department.delete()
