@@ -191,8 +191,13 @@ class ScoreCategoryChangeHandler(bcap.CapHandler):
     sc = grantable.scorecategory
     sc.name = args['name']
     sc.shortform = args['shortform']
-    sc.save()
-    return bcap.bcapNullResponse() 
+    try:
+      sc.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'invalid arguments'}
+      return bcap.bcapResponse(resp)
+    resp = {'success' : True}
+    return bcap.bcapResponse(resp)
 
 class ScoreCategoryAddHandler(bcap.CapHandler):
   def post_arg_names(self):
@@ -236,8 +241,13 @@ class ScoreValueChangeHandler(bcap.CapHandler):
       return response
     sv = grantable.scorevalue
     sv.explanation = args['explanation']
-    sv.save()
-    return bcap.bcapNullResponse()
+    try:
+      sv.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'invalid arguments'}
+      return bcap.bcapResponse(resp)
+    resp = {'success' : True}
+    return bcap.bcapResponse(resp)
 
 class ApplicantPositionAddHandler(bcap.CapHandler):
   def post_arg_names(self):
@@ -315,8 +325,8 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
     name = args['name']
     role = args['role']
     dept = grantable.department
+    uu = UnverifiedUser(email=email, name=name, role=role, department=dept)
     try:
-      uu = UnverifiedUser(email=email, name=name, role=role, department=dept)
       uu.save()
     except:
       resp = {'success' : False, 'message' : 'failed to create UnverifiedUser'}

@@ -100,10 +100,12 @@ class TestScoreCategory(ApplyTest):
     self.assertEqual(len(cats), 1)
 
     changeCap = response['change']
-    changeCap.post({\
+    change_resp = changeCap.post({\
       'name' : 'Category Dos',\
       'shortform' : 'CD'\
     })
+    self.assertTrue(change_resp.has_key('success'))
+    self.assertTrue(change_resp['success'])
     cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
       department=self.department)
     self.assertEqual(len(cats), 0)
@@ -134,7 +136,9 @@ class TestScoreValue(ApplyTest):
 
   def testScoreValue(self):
     changeCap = bcap.grant('scorevalue-change', self.value)
-    changeCap.post({'explanation' : 'because i said so'})
+    change_resp = changeCap.post({'explanation' : 'because i said so'})
+    self.assertTrue(change_resp.has_key('success'))
+    self.assertTrue(change_resp['success'])
     vals = ScoreValue.objects.filter(category=self.category, number=0,\
       explanation='because')
     self.assertEqual(len(vals), 0)
