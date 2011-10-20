@@ -15,13 +15,19 @@ def applicant_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed['GET']
 
-  return render_to_response('applicant.html', {})
+  return render_to_response('application.html', {})
 
-def new_reviewer_handler(request):
+def new_account_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed['GET']
 
-  return render_to_response('new_reviewer.html', {})
+  return render_to_response('new_account.html', {})
+
+def admin_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllowed['GET']
+
+  return render_to_response('admin.html', {})
 
 # Django middleware class to set handlers on every request
 class ApplyInit():

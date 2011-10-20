@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title>Job Application</title>
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
+    <!--[if IE]>
+    <link rel="stylesheet" type="text/css" media="all" href="styleie.css" />
+    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="all" href="/static/admin.css"/>
+<!--
+    <script type="text/javascript" src="flapjax/flapjax.js"></script>
+    <script type="text/javascript" src="flapjax/json.js"></script>
+    <script type="text/javascript" src="flapjax/plug.js"></script>
+    <script type="text/javascript" src="flapjax/myfjws.js"></script>
+    <script type="text/javascript" src="common.js"></script>
+    <script type="text/javascript" src="gcommon.js"></script>
+-->
+    <script type="text/javascript" src="/static/admin.js"></script>
+
+  </head>
+  <body>
+    <h1 id="ptitle"></h1>
+    <div id="main">
+      <h2>administer site<div class="sub">customize</div></h2>
+      <div class="customizer" style="float: right; width: 50%;">
+	<h3>contact</h3>
+	<div id="cinfo">
+	</div>
+	<br />
+	<h3>reviewers</h3>
+	<div id="revlist"></div>
+	<br />
+	<h3>pending/add new</h3>
+	<p>To add a new reviewer, please enter their full name and email address below.
+	  They will receive an email with instructions on completing the registration process.</p>
+	<span id="pending-result"></span>
+	<div id="pending">
+	</div>
+	<br/>
+	<h3>downloads</h3>
+	<p>Here you can download aggregate statistics about applicants.</p>
+	<div id="downloads">
+	  Download all non-rejected applicants as csv (suitable for
+	  opening in Excel) <a href="getFullCSV.csv">here</a>.
+	</div>
+	</div>
+      <div class="customizer">
+	<h3>review scores</h3>
+	<div id="rclist"></div>
+	<div id="rcvals"></div>
+      </div>
+      <div class="customizer" style="display: none;">
+	<h3>statements</h3>
+	<div id="stmtlist"></div>
+      </div>
+      <div class="customizer" style="display: none;">
+	<h3>contact info</h3>
+	<div id="contlist"></div>
+      </div>
+      <div class="customizer">
+	<h3>areas</h3>
+	<div id="arealist"></div>
+      </div>
+
+      <div class="customizer">
+	<h3>position</h3>
+	<p>Candidates self-identify a single position to apply for.  However, 
+	  reviewers may modify their position later.</p>
+	<div id="applicantPositions"></div>
+      </div>
+
+      <div class="customizer">
+	<h3>letter writers</h3>
+	<p>Enter an email below to get a list of all the letter requests that have gone to that email.</p>
+	<input type="text" id="lwemail" name="lwemail"/><input type="button" id="lwbut" value="OK" />
+	<span id="lwresults"></span>
+      </div>
+      <br clear="both" />
+    </div>
+    <div class="bottom">Apply is written in <a href="http://www.flapjax-lang.org">Flapjax</a>. Questions? Comments? <a href="contact.html">Contact Us.</a></div>
+  </body>
+</html>
