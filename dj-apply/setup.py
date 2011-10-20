@@ -21,7 +21,7 @@ def setup():
   ApplyInit().process_request(None)
 
   create_account = bcap.grant('add-admin', unverified_user)
-  print("To get started, go here: %s/static/new_reviewer.html#%s" % \
+  print("To get started, go here: %s/static/new_account.html#%s" % \
         (bcap.this_server_url_prefix(), create_account.serialize()))
 
 if __name__ == '__main__':
