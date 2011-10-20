@@ -3,17 +3,22 @@ import settings
 import belaylibs.dj_belay as bcap
 from apply.models import UnverifiedUser, Department
 from apply.views import ApplyInit
+import sys
 
-def setup():
-  cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
-    headerImage='', logoImage='', resumeImage='', headerBgImage='',\
-    brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
-    techEmail='tech@example.com')
-  cs.save()
+def setup(adminName):
+  cses = Department.objects.filter(shortname='cs')
+  if len(cses) == 0:
+    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+      techEmail='tech@example.com')
+    cs.save()
+  else:
+    cs = cses[0]
 
   unverified_user = UnverifiedUser( \
     role='admin',
-    name='Default Admin',
+    name=adminName,
     email='default@fake',
     department=cs)
   unverified_user.save()
@@ -26,5 +31,5 @@ def setup():
 
 if __name__ == '__main__':
   setup_environ(settings)
-  setup()
+  setup(sys.argv[1])
 

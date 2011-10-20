@@ -12,7 +12,7 @@ from belaylibs.models import Grant
 logger = logging.getLogger('default')
 
 # TODO: implement
-def sendLogEmail(msg):
+def sendLogEmail(msg, address, ):
   logger.info('send log email')
 
 def applicant_handler(request):
@@ -52,8 +52,8 @@ class ApplyInit():
         'area-delete' : AreaDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
         'add-admin': AddAdminRelationshipHandler,
-        'request-new-reviewer': AddReviewerRequestHandler,
         'launch-reviewer': ReviewerLaunchHandler,
+        'launch-admin': AdminLaunchHandler,
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
@@ -85,25 +85,19 @@ def findDepartment(class_name, dept_name):
   dept = depts[0]
   return (True, dept)
 
-# Gets a capability that is handed off to will-be reviewers.
-# It will be included in the fragment on a page that asks them
-# for information and creates their relationship.
-# This is a relatively powerful capability --- it should only
-# be accessible from Admin views.
-class AddReviewerRequestHandler(bcap.CapHandler):
-  # granted: Department
-  # args: { 'name': str, 'email': str }
-  def post(self, granted, args):
-    department = granted.department
-    unverified_reviewer = UnverifiedUser( \
-      role='reviewer', \
-      name=args['name'], \
-      email=args['email'], \
-      department=department)
-
-    unverified_reviewer.save()
-    create_account = bcap.grant('add-reviewer', unverified_reviewer)
-    return bcap.bcapResponse(create_account)
+class AdminLaunchHandler(bcap.CapHandler):
+  # getReviewers
+  # UUAdd
+  # UUGetPending
+  # 'scorecategory-delete'
+  # 'scorecategory-change'
+  # 'scorecategory-add'
+  # 'applicantposition-add'
+  # 'area-add'
+  # 'area-delete'
+  # Getting/setting basic info like contact info
+  # CSV generator handler
+  pass
 
 # Adds a new relationship with an admin
 # One-shot capability
@@ -124,7 +118,7 @@ class AddAdminRelationshipHandler(bcap.CapHandler):
     # Remove the unverified_user---this is a one-shot request
     unverified_user.delete()
     # This is the capability to put in launch_info
-    launch = bcap.grant('launch-reviewer', auth_info)
+    launch = bcap.grant('launch-admin', auth_info)
     return bcap.bcapResponse({
       'public_data': 'Admin account for %s' % auth_info.name,
       'private_data': launch,
@@ -322,41 +316,26 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
       resp = {'success' : False, 'message' : 'failed to create UnverifiedUser'}
       return bcap.bcapResponse(resp)
 
-    # TODO: insert urls/name
-    if role == 'applicant':
-      emailstr = u"""Dear Applicant,
+    if role == 'admin': create_cap = bcap.grant('add-admin', uu)
+    elif role == 'reviewer': create_cap = bcap.grant('add-reviewer', uu)
+    else: return logWith404(logger, 'UnverifiedUserAddRevHandler: role type not allowed: %s' % role)
 
-In order to continue the application process with Apply, please visit the URL:
+    activate_url = '%s/new-account/#%s' % \
+      (bcap.this_server_url_prefix(), create_cap.serialize())
+    return_url = bcap.this_server_url_prefix()
+    
+    emailstr = u"""Dear %s,
 
-<url>
+A new Apply account is being created for you.  To activate it, visit:
 
-To return to your application once you have created an account, you must log in
-at:
+%s
 
-<url>
+To regain access your account once it has been created, visit:
 
-If you have trouble with this procedure, visit
-<url>
-for information on contacting the server administrator.
-		
-[This message was generated automatically by the Apply application system.]
-
+%s
 """
-    else:
-      emailstr = u"""Dear <name>,
-
-A new Apply account is being created for you. To select a username and password, please visit:
-
-<url>
-
-To login after your account has been created, you can go to:
-
-<url>
-
-[This message was generated automatically by the Apply application system.]
-
-"""
-    sendLogEmail(emailstr)
+    emailstr = emailstr % (name, activate_url, return_url)
+    sendLogEmail(emailstr, email)
 
     delCap = bcap.grant('unverifieduser-delete', uu)
     resp = {'success' : True, 'delete' : delCap}
