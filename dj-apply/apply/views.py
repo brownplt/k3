@@ -29,6 +29,12 @@ def admin_handler(request):
 
   return render_to_response('admin.html', {})
 
+def index_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllows['GET']
+
+  return render_to_response('index.html', {})
+
 # Django middleware class to set handlers on every request
 class ApplyInit():
   def process_request(self, request):
