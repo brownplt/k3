@@ -3,19 +3,51 @@ from django.db import models
 
 
 class Department(bcap.Grantable):
+  def my(self, cls):
+    return cls.objects.filter(department=self)
   def getPending(self):
-    users = UnverifiedUser.objects.filter(department=self).exclude(role='applicant')
+    users = self.my(UnverifiedUser).exclude(role='applicant')
     return [{'name' : u.name, 'role' : u.role, 'email' : u.email} for u in users]
   def getReviewers(self):
-    reviewers = Reviewer.objects.filter(department=self)
+    reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\
       'name' : r.auth.name,\
       'role' : r.auth.role,\
       'committee' : r.committee } for r in reviewers]
   def findRefs(self, email):
-    refs = Reference.objects.filter(department=self, email=email)
+    refs = self.my(Reference).filter(email=email)
     return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,
       'appemail' : r.applicant.auth.email} for r in refs]
+  def getBasic(self):
+    return {\
+      'info' : self.to_json(),\
+      'areas' : [a.to_json() for a in self.my(Area)],\
+      'positions' : [j.to_json() for j in self.my(ApplicantPosition)],\
+      'components' : [c.to_json() for c in self.my(ComponentType)],\
+      'genders' : ['Unknown', 'Male', 'Female'],\
+      'ethnicities' : {\
+        'am':'American Indian or Alaskan Native',\
+        'as':'Asian or Pacific Islander',\
+        'b':'Black, non-Hispanic',\
+        'h':'Hispanic',\
+        'w':'White, non-Hispanic',\
+        'zo':'Other',\
+        'zu':'Unknown'
+      },\
+      'countries' : list(set([a.country for a in self.my(Applicant)])),\
+      'scores' : [s.to_json() for s in self.my(Score)],\
+      'degrees' : [d.to_json() for d in self.my(Degree)],\
+    }
+  def to_json(self):
+    return {\
+      'name' : self.name,\
+      'shortname' : self.shortname,\
+      'lastChange' : self.lastChange,\
+      'brandColor' : self.brandColor,\
+      'contactName' : self.contactName,\
+      'contactEmail' : self.contactEmail,\
+      'techEmail' : self.techEmail\
+    }
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()
@@ -42,6 +74,12 @@ class AuthInfo(bcap.Grantable):
 class ApplicantPosition(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
+  def to_json(self):
+    return {\
+      'name' : self.name,\
+      'shortform' : self.shortform,\
+      'autoemail' : self.autoemail
+    }
   department = models.ForeignKey(Department)
   name = models.TextField()
   shortform = models.TextField()
@@ -78,6 +116,8 @@ class Applicant(bcap.Grantable):
   position = models.ForeignKey(ApplicantPosition)
 
 class Degree(bcap.Grantable):
+  def to_json(self):
+    return {'name' : self.name, 'shortform' : self.shortform}
   name = models.TextField()
   shortform = models.TextField()
   department = models.ForeignKey(Department)
@@ -132,6 +172,8 @@ class Review(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Score(bcap.Grantable):
+  def to_json(self):
+    return {'score' : 'dummy field'}
   value = models.ForeignKey(ScoreValue)
   review = models.ForeignKey(Review)
   department = models.ForeignKey(Department)
@@ -139,6 +181,8 @@ class Score(bcap.Grantable):
 class Area(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
+  def to_json(self):
+    return {'name' : self.name, 'abbr' : self.abbr}
   name = models.TextField()
   abbr = models.TextField()
   department = models.ForeignKey(Department)
@@ -182,6 +226,14 @@ class ComponentType(bcap.Grantable):
     ('statement', 'statement'),\
     ('test_score', 'test_score')\
   ]
+  def to_json(self):
+    return {\
+      'type' : self.type,\
+      'value' : self.value,\
+      'lastSubmitted' : self.lastSubmitted,\
+      'verified' : self.verified,\
+      'date' : str(self.date)\
+    }
   # TODO(matt): effect of choices on data model?
   type = models.TextField(choices=choices)
   value = models.TextField()

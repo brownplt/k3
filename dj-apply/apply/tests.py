@@ -1,6 +1,7 @@
 import unittest
 from apply.models import *
 from apply.views import *
+from datetime import date
 
 import belaylibs.dj_belay as bcap
 
@@ -323,6 +324,174 @@ class TestFindRefs(ApplyTest):
     self.assertEqual(ref['appname'],\
       self.applicant.firstname + ' ' + self.applicant.lastname)
     self.assertEqual(ref['appemail'], self.applicant.auth.email)
+
+  def tearDown(self):
+    self.department.delete()
+
+class TestGetBasic(ApplyTest):
+  def setUp(self):
+    super(TestGetBasic, self).setUp()
+    self.makeCSDept()
+    self.area = Area(name='area', abbr='ar', department=self.department)
+    self.area.save()
+    auth = AuthInfo(email='foo@foo.com', name='foo', role='applicant',\
+      department=self.department)
+    auth.save()
+    self.position = ApplicantPosition(department=self.department, name='thepos',\
+      shortform='tp', autoemail=True)
+    self.position.save()
+    self.component = ComponentType(type='type', value='value', lastSubmitted=0,\
+      department=self.department, date=date.today())
+    self.component.save()
+    self.applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=self.position)
+    self.applicant.save()
+    sc = ScoreCategory(name='scorecategory', shortform='sc', department=self.department)
+    sc.save()
+    sv = ScoreValue(category=sc, number=0, explanation='exp', department=self.department)
+    sv.save()
+    applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=self.position)
+    applicant.save()
+    reviewer = Reviewer(auth=auth, committee=False, department=self.department)
+    reviewer.save()
+    review = Review(applicant=applicant, reviewer=reviewer, comments='comments',\
+      draft=False, department=self.department)
+    review.save()
+    self.score = Score(value=sv, review=review, department=self.department)
+    self.score.save()
+    self.degree = Degree(name='degree', shortform='dg', department=self.department)
+    self.degree.save()
+
+  def testGetBasic(self):
+    getBasicCap = bcap.grant('get-basic', self.department)
+    response = getBasicCap.get()
+
+    self.assertTrue(response.has_key('info'))
+    i = response['info']
+    self.assertEqual(i['name'], self.department.name)
+    self.assertEqual(i['shortname'], self.department.shortname)
+    self.assertEqual(i['lastChange'], self.department.lastChange)
+    self.assertEqual(i['brandColor'], self.department.brandColor)
+    self.assertEqual(i['contactName'], self.department.contactName)
+    self.assertEqual(i['contactEmail'], self.department.contactEmail)
+    self.assertEqual(i['techEmail'], self.department.techEmail)
+
+    self.assertTrue(response.has_key('countries'))
+    self.assertEqual(len(response['countries']), 1)
+    self.assertEqual(response['countries'][0], 'usa')
+
+    self.assertTrue(response.has_key('areas'))
+    self.assertEqual(len(response['areas']), 1)
+    a = response['areas'][0]
+    self.assertEqual(a['name'], 'area')
+    self.assertEqual(a['abbr'], 'ar')
+
+    self.assertTrue(response.has_key('positions'))
+    self.assertEqual(len(response['positions']), 1)
+    p = response['positions'][0]
+    self.assertEqual(p['name'], 'thepos')
+    self.assertEqual(p['shortform'], 'tp')
+    self.assertEqual(p['autoemail'], True)
+
+    self.assertTrue(response.has_key('components'))
+    self.assertEqual(len(response['components']), 1)
+    c = response['components'][0]
+    self.assertEqual(c['type'], 'type')
+    self.assertEqual(c['value'], 'value')
+    self.assertEqual(c['lastSubmitted'], 0)
+    self.assertEqual(c['date'], str(date.today()))
+
+    self.assertTrue(response.has_key('scores'))
+    self.assertEqual(len(response['scores']), 1)
+    self.assertEqual(response['scores'][0]['score'], 'dummy field')
+
+    self.assertTrue(response.has_key('degrees'))
+    self.assertEqual(len(response['degrees']), 1)
+    d = response['degrees'][0]
+    self.assertEqual(d['name'], 'degree')
+    self.assertEqual(d['shortform'], 'dg')
+
+  def testSetBasic(self):
+    setBasicCap = bcap.grant('set-basic', self.department)
+    newinfo = {\
+      'name' : 'updated name',\
+      'shortname' : 'un',\
+      'lastChange' : 1,\
+      'brandColor' : 'updated color',\
+      'contactName' : 'updated contactName',\
+      'contactEmail' : 'updated@email.com',\
+      'techEmail' : 'updated@tech.com'\
+    }
+    response = setBasicCap.post(newinfo)
+    self.assertTrue(response.has_key('success'))
+    self.assertTrue(response['success'])
+
+    old = Department.objects.filter(name='Computer Science', shortname='CS', lastChange=0,\
+      headerImage='', logoImage='', resumeImage='', headerBgImage='',\
+      brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
+      techEmail='tech@example.com')
+    self.assertEqual(len(old), 0)
+    new = Department.objects.filter(name='updated name', shortname='un',\
+      lastChange=1, brandColor='updated color', contactName='updated contactName',\
+      contactEmail='updated@email.com', techEmail='updated@tech.com')
+    self.assertEqual(len(new), 1)
+    self.department = new[0]
+
+  def tearDown(self):
+    self.department.delete()
+
+class TestGetCSV(ApplyTest):
+  pass
+
+class TestAdminLaunch(ApplyTest):
+  def setUp(self):
+    super(TestAdminLaunch, self).setUp()
+    self.makeCSDept()
+    self.area = Area(name='area', abbr='ar', department=self.department)
+    self.area.save()
+    auth = AuthInfo(email='foo@foo.com', name='foo', role='applicant',\
+      department=self.department)
+    auth.save()
+    self.position = ApplicantPosition(department=self.department, name='thepos',\
+      shortform='tp', autoemail=True)
+    self.position.save()
+    self.component = ComponentType(type='type', value='value', lastSubmitted=0,\
+      department=self.department, date=date.today())
+    self.component.save()
+    self.applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=self.position)
+    self.applicant.save()
+    sc = ScoreCategory(name='scorecategory', shortform='sc', department=self.department)
+    sc.save()
+    sv = ScoreValue(category=sc, number=0, explanation='exp', department=self.department)
+    sv.save()
+    applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=self.position)
+    applicant.save()
+    reviewer = Reviewer(auth=auth, committee=False, department=self.department)
+    reviewer.save()
+    review = Review(applicant=applicant, reviewer=reviewer, comments='comments',\
+      draft=False, department=self.department)
+    review.save()
+    self.score = Score(value=sv, review=review, department=self.department)
+    self.score.save()
+    self.degree = Degree(name='degree', shortform='dg', department=self.department)
+    self.degree.save()
+
+  def testAdminLaunch(self):
+    adminLaunchCap = bcap.grant('launch-admin', self.department)
+    response = adminLaunchCap.get()
+
+    self.assertTrue(response.has_key('getReviewers'))
+    self.assertTrue(response.has_key('UnverifiedUserAdd'))
+    self.assertTrue(response.has_key('UnverifiedUserGetPending'))
+    self.assertTrue(response.has_key('ScoreCategoryAdd'))
+    self.assertTrue(response.has_key('ApplicantPositionAdd'))
+    self.assertTrue(response.has_key('AreaAdd'))
+    self.assertTrue(response.has_key('getBasic'))
+    self.assertTrue(response.has_key('setBasic'))
+    self.assertTrue(response.has_key('getCSV'))
 
   def tearDown(self):
     self.department.delete()

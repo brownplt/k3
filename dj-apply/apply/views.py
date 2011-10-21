@@ -59,7 +59,10 @@ class ApplyInit():
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
         'get-reviewers' : GetReviewersHandler,
         'change-contacts' : ChangeContactsHandler,\
-        'find-refs' : FindRefsHandler })
+        'find-refs' : FindRefsHandler,\
+        'get-basic' : GetBasicHandler,\
+        'set-basic' : SetBasicHandler,\
+        'get-csv' : GetCSVHandler })
     return None
 
 def checkPostArgs(classname, args, keys):
@@ -86,18 +89,20 @@ def findDepartment(class_name, dept_name):
   return (True, dept)
 
 class AdminLaunchHandler(bcap.CapHandler):
-  # getReviewers
-  # UUAdd
-  # UUGetPending
-  # 'scorecategory-delete'
-  # 'scorecategory-change'
-  # 'scorecategory-add'
-  # 'applicantposition-add'
-  # 'area-add'
-  # 'area-delete'
-  # Getting/setting basic info like contact info
-  # CSV generator handler
-  pass
+  def get(self, granted):
+    department = granted.department
+    resp = {\
+      'getReviewers' : bcap.grant('get-reviewers', department),\
+      'UnverifiedUserAdd' : bcap.grant('unverifieduser-add', department),\
+      'UnverifiedUserGetPending' : bcap.grant('unverifieduser-getpending', department),\
+      'ScoreCategoryAdd' : bcap.grant('scorecategory-add', department),\
+      'ApplicantPositionAdd' : bcap.grant('applicantposition-add', department),\
+      'AreaAdd' : bcap.grant('area-add', department),\
+      'getBasic' : bcap.grant('get-basic', department),\
+      'setBasic' : bcap.grant('set-basic', department),\
+      'getCSV' : bcap.grant('get-csv', department)\
+    }
+    return bcap.bcapResponse(resp)
 
 # Adds a new relationship with an admin
 # One-shot capability
@@ -409,3 +414,43 @@ class FindRefsHandler(bcap.CapHandler):
 
     refs = grantable.department.findRefs(args['email'])
     return bcap.bcapResponse(refs)
+
+class GetBasicHandler(bcap.CapHandler):
+  def get(self, granted):
+    basic_info = granted.department.getBasic()
+    return bcap.bcapResponse(basic_info)
+
+class SetBasicHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'shortname', 'lastChange', 'brandColor', 'contactName',\
+      'contactEmail', 'techEmail']
+
+  def name_str(self):
+    return 'SetBasicHandler'
+
+  def post(self, granted, args):
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    dept = granted.department
+    dept.name = args['name']
+    dept.shortname = args['shortname']
+    dept.lastChange = args['lastChange']
+    dept.brandColor = args['brandColor']
+    dept.contactName = args['contactName']
+    dept.contactEmail = args['contactEmail']
+    dept.techEmail = args['techEmail']
+
+    try:
+      dept.save()
+    except IntegrityError:
+      resp = {'success' : False, 'message' : 'invalid arguments'}
+      return bcap.bcapResponse(resp)
+
+    resp = {'success' : True}
+    return bcap.bcapResponse(resp)
+
+class GetCSVHandler(bcap.CapHandler):
+  def get(self, granted):
+    return logWith404(logger, 'GetCSVHandler NYI')
