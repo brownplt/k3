@@ -1,3 +1,6 @@
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
 from django.core.management import setup_environ
 import settings
 import belaylibs.dj_belay as bcap
