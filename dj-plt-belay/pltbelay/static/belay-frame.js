@@ -185,15 +185,14 @@ $(function() {
     });
 
     var stashser, stashcap;
+    // NOTE(joe): We're only using stashes that point to the Belay server,
+    // which this check is ensuring.
     if (typeof clientLocation === 'object' &&
-        typeof clientLocation.hash === 'string') {
+        typeof clientLocation.hash === 'string' &&
+        clientLocation.hash.indexOf(COMMON.urlPrefix) !== -1) {
       stashser = clientLocation.hash.substr(1);
-      // NOTE(joe): We're only using stashes that point to the Belay server,
-      // which this check is ensuring.
-      if (stashser.indexOf(COMMON.urlPrefix) !== -1) {
-        stashcap = capServer.restore(stashser);
-        launchInstance(stashcap);
-      }
+      stashcap = capServer.restore(stashser);
+      launchInstance(stashcap);
     }
     else {
       launchNonInstance();
