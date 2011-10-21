@@ -114,13 +114,12 @@
 		(function () { throw 'unknown type'; })();
 	};
 */
-  Object.prototype.toJSONString = function () {
-       return s.object(this);
+  window.toJSONString = function () {
+       if(o instanceof Array) {
+        return s.array(o);
+       }
+       return s.object(o);
     };
-
-    Array.prototype.toJSONString = function () {
-        return s.array(this);
-    }; 
 })();
 
 String.prototype.parseJSON = function () {

@@ -201,11 +201,15 @@ $(function() {
 
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
-    frame[0].src = COMMON.belayFrame;
-    frame[0].name = COMMON.belayFrame;
-    frame[0].style.display = 'none';
-    frame[0].style.width = '1px';
-    frame[0].style.height = '1px';
+    frame.attr({
+      'src': COMMON.belayFrame,
+      'name': 'belay'
+    });
+    frame.css({
+      display: 'none',
+      width: '1px',
+      height: '1px'
+    });
     theFrame = frame;
     return frame;
   }
