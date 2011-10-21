@@ -184,19 +184,49 @@ $(function() {
       }
     });
 
-    tunnel.sendOutpost(capServer.dataPreProcess({
-      services: {
-        becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
-          stationInfo.newInstance.post(launchInfo, function(launched) {
-            launch(launchInfo);
-          },
-          function(err) {
-            console.log('belay_frame: Failed to create new instance: ', err);
-            fk('failed');
-          });
-        })
+    var stashser, stashcap;
+    if (typeof clientLocation === 'object' &&
+        typeof clientLocation.hash === 'string') {
+      stashser = clientLocation.hash.substr(1);
+      // NOTE(joe): We're only using stashes that point to the Belay server,
+      // which this check is ensuring.
+      if (stashser.indexOf(COMMON.urlPrefix) !== -1) {
+        stashcap = capServer.restore(stashser);
+        launchInstance(stashcap);
       }
-    }));
+    }
+    else {
+      launchNonInstance();
+    }
+
+    function launchInstance(stashcap) {
+      stashcap.post({ sessionID: sessionID },
+        function(stashed) {
+          tunnel.sendOutpost(capServer.dataPreProcess({
+            services: {},
+            launchInfo: stashed
+          }));
+        },
+        function(fail) {
+          console.log('Getting stashed value failed: ', fail);
+        });
+    }
+
+    function launchNonInstance() {
+      tunnel.sendOutpost(capServer.dataPreProcess({
+        services: {
+          becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
+            stationInfo.newInstance.post(launchInfo, function(launched) {
+              launch(launchInfo);
+            },
+            function(err) {
+              console.log('belay_frame: Failed to create new instance: ', err);
+              fk('failed');
+            });
+          })
+        }
+      }));
+    }
   }
 });
 

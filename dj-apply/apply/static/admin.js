@@ -197,6 +197,29 @@ $(function() {
 
   var onLoadTimeE = receiver_e();
 
+  var theFrame;
+
+  function makeBelayFrame() {
+    var frame = $('<iframe></iframe>');
+    frame[0].src = COMMON.belayFrame;
+    frame[0].name = COMMON.belayFrame;
+    frame[0].style.display = 'none';
+    frame[0].style.width = '1px';
+    frame[0].style.height = '1px';
+    theFrame = frame;
+    return frame;
+  }
+  function addFrame(frame) {
+    $('#main').append(frame);
+  }
+
+  window.belay.belayInit(makeBelayFrame, addFrame);
+
+  onBelayReady(function() {
+    console.log('Belay is ready: ', launchInfo);
+  });
+
+
   authCookie = $URL('cookie');
 
   var basicInfoE = getBasicInfoE(onLoadTimeE);

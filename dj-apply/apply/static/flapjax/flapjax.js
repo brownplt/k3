@@ -1213,7 +1213,7 @@ function flapjaxInit(makeTopLevel) {
       return res;
 		}
 	};
-	annotate(d.getObj,['getObj','$']);
+	annotate(d.getObj,['getObj']);
   
   //topE: Event alpha
   //alerts whenever an inserted dom changes
