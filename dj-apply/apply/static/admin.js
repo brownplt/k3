@@ -221,94 +221,101 @@ $(function() {
 
   onBelayReady(function() {
     console.log('Belay is ready: ', launchInfo);
+
+    launchInfo.get(function(r) {
+      r.getBasic.get(function(basicInfo) {
+        var basicInfoE = onLoadTimeE.constant_e(basicInfo);
+        r.getReviewers.get(function(reviewers) {
+          var allrevsE = onLoadTimeE.constant_e(reviewers);
+          r.UnverifiedUserGetPending.get(function(pending) {
+            var pendingE = onLoadTimeE.constant_e(pending);
+            doRestAdmin(basicInfoE, allrevsE, pendingE);
+          });
+        });
+      });
+    });
   });
 
 
   authCookie = $URL('cookie');
 
-  var basicInfoE = getBasicInfoE(onLoadTimeE);
-  var curAuthE = getAuthE(onLoadTimeE,authCookie);
-	
-  var allrevsE = getFilteredWSO_e(onLoadTimeE.constant_e(genRequest(
-    {url:'getReviewers',
-     fields:{cookie:authCookie}})));
+  function doRestAdmin(basicInfoE, allrevsE, pendingE) {
+    //var curAuthE = getAuthE(onLoadTimeE,authCookie);
+    var curAuthE = onLoadTimeE.constant_e('curAuth');
+    
+    lift_e(function(basicInfo,curAuth,allRevs) {
+        setHeadAndTitle(basicInfo,'Site Administration',
+            [A({href:'login.html?logout='+authCookie},'Log Out'),
+             A({href:'reviewer.html'},'Back to List')]);
 
-  lift_e(function(basicInfo,curAuth,allRevs) {
-      setHeadAndTitle(basicInfo,'Site Administration',
-		      [A({href:'login.html?logout='+authCookie},'Log Out'),
-		       A({href:'reviewer.html'},'Back to List')]);
+        insertDomB(reviewerTable(allRevs),'revlist');
 
-      insertDomB(reviewerTable(allRevs),'revlist');
+        insertDomB(genAreasList(basicInfo),'arealist');
+        insertDomB(genStmtList(basicInfo),'stmtlist');
+        insertDomB(genContList(basicInfo),'contlist');
+        insertDomB(genRCList(basicInfo),'rclist');
+        insertDomB(positionListB(basicInfo),'applicantPositions');
+      
+      
+        insertDom(
+      new CombinedInputWidget(
+            [new TextInputWidget(basicInfo.info.contactName,20).toTableRow('Contact Name'),
+             new TextInputWidget(basicInfo.info.contactEmail,20).toTableRow('Contact Email'),
+             new TextInputWidget(basicInfo.info.techEmail,20).toTableRow('Maintainer Email')],
+            function(cname,cemail,temail) {return TABLE({className:'key-value'},TBODY(cname,cemail,temail));}).serverSaving(
+                                        function(cinfo) {
+                                          return genRequest(
+                                                {url:'changeContacts',
+                                              fields:{cookie:authCookie,contactName:cinfo[0],contactEmail:cinfo[1],techEmail:cinfo[2]}});
+                                        }).dom,'cinfo');
+      },basicInfoE,curAuthE,allrevsE);
 
-      insertDomB(genAreasList(basicInfo),'arealist');
-      insertDomB(genStmtList(basicInfo),'stmtlist');
-      insertDomB(genContList(basicInfo),'contlist');
-      insertDomB(genRCList(basicInfo),'rclist');
-      insertDomB(positionListB(basicInfo),'applicantPositions');
-		
-		
-      insertDom(
-		new CombinedInputWidget(
-					[new TextInputWidget(basicInfo.info.contactName,20).toTableRow('Contact Name'),
-					 new TextInputWidget(basicInfo.info.contactEmail,20).toTableRow('Contact Email'),
-					 new TextInputWidget(basicInfo.info.techEmail,20).toTableRow('Maintainer Email')],
-					function(cname,cemail,temail) {return TABLE({className:'key-value'},TBODY(cname,cemail,temail));}).serverSaving(
-																			function(cinfo) {
-																			  return genRequest(
-																					    {url:'changeContacts',
-																						fields:{cookie:authCookie,contactName:cinfo[0],contactEmail:cinfo[1],techEmail:cinfo[2]}});
-																			}).dom,'cinfo');
-    },basicInfoE,curAuthE,allrevsE);
+    insertDomE(
+         getFilteredWSO_e(snapshot_e(extractEvent_e('lwbut','click'),$B('lwemail')).transform_e(function(email) {
+         return genRequest(
+               {url:'findRefs',
+             fields:{cookie:authCookie,email:email}});})).transform_e(function(results) {
+                 if (results.length > 0) return UL(
+                           map(function(apl) {
+                         return LI(
+                             A({href:'appreview.html?id='+apl.appid},apl.appname),
+                             A({href:'mailto:'+apl.appemail},' ',IMG({border:0,src:'images/envelope.png',alt:'Email Candidate'})));
+                       },results)); else return P('No requests have gone to that email address.');}),'lwresults');
 
-  insertDomE(
-	     getFilteredWSO_e(snapshot_e(extractEvent_e('lwbut','click'),$B('lwemail')).transform_e(function(email) {
-		   return genRequest(
-				     {url:'findRefs',
-					 fields:{cookie:authCookie,email:email}});})).transform_e(function(results) {
-					     if (results.length > 0) return UL(
-									       map(function(apl) {
-										   return LI(
-											     A({href:'appreview.html?id='+apl.appid},apl.appname),
-											     A({href:'mailto:'+apl.appemail},' ',IMG({border:0,src:'images/envelope.png',alt:'Email Candidate'})));
-										 },results)); else return P('No requests have gone to that email address.');}),'lwresults');
+    insertDomB(switch_b(pendingE.transform_e(function(pending) {
+          return new ModListWidget(pending,
+                 TR(TH('Name'),TH('Email'),TH('Admin?')),
+                 function(obj) {
+                   var ret = new ButtonInputWidget([],
+                           {del:new LinkWidget('Delete')},
+                           function(_) {return obj;},
+                           function(_,bob) {
+                             return TR(TD(obj.name),TD(obj.email),TD(obj.role == 'admin' ? 'Yes' : 'No'),TD(bob.del));
+                           });
+                   ret.events.del = getFilteredWSO_e(
+                             ret.events.del.transform_e(function(d) {
+                           return genRequest({url:'UnverifiedUser/delete',
+                                  fields:{cookie:authCookie,id:d.id}});}));
+                   return ret;
+          },
+                 function() {
+                   return new ButtonInputWidget(
+                        [new TextInputWidget('',20),
+                         new TextInputWidget('',20),
+                         new CheckboxWidget(false)],
+                        {value:new ButtonWidget('Add')},
+                        function(n,e,a) {
+                          return {cookie:authCookie,name:n,email:e,role:a?'admin':'reviewer'};
+                        },
+                        function(is,bs) {
+                          return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));
+                        })
+                     .serverSaving(
+                       function(v) {
+                         return genRequest({url:'UnverifiedUser/addRev',fields:v});
+                       },true);
+                 }).dom;}).startsWith(SPANB())),'pending');
 
-  insertDomB(switch_b(getFilteredWSO_e(onLoadTimeE.constant_e(
-							      genRequest(
-									 {url:'UnverifiedUser/getPending',
-									     fields:{cookie:authCookie}})))
-		      .transform_e(function(pending) {
-			  return new ModListWidget(pending,
-						   TR(TH('Name'),TH('Email'),TH('Admin?')),
-						   function(obj) {
-						     var ret = new ButtonInputWidget([],
-										     {del:new LinkWidget('Delete')},
-										     function(_) {return obj;},
-										     function(_,bob) {
-										       return TR(TD(obj.name),TD(obj.email),TD(obj.role == 'admin' ? 'Yes' : 'No'),TD(bob.del));
-										     });
-						     ret.events.del = getFilteredWSO_e(
-										       ret.events.del.transform_e(function(d) {
-											   return genRequest({url:'UnverifiedUser/delete',
-													      fields:{cookie:authCookie,id:d.id}});}));
-						     return ret;
-			  },
-						   function() {
-						     return new ButtonInputWidget(
-										  [new TextInputWidget('',20),
-										   new TextInputWidget('',20),
-										   new CheckboxWidget(false)],
-										  {value:new ButtonWidget('Add')},
-										  function(n,e,a) {
-										    return {cookie:authCookie,name:n,email:e,role:a?'admin':'reviewer'};
-										  },
-										  function(is,bs) {
-										    return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));
-										  })
-						       .serverSaving(
-								     function(v) {
-								       return genRequest({url:'UnverifiedUser/addRev',fields:v});
-								     },true);
-						   }).dom;}).startsWith(SPANB())),'pending');
-
-  onLoadTimeE.sendEvent('Loaded!');
+    onLoadTimeE.sendEvent('Loaded!');
+  }
 });

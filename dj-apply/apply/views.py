@@ -17,25 +17,25 @@ def sendLogEmail(msg, address, ):
 
 def applicant_handler(request):
   if request.method != 'GET':
-    return HttpResponseNotAllowed['GET']
+    return HttpResponseNotAllowed(['GET'])
 
   return render_to_response('application.html', {})
 
 def new_account_handler(request):
   if request.method != 'GET':
-    return HttpResponseNotAllowed['GET']
+    return HttpResponseNotAllowed(['GET'])
 
   return render_to_response('new_account.html', {})
 
 def admin_handler(request):
   if request.method != 'GET':
-    return HttpResponseNotAllowed['GET']
+    return HttpResponseNotAllowed(['GET'])
 
   return render_to_response('admin.html', {})
 
 def index_handler(request):
   if request.method != 'GET':
-    return HttpResponseNotAllows['GET']
+    return HttpResponseNotAllowed(['GET'])
 
   return render_to_response('index.html', {})
 
@@ -71,26 +71,9 @@ def checkPostArgs(classname, args, keys):
       return logWith404(classname + ' error: post args missing ' + k)
   return 'OK'
 
-# Search for a department with name=dept_name and handle errors
-# Returns (success, <department or response>)
-def findDepartment(class_name, dept_name):
-  depts = Department.objects.filter(name=dept_name)
-  if len(depts) > 1:
-    resp = logWith404(logger, class_name + ' fatal error: duplicate departments',\
-      level='error')
-    return (False, resp)
-  if len(depts) == 0:
-    resp = { \
-      "success" : False, \
-      "message" : "no department named %s" % deptname\
-    }
-    return (False, bcap.bcapResponse(resp))
-  dept = depts[0]
-  return (True, dept)
-
 class AdminLaunchHandler(bcap.CapHandler):
   def get(self, granted):
-    department = granted.department
+    department = granted.authinfo.department
     resp = {\
       'getReviewers' : bcap.grant('get-reviewers', department),\
       'UnverifiedUserAdd' : bcap.grant('unverifieduser-add', department),\
