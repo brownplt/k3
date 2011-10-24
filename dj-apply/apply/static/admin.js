@@ -229,7 +229,7 @@ $(function() {
           var allrevsE = onLoadTimeE.constant_e(reviewers);
           r.UnverifiedUserGetPending.get(function(pending) {
             var pendingE = onLoadTimeE.constant_e(pending);
-            doRestAdmin(basicInfoE, allrevsE, pendingE);
+            doRestAdmin(basicInfoE, allrevsE, pendingE, r);
           });
         });
       });
@@ -239,11 +239,8 @@ $(function() {
 
   authCookie = $URL('cookie');
 
-  function doRestAdmin(basicInfoE, allrevsE, pendingE) {
-    //var curAuthE = getAuthE(onLoadTimeE,authCookie);
-    var curAuthE = onLoadTimeE.constant_e('curAuth');
-    
-    lift_e(function(basicInfo,curAuth,allRevs) {
+  function doRestAdmin(basicInfoE, allrevsE, pendingE, launchInfo) {
+    lift_e(function(basicInfo,allRevs) {
         setHeadAndTitle(basicInfo,'Site Administration',
             [A({href:'login.html?logout='+authCookie},'Log Out'),
              A({href:'reviewer.html'},'Back to List')]);
@@ -268,7 +265,7 @@ $(function() {
                                                 {url:'changeContacts',
                                               fields:{cookie:authCookie,contactName:cinfo[0],contactEmail:cinfo[1],techEmail:cinfo[2]}});
                                         }).dom,'cinfo');
-      },basicInfoE,curAuthE,allrevsE);
+      },basicInfoE,allrevsE);
 
     insertDomE(
          getFilteredWSO_e(snapshot_e(extractEvent_e('lwbut','click'),$B('lwemail')).transform_e(function(email) {
@@ -310,10 +307,13 @@ $(function() {
                         function(is,bs) {
                           return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));
                         })
-                     .serverSaving(
+                     .belayServerSaving(
                        function(v) {
-                         return genRequest({url:'UnverifiedUser/addRev',fields:v});
-                       },true);
+                         return {fields : v};
+                       },
+                       true,
+                       launchInfo.UnverifiedUserAddRev
+                       );
                  }).dom;}).startsWith(SPANB())),'pending');
 
     onLoadTimeE.sendEvent('Loaded!');

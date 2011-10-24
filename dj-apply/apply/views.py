@@ -76,7 +76,7 @@ class AdminLaunchHandler(bcap.CapHandler):
     department = granted.authinfo.department
     resp = {\
       'getReviewers' : bcap.grant('get-reviewers', department),\
-      'UnverifiedUserAdd' : bcap.grant('unverifieduser-add', department),\
+      'UnverifiedUserAddRev' : bcap.grant('unverifieduser-addrev', department),\
       'UnverifiedUserGetPending' : bcap.grant('unverifieduser-getpending', department),\
       'ScoreCategoryAdd' : bcap.grant('scorecategory-add', department),\
       'ApplicantPositionAdd' : bcap.grant('applicantposition-add', department),\
