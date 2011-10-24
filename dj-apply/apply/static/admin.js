@@ -1,4 +1,4 @@
-function positionListB(basicInfo) {
+function positionListB(basicInfo, addCap) {
   var positions = basicInfo.positions;
   return new ModListWidget(positions,
 			   TR(TH('Name'), TH('Abbr'), TH('Auto Email')), // header
@@ -30,9 +30,10 @@ function positionListB(basicInfo) {
 							  function(is,bs) { 
 							    return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));
 							  })
-			       .serverSaving(function(fields) {
-				   return genRequest({ url: 'ApplicantPosition/add', fields: fields });
-			       }, true);
+                   .belayServerSaving(function(fields){
+                     console.log('position list add: fields = ', fields);
+                     return {fields:fields};
+                   }, true, addCap);
 			   }).dom;
 };
 
@@ -249,7 +250,7 @@ $(function() {
         insertDomB(genStmtList(basicInfo),'stmtlist');
         insertDomB(genContList(basicInfo),'contlist');
         insertDomB(genRCList(basicInfo),'rclist');
-        insertDomB(positionListB(basicInfo),'applicantPositions');
+        insertDomB(positionListB(basicInfo, launchInfo.ApplicantPositionAdd),'applicantPositions');
       
       
         insertDom(

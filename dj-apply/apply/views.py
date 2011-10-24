@@ -248,7 +248,7 @@ class ApplicantPositionAddHandler(bcap.CapHandler):
     autoemail = args['autoemail']
 
     position = ApplicantPosition(department=grantable.department, name=name,\
-      shortform=shortform)
+      shortform=shortform, autoemail=autoemail)
     try:
       position.save()
     except IntegrityError:
