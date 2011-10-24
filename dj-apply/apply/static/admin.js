@@ -36,7 +36,7 @@ function positionListB(basicInfo) {
 			   }).dom;
 };
 
-function genAreasList(bi) {
+function genAreasList(bi, addCap) {
   return new ModListWidget(bi.areas,
 			   TR(TH('Name'),TH('Abbr')),
 			   function(obj) {
@@ -44,11 +44,9 @@ function genAreasList(bi) {
 							     {del:new LinkWidget('Delete')},
 							     function() {return obj;},
 							     function(_,bob) {return TR(TD(obj.name),TD(obj.abbr),TD(bob.del));});
-			     ret.events.del = getFilteredWSO_e(ret.events.del.transform_e(function(d) {
-				   return genRequest(
-			       {url:'Area/delete',
-				fields:{cookie:authCookie,id:d.id}});
-				 }));
+                 ret.events.del = belayGetWSO_e(ret.events.del.transform_e(function(d) {
+                   return {request:'delete'};
+                 }), obj.del);
 			     return ret;
   },
 			   function() {
@@ -58,7 +56,7 @@ function genAreasList(bi) {
 							  {value:new ButtonWidget('Add')},
 							  function(n,a) {return {cookie:authCookie,name:n,abbr:a};},
 							  function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(bs.value));})
-			       .serverSaving(function(a) {return genRequest({url:'Area/add',fields:a});},true);
+			       .belayServerSaving(function(a) {return {fields:a};},true, addCap);
 			   }).dom;
 }
 function genStmtList(bi) {
@@ -247,7 +245,7 @@ $(function() {
 
         insertDomB(reviewerTable(allRevs),'revlist');
 
-        insertDomB(genAreasList(basicInfo),'arealist');
+        insertDomB(genAreasList(basicInfo, launchInfo.AreaAdd),'arealist');
         insertDomB(genStmtList(basicInfo),'stmtlist');
         insertDomB(genContList(basicInfo),'contlist');
         insertDomB(genRCList(basicInfo),'rclist');

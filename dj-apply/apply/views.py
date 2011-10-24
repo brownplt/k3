@@ -407,6 +407,12 @@ class FindRefsHandler(bcap.CapHandler):
 class GetBasicHandler(bcap.CapHandler):
   def get(self, granted):
     basic_info = granted.department.getBasic()
+    response_areas = [\
+      {'name' : a.name,\
+       'abbr' : a.abbr,\
+       'del' : bcap.grant('area-delete', a)\
+      } for a in basic_info['areas']]
+    basic_info['areas'] = response_areas
     return bcap.bcapResponse(basic_info)
 
 class SetBasicHandler(bcap.CapHandler):
