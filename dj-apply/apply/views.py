@@ -83,6 +83,7 @@ class AdminLaunchHandler(bcap.CapHandler):
       'AreaAdd' : bcap.grant('area-add', department),\
       'getBasic' : bcap.grant('get-basic', department),\
       'setBasic' : bcap.grant('set-basic', department),\
+      'findRefs' : bcap.grant('find-refs', department),\
       'getCSV' : bcap.grant('get-csv', department)\
     }
     return bcap.bcapResponse(resp)

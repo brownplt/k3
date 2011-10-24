@@ -267,10 +267,9 @@ $(function() {
       },basicInfoE,allrevsE);
 
     insertDomE(
-         getFilteredWSO_e(snapshot_e(extractEvent_e('lwbut','click'),$B('lwemail')).transform_e(function(email) {
-         return genRequest(
-               {url:'findRefs',
-             fields:{cookie:authCookie,email:email}});})).transform_e(function(results) {
+        belayGetWSO_e(snapshot_e(extractEvent_e('lwbut','click'),$B('lwemail')).transform_e(function(email) {
+          return {fields:{email:email}};
+        }), launchInfo.findRefs).transform_e(function(results) {
                  if (results.length > 0) return UL(
                            map(function(apl) {
                          return LI(
