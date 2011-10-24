@@ -351,7 +351,13 @@ class UnverifiedUserDeleteHandler(bcap.CapHandler):
 class UnverifiedUserGetPendingHandler(bcap.CapHandler):
   def get(self, grantable):
     pending = grantable.department.getPending()
-    return bcap.bcapResponse(pending)
+    result = [\
+        {'name' : u.name,\
+         'role' : u.role,\
+         'email' : u.email,\
+         'del' : bcap.grant('unverifieduser-delete', u)\
+        } for u in pending]
+    return bcap.bcapResponse(result)
 
 class GetReviewersHandler(bcap.CapHandler):
   def get(self, grantable):

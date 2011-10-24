@@ -6,8 +6,7 @@ class Department(bcap.Grantable):
   def my(self, cls):
     return cls.objects.filter(department=self)
   def getPending(self):
-    users = self.my(UnverifiedUser).exclude(role='applicant')
-    return [{'name' : u.name, 'role' : u.role, 'email' : u.email} for u in users]
+    return self.my(UnverifiedUser).exclude(role='applicant')
   def getReviewers(self):
     reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\

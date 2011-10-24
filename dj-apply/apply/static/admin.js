@@ -289,10 +289,9 @@ $(function() {
                            function(_,bob) {
                              return TR(TD(obj.name),TD(obj.email),TD(obj.role == 'admin' ? 'Yes' : 'No'),TD(bob.del));
                            });
-                   ret.events.del = getFilteredWSO_e(
-                             ret.events.del.transform_e(function(d) {
-                           return genRequest({url:'UnverifiedUser/delete',
-                                  fields:{cookie:authCookie,id:d.id}});}));
+                   ret.events.del = belayGetWSO_e(ret.events.del.transform_e(function(d) {
+                      return {request:'delete', fields:{id:d.id}};}),
+                     obj.del);
                    return ret;
           },
                  function() {
