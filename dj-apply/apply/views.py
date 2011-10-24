@@ -84,6 +84,7 @@ class AdminLaunchHandler(bcap.CapHandler):
       'getBasic' : bcap.grant('get-basic', department),\
       'setBasic' : bcap.grant('set-basic', department),\
       'findRefs' : bcap.grant('find-refs', department),\
+      'changeContacts' : bcap.grant('change-contacts', department),\
       'getCSV' : bcap.grant('get-csv', department)\
     }
     return bcap.bcapResponse(resp)

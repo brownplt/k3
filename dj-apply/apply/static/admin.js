@@ -258,12 +258,10 @@ $(function() {
             [new TextInputWidget(basicInfo.info.contactName,20).toTableRow('Contact Name'),
              new TextInputWidget(basicInfo.info.contactEmail,20).toTableRow('Contact Email'),
              new TextInputWidget(basicInfo.info.techEmail,20).toTableRow('Maintainer Email')],
-            function(cname,cemail,temail) {return TABLE({className:'key-value'},TBODY(cname,cemail,temail));}).serverSaving(
-                                        function(cinfo) {
-                                          return genRequest(
-                                                {url:'changeContacts',
-                                              fields:{cookie:authCookie,contactName:cinfo[0],contactEmail:cinfo[1],techEmail:cinfo[2]}});
-                                        }).dom,'cinfo');
+            function(cname,cemail,temail) {return TABLE({className:'key-value'},TBODY(cname,cemail,temail));}).belayServerSaving(
+                                          function(cinfo) {
+                                            return {fields:{contactName:cinfo[0], contactEmail:cinfo[1], techEmail:cinfo[2]}}
+                                          }, false, launchInfo.changeContacts).dom, 'cinfo');
       },basicInfoE,allrevsE);
 
     insertDomE(
