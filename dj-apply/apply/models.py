@@ -34,7 +34,7 @@ class Department(bcap.Grantable):
         'zu':'Unknown'
       },\
       'countries' : list(set([a.country for a in self.my(Applicant)])),\
-      'scores' : [s.to_json() for s in self.my(Score)],\
+      'scores' : [s.to_json() for s in self.my(ScoreCategory)],\
       'degrees' : [d.to_json() for d in self.my(Degree)],\
     }
   def to_json(self):
@@ -138,11 +138,18 @@ class ApplicantInstitution(bcap.Grantable):
 class ScoreCategory(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
+  def getValues(self):
+    return ScoreValue.objects.filter(category=self)
+  def to_json(self):
+    values = [v.to_json() for v in self.getValues()]
+    return {'name' : self.name, 'shortform' : self.shortform, 'values' : values}
   name = models.TextField()
   shortform = models.TextField()
   department = models.ForeignKey(Department)
 
 class ScoreValue(bcap.Grantable):
+  def to_json(self):
+    return {'number' : self.number, 'explanation' : self.explanation}
   category = models.ForeignKey(ScoreCategory)
   number = models.IntegerField()
   explanation = models.TextField()

@@ -103,7 +103,7 @@ function genContList(bi) {
 							  function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));});
 			   }).dom;
 }
-function genRCList(bi) {
+function genRCList(bi, addCap) {
   var editValueE = receiver_e();
   var rclB = new ModListWidget(bi.scores,
 			       TR(TH('Name'),TH('Abbr'),TH('Values')),
@@ -137,9 +137,7 @@ function genRCList(bi) {
 								is[2].style.width = '1em';
 								is[3].style.width = '1em';
 								return TR(TD(is[0]),TD(is[1]),TD(is[2],' - ',is[3]),TD(is[4]),TD(bs.value));})
-				 .serverSaving(function(val) {
-				     return genRequest({url:'ScoreCategory/add',fields:val});
-				   },true);
+          .belayServerSaving(function(val) { return {fields:val}; }, true, addCap);
 			       }).dom;
   insertDomE(editValueE.transform_e(function(ev) {
 	return DIV(
@@ -249,7 +247,7 @@ $(function() {
         insertDomB(genAreasList(basicInfo, launchInfo.AreaAdd),'arealist');
         insertDomB(genStmtList(basicInfo),'stmtlist');
         insertDomB(genContList(basicInfo),'contlist');
-        insertDomB(genRCList(basicInfo),'rclist');
+        insertDomB(genRCList(basicInfo, launchInfo.ScoreCategoryAdd),'rclist');
         insertDomB(positionListB(basicInfo, launchInfo.ApplicantPositionAdd),'applicantPositions');
       
       

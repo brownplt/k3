@@ -185,7 +185,7 @@ class ScoreCategoryChangeHandler(bcap.CapHandler):
 
 class ScoreCategoryAddHandler(bcap.CapHandler):
   def post_arg_names(self):
-    return ['name', 'shortform']
+    return ['name', 'shortform', 'maxval', 'minval']
 
   def name_str(self):
     return 'ScoreCategoryAddHandler'
@@ -197,6 +197,8 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
 
     name = args['name']
     shortform = args['shortform']
+    maxval = args['maxval']
+    minval = args['minval']
     
     sc = ScoreCategory(department=grantable.department, name=name, \
       shortform=shortform)
@@ -206,10 +208,25 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
       resp = {'success' : False, 'message' : 'category already exists'}
       return bcap.bcapResponse(resp)
 
+    value_range = range(int(minval), int(maxval) + 1)
+    for x in value_range:
+      sv = ScoreValue(category=sc, department=grantable.department, explanation='',\
+        number=x)
+      try:
+        sv.save()
+      except IntegrityError:
+        resp = {'success' : False, 'message' : "couldn't create score value: " + str(x)}
+        return bcap.bcapResponse(resp)
+
     delCap = bcap.grant('scorecategory-delete', sc)
     changeCap = bcap.grant('scorecategory-change', sc)
 
-    resp = {"success" : True, "change" : changeCap, "delete" : delCap}
+    resp = {\
+      "success" : True,\
+      "change" : changeCap, \
+      "delete" : delCap,\
+      "values" : value_range\
+    }
     return bcap.bcapResponse(resp)
 
 class ScoreValueChangeHandler(bcap.CapHandler):
