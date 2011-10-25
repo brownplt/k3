@@ -180,7 +180,11 @@ class ScoreCategoryChangeHandler(bcap.CapHandler):
     except IntegrityError:
       resp = {'success' : False, 'message' : 'invalid arguments'}
       return bcap.bcapResponse(resp)
-    resp = {'success' : True}
+    resp = {\
+      'success' : True,\
+      'name' : sc.name,\
+      'shortform' : sc.shortform,\
+    }
     return bcap.bcapResponse(resp)
 
 class ScoreCategoryAddHandler(bcap.CapHandler):
@@ -220,7 +224,11 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
 
     resp = {\
       "success" : True,\
-      "values" : value_range\
+      "name" : name,\
+      "shortform" : shortform,\
+      "maxval" : maxval,\
+      "minval" : minval,\
+      "values" : [{'number' : v, 'explanation' : ''} for v in value_range]\
     }
     return bcap.bcapResponse(resp)
 
@@ -269,7 +277,11 @@ class ApplicantPositionAddHandler(bcap.CapHandler):
       resp = {'success' : False, 'message' : 'position already exists'}
       return bcap.bcapResponse(resp)
 
-    return bcap.bcapResponse({'success' : True})
+    return bcap.bcapResponse({\
+      'success' : True,\
+      'name' : name,\
+      'shortform' : shortform,\
+      'autoemail' : autoemail})
 
 class AreaAddHandler(bcap.CapHandler):
   def post_arg_names(self):
