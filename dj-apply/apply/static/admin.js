@@ -117,8 +117,8 @@ function genRCList(bi, addCap) {
      del:new LinkWidget('Delete')},
 								 function(n,s,agg) {return {name:n,shortform:s,cookie:authCookie,id:obj.id };},
 								 function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(ln),TD(bs.value),TD(bs.del));})
-				 .serverSaving(function(val) {
-				     return genRequest({url:'ScoreCategory/change',fields:val});},true)
+           .belayServerSaving(function(val) {
+             return {fields:val}; }, true, obj.change);
          ret.events.del = belayGetWSO_e(ret.events.del.transform_e(function(){return {request:'delete'};}), obj.del);
 				 return ret;
 			       },
@@ -142,9 +142,9 @@ function genRCList(bi, addCap) {
 		   TABLE({className:'key-value'},
 			 TBODY(
 			       map(function(sv) {
-				   return new TextInputWidget(sv.explanation,20).toTableRow(''+sv['number']).serverSaving(function(sve) {
+				   return new TextInputWidget(sv.explanation,20).toTableRow(''+sv['number']).belayServerSaving(function(sve) {
 				       sv.explanation = sve;
-				       return genRequest({url:'ScoreValue/change',fields:{cookie:authCookie,id:sv.id,explanation:sve}});}).dom;
+               return {fields:{explanation:sve, number:sv.number}};}, false, sv.change).dom;
 				 },ev.values))));
       }),'rcvals');
   return rclB;

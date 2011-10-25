@@ -218,11 +218,8 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
         resp = {'success' : False, 'message' : "couldn't create score value: " + str(x)}
         return bcap.bcapResponse(resp)
 
-    changeCap = bcap.grant('scorecategory-change', sc)
-
     resp = {\
       "success" : True,\
-      "change" : changeCap, \
       "values" : value_range\
     }
     return bcap.bcapResponse(resp)
@@ -433,8 +430,12 @@ class GetBasicHandler(bcap.CapHandler):
     response_scores = [\
       {'name' : s.name,\
        'shortform' : s.shortform,\
-       'values' : [{'number' : v.number} for v in s.getValues()],\
-       'del' : bcap.grant('scorecategory-delete', s)\
+       'values' : [\
+          {'number' : v.number,\
+           'explanation' : v.explanation,\
+           'change' : bcap.grant('scorevalue-change', v)} for v in s.getValues()],\
+       'del' : bcap.grant('scorecategory-delete', s),\
+       'change' : bcap.grant('scorecategory-change', s)\
       } for s in basic_info['scores']]
     basic_info['scores'] = response_scores
     return bcap.bcapResponse(basic_info)
