@@ -12,8 +12,8 @@ from belaylibs.models import Grant
 logger = logging.getLogger('default')
 
 # TODO: implement
-def sendLogEmail(msg, address, ):
-  logger.info('send log email')
+def sendLogEmail(msg, address):
+  logger.error('send log email:\n %s \n%s' % (address, msg))
 
 def applicant_handler(request):
   if request.method != 'GET':
@@ -294,7 +294,12 @@ class AreaAddHandler(bcap.CapHandler):
       return bcap.bcapResponse(resp)
 
     delCap = bcap.grant('area-delete', area)
-    return bcap.bcapResponse({'success' : True, 'delete' : delCap})
+    return bcap.bcapResponse({
+      'name' : name,
+      'abbr' : abbr,
+      'success' : True,
+      'delete' : delCap
+    })
 
 class AreaDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
