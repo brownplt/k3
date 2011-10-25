@@ -60,10 +60,9 @@ $(function() {
     );
   }
 
-  $(window).bind('message', function(e) {
-    console.log('Receiving page message: ', e);
-    $(window).unbind('message');
-    clientLocation = e.originalEvent.data.clientLocation;
+  $.pm.bind('init', function(data) {
+    console.log(data);
+    clientLocation = data.clientLocation;
     console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
       console.log("Unexpected message from client: ", e);
