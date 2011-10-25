@@ -367,7 +367,12 @@ To regain access your account once it has been created, visit:
     sendLogEmail(emailstr, email)
 
     delCap = bcap.grant('unverifieduser-delete', uu)
-    resp = {'success' : True, 'delete' : delCap}
+    resp = {\
+      'success' : True,\
+      'email' : email,\
+      'name' : name,\
+      'role' : role,\
+    }
     return bcap.bcapResponse(resp)
 
 class UnverifiedUserDeleteHandler(bcap.CapHandler):
