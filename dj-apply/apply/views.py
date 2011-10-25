@@ -218,13 +218,11 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
         resp = {'success' : False, 'message' : "couldn't create score value: " + str(x)}
         return bcap.bcapResponse(resp)
 
-    delCap = bcap.grant('scorecategory-delete', sc)
     changeCap = bcap.grant('scorecategory-change', sc)
 
     resp = {\
       "success" : True,\
       "change" : changeCap, \
-      "delete" : delCap,\
       "values" : value_range\
     }
     return bcap.bcapResponse(resp)
@@ -432,6 +430,13 @@ class GetBasicHandler(bcap.CapHandler):
        'del' : bcap.grant('area-delete', a)\
       } for a in basic_info['areas']]
     basic_info['areas'] = response_areas
+    response_scores = [\
+      {'name' : s.name,\
+       'shortform' : s.shortform,\
+       'values' : [{'number' : v.number} for v in s.getValues()],\
+       'del' : bcap.grant('scorecategory-delete', s)\
+      } for s in basic_info['scores']]
+    basic_info['scores'] = response_scores
     return bcap.bcapResponse(basic_info)
 
 class SetBasicHandler(bcap.CapHandler):

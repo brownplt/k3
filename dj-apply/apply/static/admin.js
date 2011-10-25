@@ -119,10 +119,7 @@ function genRCList(bi, addCap) {
 								 function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(ln),TD(bs.value),TD(bs.del));})
 				 .serverSaving(function(val) {
 				     return genRequest({url:'ScoreCategory/change',fields:val});},true)
-				 ret.events.del = getFilteredWSO_e(ret.events.del.transform_e(function(d) {
-				       return genRequest({url:'ScoreCategory/delete',
-							  fields:{cookie:authCookie,id:d.id}});
-				     }));
+         ret.events.del = belayGetWSO_e(ret.events.del.transform_e(function(){return {request:'delete'};}), obj.del);
 				 return ret;
 			       },
 			       function() {

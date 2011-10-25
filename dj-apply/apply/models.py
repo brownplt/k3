@@ -34,7 +34,7 @@ class Department(bcap.Grantable):
         'zu':'Unknown'
       },\
       'countries' : list(set([a.country for a in self.my(Applicant)])),\
-      'scores' : [s.to_json() for s in self.my(ScoreCategory)],\
+      'scores' : self.my(ScoreCategory),\
       'degrees' : [d.to_json() for d in self.my(Degree)],\
     }
   def to_json(self):
