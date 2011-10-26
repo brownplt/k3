@@ -10,6 +10,7 @@ class Department(bcap.Grantable):
   def getReviewers(self):
     reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\
+      'uname' : r.auth.username,\
       'name' : r.auth.name,\
       'role' : r.auth.role,\
       'committee' : r.committee } for r in reviewers]
@@ -65,9 +66,12 @@ class AuthInfo(bcap.Grantable):
     ('reviewer', 'reviewer'),\
     ('admin', 'admin')\
   ]
+  username = models.TextField()
+  password_hash = models.TextField()
   email = models.EmailField()
   name = models.TextField()
   role = models.TextField(choices=roles)
+  verify = models.IntegerField(default=0)
   department = models.ForeignKey(Department)
 
 class ApplicantPosition(bcap.Grantable):

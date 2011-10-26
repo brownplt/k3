@@ -1,4 +1,5 @@
 import apply.models as amod
+import random
 from django.http import HttpResponse
 from datetime import date
 
@@ -149,16 +150,16 @@ def generate(request):
     return ''.join([chr(random.randint(48, 90)) for x in range(n)])
 
   def randEmail():
-    nm = ''.join([chr(random.randint(97, 122) for x in range(5))])
-    dom = ''.join([chr(random.randint(97, 122) for x in range(5))])
+    nm = ''.join([chr(random.randint(97, 122)) for x in range(5)])
+    dom = ''.join([chr(random.randint(97, 122)) for x in range(5)])
     return nm + '@' + dom
 
   def randDate():
     return date.fromtimestamp(random.randint(0, 1318790434))
 
   def randAuthInfo():
-    rtn = amod.AuthInfo(username=randStr(10), password_hash=randStr(15), email=randEmail(),\
-      name=randStr(10), role=randAuthInfoRole(), department=randDepartment())
+    rtn = amod.AuthInfo(username=randStr(10), name=randStr(10), email=randEmail(),\
+      password_hash=randStr(10), role=randAuthInfoRole(), department=randDepartment())
     rtn.save()
     return rtn
 
@@ -211,7 +212,7 @@ def generate(request):
 
   def randReviewer():
     rtn = amod.Reviewer(auth=randAuthInfo(), committee=randBool(), \
-      department=randDepartment())
+      department=cs)
     rtn.save()
     return rtn
 
@@ -278,5 +279,8 @@ def generate(request):
       expires=random.randint(1, 100))
     rtn.save()
     return rtn
+
+  for i in range(10):
+    randReviewer()
 
   return HttpResponse("OK")
