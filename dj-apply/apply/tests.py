@@ -481,6 +481,7 @@ class TestAdminLaunch(ApplyTest):
     applicant.save()
     reviewer = Reviewer(auth=auth, committee=False, department=self.department)
     reviewer.save()
+    self.reviewer = reviewer
     review = Review(applicant=applicant, reviewer=reviewer, comments='comments',\
       draft=False, department=self.department)
     review.save()
@@ -507,3 +508,34 @@ class TestAdminLaunch(ApplyTest):
 
   def tearDown(self):
     self.department.delete()
+
+class TestReviewer(TestAdminLaunch):
+  def setUp(self):
+    super(TestReviewer, self).setUp()
+
+  def testGetReviewerEmpty(self):
+    get_reviewer = bcap.grant('get-reviewer', self.reviewer)
+    result = get_reviewer.get()
+    self.assertEqual(result['hiddens'], [])
+    self.assertEqual(result['highlights'], [])
+    self.assertEqual(result['drafts'], [])
+    
+  def testGetReviewerHidden(self):
+    get_reviewer = bcap.grant('get-reviewer', self.reviewer)
+    hidden = Hidden(applicant=self.applicant, department=self.department,\
+                    reviewer=self.reviewer)
+    hidden.save()
+    result = get_reviewer.get()
+    self.assertEqual(result['hiddens'], [self.applicant.id])
+    self.assertEqual(result['highlights'], [])
+    self.assertEqual(result['drafts'], [])
+
+  def testGetReviewerHighlight(self):
+    get_reviewer = bcap.grant('get-reviewer', self.reviewer)
+    highlight = Highlight(applicant=self.applicant, department=self.department,\
+                    highlightee=self.reviewer)
+    highlight.save()
+    result = get_reviewer.get()
+    self.assertEqual(result['hiddens'], [])
+    self.assertEqual(result['highlights'], [self.applicant.id])
+    self.assertEqual(result['drafts'], [])
