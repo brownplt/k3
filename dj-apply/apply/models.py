@@ -10,7 +10,6 @@ class Department(bcap.Grantable):
   def getReviewers(self):
     reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\
-      'uname' : r.auth.username,\
       'name' : r.auth.name,\
       'role' : r.auth.role,\
       'committee' : r.committee } for r in reviewers]
@@ -66,13 +65,16 @@ class AuthInfo(bcap.Grantable):
     ('reviewer', 'reviewer'),\
     ('admin', 'admin')\
   ]
-  username = models.TextField()
-  password_hash = models.TextField()
   email = models.EmailField()
   name = models.TextField()
   role = models.TextField(choices=roles)
-  verify = models.IntegerField(default=0)
   department = models.ForeignKey(Department)
+  # NOTE(joe): These are REMOVED ON PURPOSE from the model, but kept for
+  # documentary reasons during porting.  If you are inheriting this codebase
+  # and confused sometime in 2014, you can safely delete these lines.
+  # username = models.TextField()
+  # password_hash = models.TextField()
+  # verify = models.IntegerField(default=0)
 
 class ApplicantPosition(bcap.Grantable):
   class Meta:
@@ -114,8 +116,8 @@ class Applicant(bcap.Grantable):
   lastname = models.TextField()
   country = models.TextField()
   department = models.ForeignKey(Department)
-  # TODO(matt): does the department of the ApplicantPosition have to be the same
-  # as the department of this Applicant?
+  # TODO(matt): does the department of the ApplicantPosition have to be the
+  # same as the department of this Applicant?
   position = models.ForeignKey(ApplicantPosition)
 
 class Degree(bcap.Grantable):

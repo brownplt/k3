@@ -241,12 +241,18 @@ def handle(cap_id, method, args):
   if len(grants) > 1:
     # TODO(arjun.guha@gmail.com): appropriate error in response
     raise BelayException('%s, %s' % (self.request.path_info, cap_id))
-  
+
   grant = grants[0]   
   handler_class = get_handler(str(grant.internal_path))
   handler = handler_class()
 
   item = grant.db_entity
+
+# TODO(joe): make sure this is legit
+#  if(hasattr(handler, 'post_arg_names')):
+#    maybe_error_response = handler.checkPostArgs(args)
+#    if maybe_error_response != 'OK':
+#      return maybe_error_response
 
   if method == 'GET':
     return handler.get(item)

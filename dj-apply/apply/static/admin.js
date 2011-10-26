@@ -165,10 +165,7 @@ function RevEntry(rev,cols) {
 function stringCmp(a,b) {return (a > b) ? 1 : (b > a) ? -1 : 0;}
 function reviewerTable(allrevs) {
   var cols = [
-    makeColumn('username','Username',function(a, b) {return stringCmp(a.uname,b.uname);},function(r, cookie) {
-      //return TD(A({href:'login.html?switch='+authCookie+'&user_id='+r.id}, r.uname));
-      return TD(r.uname);
-    }),
+    // NOTE(joe): The full name can become a log-in-as link (or some other ui)
     makeColumn('name','Full Name',function(a, b) {return stringCmp(a.name,b.name);},function(r, cookie) {return TD(r.name);}),
     makeColumn('email','Email',function(a, b) {return stringCmp(a.email,b.email);},function(r, cookie) {return TD(r.email);}),
     makeColumn('committee','Comm?',

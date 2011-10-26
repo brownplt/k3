@@ -440,18 +440,25 @@ $(function() {
       return launchData.getReviewer;
     }));
     
-    var hiddensB = getFilteredWSO_e(
-            merge_e(onLoadTimeE,timer_e(20000)).
-            constant_e(genRequest({url:'getReviewer',fields:{cookie:authCookie}})))
-      .collect_e({ isNew: true, value: [ ] }, function(current, prev) { 
-          return { 
-    isNew: arrayDifferent(prev.value,current.hiddens), 
-    value: current.hiddens 
-          };
+    var hiddensB = 
+      getE(
+        getE(
+          merge_e(onLoadTimeE, timer_e(20000)).
+          constant_e(launchInfo)
+        ).
+        transform_e(function(launchData) { 
+          return launchData.getReviewer;
         })
-      .filter_e(function(v) { return v.isNew; })
-      .lift_e(function(v) { return v.value; })
-      .hold([]);
+      ).
+      collect_e({ isNew: true, value: [ ] }, function(current, prev) { 
+        return { 
+          isNew: arrayDifferent(prev.value, current.hiddens), 
+          value: current.hiddens
+        };
+      }).
+      filter_e(function(v) { return v.isNew; }).
+      lift_e(function(v) { return v.value; }).
+      hold([]);
     
     var applicantsB = rec_e(function(aqE) {
         var lastChangeValB = aqE.transform_e(function(_) {return _.lastChange;}).startsWith(0);
