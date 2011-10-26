@@ -164,6 +164,24 @@ class Reviewer(bcap.Grantable):
   committee = models.BooleanField()
   department = models.ForeignKey(Department)
 
+  def hiddenIds(self):
+    hiddens = Hidden.objects.filter(reviewer=self)
+    # TODO(joe): This is really stupid, but works.  Why can't I join from
+    # a query set?
+    return list(set([h.applicant.id for h in hiddens]))
+  def highlightIds(self):
+    highlights = Highlight.objects.filter(highlightee=self)
+    return list(set([h.applicant.id for h in highlights]))
+  def draftIds(self):
+    reviews = Review.objects.filter(reviewer=self, draft=True)\
+                .exclude(comments='')
+    return list(set([r.applicant.id for r in reviews]))
+
+class Hidden(bcap.Grantable):
+  reviewer = models.ForeignKey(Reviewer)
+  applicant = models.ForeignKey(Applicant)
+  department = models.ForeignKey(Department)
+
 class Review(bcap.Grantable):
   advocate_choices = [\
     ('advocate', 'advocate'),\

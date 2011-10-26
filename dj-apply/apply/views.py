@@ -33,6 +33,12 @@ def admin_handler(request):
 
   return render_to_response('admin.html', {})
 
+def review_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllowed(['GET'])
+
+  return render_to_response('review.html', {})
+
 def index_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
@@ -62,6 +68,7 @@ class ApplyInit():
         'find-refs' : FindRefsHandler,\
         'get-basic' : GetBasicHandler,\
         'set-basic' : SetBasicHandler,\
+        'get-reviewer' : GetReviewerHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -150,8 +157,22 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
     })
 
 class ReviewerLaunchHandler(bcap.CapHandler):
-  def get(self, granted, args):
-    return bcap.bcapNullResponse()
+  def get(self, granted):
+    department = granted.reviewer.auth.department
+    return bcap.bcapResponse({
+      'getBasic': bcap.grant('get-basic', department),
+      'getReviewer': bcap.grant('get-reviewer', granted)
+    })
+
+class GetReviewerHandler(bcap.CapHandler):
+  def get(self, granted):
+    reviewer = granted.reviewer
+    ret = {
+      'hiddens': reviewer.hiddenIds(),
+      'highlights': reviewer.highlightIds(),
+      'drafts': reviewer.draftIds()
+    }
+    return bcap.bcapResponse(ret)
 
 class ScoreCategoryDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):

@@ -10,6 +10,8 @@ urlpatterns = patterns('',
   (r'applicant/', 'apply.views.applicant_handler'),
   (r'new-account/', 'apply.views.new_account_handler'),
   (r'admin/', 'apply.views.admin_handler'),
+  (r'review/', 'apply.views.review_handler'),
+  (r'appreview/', 'apply.view.appreview_handler'),
   (r'^common.js$', 'lib.py.common_js.common_js_handler')
 )
 
