@@ -88,38 +88,41 @@ class TestScoreCategory(ApplyTest):
     args = {\
       'name' : 'Category Uno',\
       'shortform' : 'CU',\
+      'minval' : 0,\
+      'maxval' : 10\
     }
 
     addCap = bcap.grant('scorecategory-add', self.department)
     response = addCap.post(args)
+    self.assertTrue(response.has_key('success'))
+    self.assertTrue(response['success'])
+    for k in args.keys():
+      self.assertTrue(response.has_key(k))
+      self.assertEqual(response[k], args[k])
 
-    hasChange = response.has_key('change')
-    hasDelete = response.has_key('delete')
-    self.assertTrue(hasChange and hasDelete and response['success'])
+    scs = ScoreCategory.objects.filter(name=args['name'])
+    self.assertEqual(len(scs), 1)
+    sc = scs[0]
+    changeCap = bcap.grant('scorecategory-change', sc)
+    new_args = {'name' : 'changed name', 'shortform' : 'cn'}
+    response = changeCap.post(new_args)
+    self.assertTrue(response.has_key('success'))
+    self.assertTrue(response['success'])
+    for k in new_args.keys():
+      self.assertTrue(response.has_key(k), 'response missing key = ' + k)
+      self.assertEqual(response[k], new_args[k])
+    old_scs = ScoreCategory.objects.filter(name=args['name'],\
+      shortform=args['shortform'])
+    self.assertEqual(len(old_scs), 0)
+    new_scs = ScoreCategory.objects.filter(name=new_args['name'],\
+      shortform=new_args['shortform'])
+    self.assertEqual(len(new_scs), 1)
     
-    cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
-      department=self.department)
-    self.assertEqual(len(cats), 1)
-
-    changeCap = response['change']
-    change_resp = changeCap.post({\
-      'name' : 'Category Dos',\
-      'shortform' : 'CD'\
-    })
-    self.assertTrue(change_resp.has_key('success'))
-    self.assertTrue(change_resp['success'])
-    cats = ScoreCategory.objects.filter(name='Category Uno', shortform='CU',\
-      department=self.department)
-    self.assertEqual(len(cats), 0)
-    cats = ScoreCategory.objects.filter(name='Category Dos', shortform='CD',\
-      department=self.department)
-    self.assertEqual(len(cats), 1)
-
-    delCap = response['delete']
-    delResponse = delCap.delete()
-    cats = ScoreCategory.objects.filter(name='Category Dos', shortform='CD',\
-      department=self.department)
-    self.assertEqual(len(cats), 0)
+    sc = new_scs[0]
+    delCap = bcap.grant('scorecategory-delete', sc)
+    sc.delete()
+    new_scs = ScoreCategory.objects.filter(name=new_args['name'],\
+      shortform=new_args['shortform'])
 
   def tearDown(self):
     self.department.delete()
@@ -206,37 +209,32 @@ class TestUnverifiedUser(ApplyTest):
       'role' : 'reviewer',\
       'name' : 'Matt'\
     }
-    rev2data = {\
-      'email' : 'blah2@blah.com',\
-      'role' : 'admin',\
-      'name' : 'Some Guy'\
-    }
 
     addRevCap = bcap.grant('unverifieduser-addrev', self.department)
     response = addRevCap.post(rev1data)
-    self.assertTrue(response['success'] and response.has_key('delete'))
-    users = UnverifiedUser.objects.filter(name='Matt', email='blah@blah.com',\
-      role='reviewer', department=self.department)
-    self.assertEqual(len(users), 1)
-
-    delCap = response['delete']
-    delCap.delete()
-    users = UnverifiedUser.objects.filter(name='Matt', email='blah@blah.com',\
-      role='reviewer', department=self.department)
-    self.assertEqual(len(users), 0)
-
-    reviewerResponse = addRevCap.post(rev1data)
-    adminResponse = addRevCap.post(rev2data)
-    getPendingCap = bcap.grant('unverifieduser-getpending', self.department)
-    pendingResponse = getPendingCap.get()
-    self.assertEqual(len(pendingResponse), 2)
-    rev1info = pendingResponse[0]
+    self.assertTrue(response.has_key('success'))
+    self.assertTrue(response['success'])
     for (k, v) in rev1data.iteritems():
-      self.assertTrue(rev1info.has_key(k))
-      self.assertEqual(rev1info[k], v)
-    
-    reviewerResponse['delete'].delete()
-    adminResponse['delete'].delete()
+      self.assertTrue(response.has_key(k))
+      self.assertEqual(response[k], v)
+    uus = UnverifiedUser.objects.filter(name=rev1data['name'],\
+      role=rev1data['role'], email=rev1data['email'])
+    self.assertEqual(len(uus), 1)
+
+    getPenCap = bcap.grant('unverifieduser-getpending', self.department)
+    response = getPenCap.get()
+    self.assertEqual(len(response), 1)
+    p = response[0]
+    self.assertTrue(p.has_key('del'))
+    for (k, v) in rev1data.iteritems():
+      self.assertTrue(p.has_key(k))
+      self.assertEqual(p[k], v)
+
+    delCap = p['del']
+    delCap.delete()
+    uus = UnverifiedUser.objects.filter(name=rev1data['name'],\
+      role=rev1data['role'], email=rev1data['email'])
+    self.assertEqual(len(uus), 0)
   
   def tearDown(self):
     self.department.delete()
@@ -403,8 +401,20 @@ class TestGetBasic(ApplyTest):
     self.assertEqual(c['date'], str(date.today()))
 
     self.assertTrue(response.has_key('scores'))
+    s = response['scores'][0]
     self.assertEqual(len(response['scores']), 1)
-    self.assertEqual(response['scores'][0]['score'], 'dummy field')
+    self.assertTrue(s.has_key('values'))
+    svals = s['values']
+    self.assertEqual(len(svals), 1)
+    self.assertEqual(svals[0]['explanation'], 'exp')
+    self.assertEqual(svals[0]['number'], 0)
+    self.assertTrue(svals[0].has_key('change'))
+    self.assertTrue(s.has_key('del'))
+    self.assertTrue(s.has_key('name'))
+    self.assertEquals(s['name'], 'scorecategory')
+    self.assertTrue(s.has_key('change'))
+    self.assertTrue(s.has_key('shortform'))
+    self.assertEquals(s['shortform'], 'sc')
 
     self.assertTrue(response.has_key('degrees'))
     self.assertEqual(len(response['degrees']), 1)
@@ -479,12 +489,14 @@ class TestAdminLaunch(ApplyTest):
     self.degree = Degree(name='degree', shortform='dg', department=self.department)
     self.degree.save()
 
+    self.auth = auth
+
   def testAdminLaunch(self):
-    adminLaunchCap = bcap.grant('launch-admin', self.department)
+    adminLaunchCap = bcap.grant('launch-admin', self.auth)
     response = adminLaunchCap.get()
 
     self.assertTrue(response.has_key('getReviewers'))
-    self.assertTrue(response.has_key('UnverifiedUserAdd'))
+    self.assertTrue(response.has_key('UnverifiedUserAddRev'))
     self.assertTrue(response.has_key('UnverifiedUserGetPending'))
     self.assertTrue(response.has_key('ScoreCategoryAdd'))
     self.assertTrue(response.has_key('ApplicantPositionAdd'))
