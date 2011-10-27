@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpR
 import os
 import logging
 import uuid
-from apply.models import *
+from resume.models import *
 from django.db import IntegrityError
 import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
