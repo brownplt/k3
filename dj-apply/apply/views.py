@@ -69,6 +69,7 @@ class ApplyInit():
         'get-basic' : GetBasicHandler,\
         'set-basic' : SetBasicHandler,\
         'get-reviewer' : GetReviewerHandler,\
+        'get-applicants' : GetApplicantsHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -160,8 +161,9 @@ class ReviewerLaunchHandler(bcap.CapHandler):
   def get(self, granted):
     department = granted.reviewer.auth.department
     return bcap.bcapResponse({
-      'getBasic': bcap.grant('get-basic', department),
-      'getReviewer': bcap.grant('get-reviewer', granted)
+      'getBasic': bcap.regrant('get-basic', department),
+      'getReviewer': bcap.regrant('get-reviewer', granted),
+      'getApplicants': bcap.regrant('get-applicants', granted)
     })
 
 class GetReviewerHandler(bcap.CapHandler):
@@ -170,9 +172,23 @@ class GetReviewerHandler(bcap.CapHandler):
     ret = {
       'hiddens': reviewer.hiddenIds(),
       'highlights': reviewer.highlightIds(),
-      'drafts': reviewer.draftIds()
+      'drafts': reviewer.draftIds(),
+      'auth': {'role' : 'reviewer'}
     }
     return bcap.bcapResponse(ret)
+
+class GetApplicantsHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['lastChange']
+
+  def post(self, grantable, args):
+    reviewer = grantable.reviewer
+    applicant_json = [a.to_json() for a in reviewer.getApplicants()]
+    return bcap.bcapResponse({
+      'changed': True,
+      'lastChange': reviewer.getLastChange(),
+      'value': applicant_json
+    })
 
 class ScoreCategoryDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):

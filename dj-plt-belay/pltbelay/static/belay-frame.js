@@ -154,7 +154,6 @@ $(function() {
           elt.html(instanceInfo.public_data);
         }
         else { return; } // Don't show the relationship
-        console.log('Appending: ', elt);
         accountsDiv.append(elt);
         elt.click(function() {
           launch(instanceInfo);

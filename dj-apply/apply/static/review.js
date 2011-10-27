@@ -1,3 +1,4 @@
+var authCookie = 'belay-fake-cookie';
 
 function highlightBatchCheckboxes() {
   var elts = getElementsByClass('batchCheckbox');
@@ -13,7 +14,7 @@ AppTableWidget.prototype.makePaginator = function(numPapersB,cl) {
   var isp = pagesizecookie.parseJSON();
   var pw = new PaginatorWidget(numPapersB,cl,isp[0],isp[1]);
   lift_b(function(ps,pn) {
-      setCookie('appage',10,[ps,pn].toJSONString());
+      setCookie('appage',10,toJSONString([ps,pn]));
     },pw.behaviors.size,pw.behaviors.page);
   return pw;
 }
@@ -22,7 +23,7 @@ AppTableWidget.prototype.makePaginator = function(numPapersB,cl) {
     //    if(sortcookie) initsort = sortcookie.parseJSON();
     var hsw = new HeaderSortWidget(columns,initsort);
     hsw.behaviors.cols.transform_b(function(sc) {
-	setCookie('appsort',10,sc.toJSONString());
+	setCookie('appsort',10,toJSONString(sc));
       });
     return hsw;
   };
@@ -239,7 +240,8 @@ function getTblColumns(bi,reviewer) {
 				 function(a,cookie) {
 				   return TD(A({href:'appreview.html?id='+a.id,
 						       target:'app'+a.id},a.info.lastname + ', ' + a.info.firstname),
-					     reviewer.auth.role == 'admin' ? DIV(A({href:'login.html?switch='+authCookie+'&user_id='+a.id},'(Log in as)')) : SPAN());
+        // TODO(joe): what to do about admin weaving
+					     /* reviewer.auth.role == 'admin' ? DIV(A({href:'login.html?switch='+authCookie+'&user_id='+a.id},'(Log in as)')) : */ SPAN());
 				 }),
 /*		      makeColumn('info-col','Position',
 				 function(a,b) { return stringCmp(a.info.position,b.info.position); },
@@ -435,49 +437,46 @@ $(function() {
     
     basicInfoE.lift_e(function(v) { basicInfo = parseBasic(v); });
 
-    var curAuthE = getE(launchE.transform_e(function(launchData) {
+    var reviewerCapE = launchE.transform_e(function(launchData) {
       console.log('Getting reviewer');
       return launchData.getReviewer;
-    }));
-    
-    var hiddensB = 
-      getE(
-        getE(
-          merge_e(onLoadTimeE, timer_e(20000)).
-          constant_e(launchInfo)
-        ).
-        transform_e(function(launchData) { 
-          return launchData.getReviewer;
-        })
-      ).
+    });
+    var curAuthE = getE(reviewerCapE);    
+
+    var reviewerCapB = reviewerCapE.startsWith(null);
+
+    var hiddensB = getE(timer_e(20000).snapshot_e(reviewerCapB)).
       collect_e({ isNew: true, value: [ ] }, function(current, prev) { 
         return { 
           isNew: arrayDifferent(prev.value, current.hiddens), 
           value: current.hiddens
         };
       }).
-      filter_e(function(v) { return v.isNew; }).
-      lift_e(function(v) { return v.value; }).
-      hold([]);
+        filter_e(function(v) { return v.isNew; }).
+          lift_e(function(v) { return v.value; }).
+            hold([]);
     
     var applicantsB = rec_e(function(aqE) {
         var lastChangeValB = aqE.transform_e(function(_) {return _.lastChange;}).startsWith(0);
-        return getFilteredWSO_e(snapshot_e(
-             merge_e(onLoadTimeE,timer_e(120000)),
-             lastChangeValB.transform_b(function(lcv) {
-                 return genRequest(
-                       {url:'getApplicants',
-                     fields:{cookie:authCookie,lastChangeVal:lcv}});
-               }))).filter_e(function(_) {return _.changed;});
-      }).transform_e(function(_) {return _.value;}).startsWith([]);
+        var applicantsCapB = launchE.transform_e(function(launchData) {
+          return launchData.getApplicants;
+        }).startsWith(null);
+        var postB = transform_b(function(applicantsCap, lcv) {
+          return [applicantsCap, { lastChangeVal: lcv }];
+        }, applicantsCapB, lastChangeValB);
+        var applicantChangesE = postE(timer_e(120000).
+                                        merge_e(launchE).
+                                          snapshot_e(postB)).
+          filter_e(function(_) {return _.changed;});
+        return applicantChangesE;
+    }).transform_e(function(_) {return _.value;}).startsWith([]);
     
     insertValueE(applicantsB.changes().once_e().constant_e('block'),'atbl','style','display');
     insertValueE(applicantsB.changes().once_e().constant_e('none'),'loading','style','display');
 
     lift_e(function(basicInfo,curAuth) {
         setHeadAndTitle(basicInfo,'Review Applicants',
-            [A({href:'login.html?logout='+authCookie},'Log Out'),
-             curAuth.auth.role == 'admin' ? A({href:'admin.html?cookie='+authCookie},'Admin') : '']);
+            []);
 
         basicInfo.statements = filter(function(c) {return c.type == 'statement';},basicInfo.components);
         basicInfo.test_scores = filter(function(c) {return c.type == 'test_score';},basicInfo.components);
@@ -486,14 +485,15 @@ $(function() {
 
         refilterE = receiver_e();
         var tblRowsB = lift_b(function(apps) {
-      var i = 0;
-      return map(function(app) {
-          i ++;
-          return new ApplicantEntry(curAuth,basicInfo,app,tblColumns,i);
-        },apps);
-    },applicantsB);
+          var i = 0;
+          return map(function(app) {
+            i++;
+            return new ApplicantEntry(curAuth, basicInfo, app, tblColumns, i);
+          }, apps);
+        }, applicantsB);
+
         tblRowsB = merge_e(tblRowsB.changes(),refilterE.snapshot_e(tblRowsB)).startsWith(tblRowsB.valueNow());
-      
+
         pagesizecookie = getCookie('appage');
         if(!pagesizecookie) pagesizecookie = '[10,1]';
         sortcookie = getCookie('appsort');
@@ -501,14 +501,10 @@ $(function() {
         var filterFnB = initializeFilters(basicInfo, hiddensB, curAuth);
         var tableB = getTable(tblColumns,filterFnB,tblRowsB);
 
-
-
         insertDomB(tableB,'atbl','end');
 
-      },basicInfoE,curAuthE);
+      }, basicInfoE, curAuthE);
       
-
-    console.log('Loaded!');
     onLoadTimeE.sendEvent('Loaded!');
   });
 });
@@ -553,11 +549,11 @@ function checkboxList(elts,init) {
 };
 
 function nameFilter() {
-  $('nameFilter').value = getCookie("nameFilter") || "";
+  getObj('nameFilter').value = getCookie("nameFilter") || "";
 
   insertValueB($B('nameFilter').lift_b(function(name) { 
 	return name ? 'black' : 'gray';
-      }), $('nameFilterLabel'),'style','color');
+      }), getObj('nameFilterLabel'),'style','color');
 
  
   return $B('nameFilter').lift_b(function(name) {
@@ -578,7 +574,7 @@ function noAreaFilter(basicInfo) {
   var isInUse = function(checkbox) { return checkbox; }
 
   insertValueB(checked_b.lift_b(isInUse).lift_b(grayOut),
-	       $('noAreasFilterArea'), 'style', 'color');
+	       getObj('noAreasFilterArea'), 'style', 'color');
 
   var filterFunction = function(checked) {
     setCookie('noAreaFilter',checked);
@@ -602,12 +598,12 @@ function areaFilter(basicInfo) {
       }, basicInfo.areas.sort(function(a,b) { return a.name > b.name ? 1 : -1;})),init);
   // TODO: This need not be an assignment.  It should be possible to effect
   // the control itself by turning it into a behavior.
-  $('filterAreaCheckboxes').appendChild(ctrl.element);
+  getObj('filterAreaCheckboxes').appendChild(ctrl.element);
 
 
   var checked = getCookie('areaFilterType');
   if (checked) {
-    $('af_' + checked).checked = "checked";
+    getObj('af_' + checked).checked = "checked";
   }
 
   var areasB = ctrl.valueB;
@@ -616,13 +612,14 @@ function areaFilter(basicInfo) {
   var isInUse = function(areas) { return areas.length != 0; };
 
   insertValueB(areasB.lift_b(isInUse).lift_b(grayOut),
-	       $('filterArea'), 'style', 'color');
+	       getObj('filterArea'), 'style', 'color');
 
 
   var filterFunction = function(areas,type) {
-    setCookie('areaFilter',30,areas.toJSON());
-    setCookie('areaFilterType',30,
-	      $$('input:checked[type="radio"][name="areaFilterType"]').pluck('value'));
+    setCookie('areaFilter',30,toJSONString(areas));
+    // TODO(arjun.guha@gmail.com): What is pluck?
+   /* setCookie('areaFilterType',30,
+	      getElementsByClass('input:checked[type="radio"][name="areaFilterType"]').pluck('value')); */
 
     if (areas.length == 0) {
       return filterNone;
@@ -657,7 +654,7 @@ function areaFilter(basicInfo) {
 };
 
 function letterFilter() {
-  $('letterFilter').value = getCookie("letterFilter") || "";
+  getObj('letterFilter').value = getCookie("letterFilter") || "";
 
   var rawWritersB = $B('letterFilter').calm_b(1000);
   var writersB = rawWritersB
@@ -682,7 +679,7 @@ function letterFilter() {
 };
 
 function institutionFilter() {
-  $('institutionFilter').value = getCookie("institutionFilter") || "";
+  getObj('institutionFilter').value = getCookie("institutionFilter") || "";
 
   var rawNameB = $B('institutionFilter').calm_b(1000);
   var nameB = rawNameB.lift_b(function(str) { return str.split(/\s+/,5); })
@@ -707,7 +704,7 @@ function institutionFilter() {
 }
 
 function reviewCountFilter() {
-  $('filterReviewLimit').value = getCookie("reviewCountFilter") || "";
+  getObj('filterReviewLimit').value = getCookie("reviewCountFilter") || "";
   
   var numReviewsB = $B('filterReviewLimit').lift_b(parseInt);
 	
@@ -731,7 +728,7 @@ function reviewCountFilter() {
 } 
 
 function reviewGreaterCountFilter() {
-  $('filterGreaterReviewLimit').value = getCookie("reviewGreaterCountFilter") || "";
+  getObj('filterGreaterReviewLimit').value = getCookie("reviewGreaterCountFilter") || "";
   
   var numReviewsB = $B('filterGreaterReviewLimit').lift_b(parseInt);
 	
@@ -755,7 +752,7 @@ function reviewGreaterCountFilter() {
 } 
 
 function letterCountFilter() {
-  $('filterLetterLimit').value = getCookie("letterCountFilter") || "";
+  getObj('filterLetterLimit').value = getCookie("letterCountFilter") || "";
   
   var numLettersB = 
     $B('filterLetterLimit').lift_b(parseInt);
@@ -782,7 +779,7 @@ function letterCountFilter() {
 }
 
 function letterLessCountFilter() {
-  $('filterLessLetterLimit').value = getCookie("letterLessCountFilter") || "";
+  getObj('filterLessLetterLimit').value = getCookie("letterLessCountFilter") || "";
   
   var numLettersB = 
     $B('filterLessLetterLimit').lift_b(parseInt);
@@ -811,7 +808,7 @@ function letterLessCountFilter() {
 
 
 function hiddenFilter(basicInfo, hiddensB) {
-  $('filterHidden').checked = getCookie("hiddenFilter") === "true" || false; 
+  getObj('filterHidden').checked = getCookie("hiddenFilter") === "true" || false; 
  
   return lift_b(function(showHidden, hiddens) {
       setCookie("hiddenFilter",30,showHidden.toString());
@@ -825,7 +822,7 @@ function hiddenFilter(basicInfo, hiddensB) {
 };
 
 function rejectedFilter() {
-  $('filterRejected').checked = 
+  getObj('filterRejected').checked = 
     getCookie("rejectedFilter") === "true" || false; 
   
   return extractValue_b('filterRejected').lift_b(function(showRejected) {
@@ -838,7 +835,7 @@ function rejectedFilter() {
 };
 
 function acceptedFilter() {
-  $('filterAccepted').checked = 
+  getObj('filterAccepted').checked = 
     getCookie("acceptedFilter") === "true" || false; 
   
   return extractValue_b('filterAccepted').lift_b(function(showAccepted) {
@@ -1201,15 +1198,15 @@ function makeScoreFilterCNF(basicInfo, reviewer) {
       })
     .hold(constant_b(filterNone)).switch_b();
   
-  insertDomB(domB,$('filterScore')); 
+  insertDomB(domB,getObj('filterScore')); 
   return result;
 } 
 
 var makeScoreFilters = makeScoreFilterCNF;
 
 function reviewFilter(basicInfo) {
-  $('filterReviewer').value = getCookie('filterReviewer') || "";
-  $('filterReviewType').value = getCookie('filterReviewType') || "none";
+  getObj('filterReviewer').value = getCookie('filterReviewer') || "";
+  getObj('filterReviewType').value = getCookie('filterReviewType') || "none";
  
   // "review", "comment", "noreview" or undefined
   var typeB = extractValue_b('filterReviewType');
@@ -1360,25 +1357,25 @@ function draftFilter(reviewer) {
 
 
 function initializeFilters(basicInfo, hiddensB, reviewer) {
-  toggleDisplay($('allFilters'),$('toggleFilters'),
-		clicks_e($('toggleFilters')) // TODO: + / - text
+  toggleDisplay(getObj('allFilters'),getObj('toggleFilters'),
+		clicks_e(getObj('toggleFilters')) // TODO: + / - text
 		.collect_e(false,function(_,prev) { 
 		    document.notifyDemo({ action: 'filtertoggle' });
 		    return !prev; }));
 
-  toggleDisplay($('appDataFilters'),$('toggleAppData'),
-		clicks_e($('toggleAppData')) // TODO: + / - text
+  toggleDisplay(getObj('appDataFilters'),getObj('toggleAppData'),
+		clicks_e(getObj('toggleAppData')) // TODO: + / - text
 		.collect_e(true,function(_,prev) { 
 		    return !prev; }));
 
 
-  toggleDisplay($('reviewFilters'),$('toggleReview'),
-		clicks_e($('toggleReview')) // TODO: + / - text
+  toggleDisplay(getObj('reviewFilters'),getObj('toggleReview'),
+		clicks_e(getObj('toggleReview')) // TODO: + / - text
 		.collect_e(true,function(_,prev) { 
 		    return !prev; }));
 
-  toggleDisplay($('filterComposable'),$('toggleComposable'),
-		clicks_e($('toggleComposable')) // TODO: + / - text
+  toggleDisplay(getObj('filterComposable'),getObj('toggleComposable'),
+		clicks_e(getObj('toggleComposable')) // TODO: + / - text
 		.collect_e(true,function(_,prev) { 
 		    return !prev; }));
 

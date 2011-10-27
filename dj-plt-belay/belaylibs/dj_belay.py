@@ -304,12 +304,10 @@ def grant(path, entity):
 
 def regrant(path, entity):
   items = Grant.objects.filter(internal_path=path, db_entity=entity)
-  if(len(items) > 1):
-    raise BelayException('CapServer:regrant::ambiguous internal_path in regrant')
-  elif len(items) == 1:
+  if len(items) >= 1:
     return Capability(cap_url(items[0].cap_id))
   else:
-    return grant(path_or_handler, entity)
+    return grant(path, entity)
 
 def revoke(path_or_handler, entity):
   entity.grant_set.filter(internal_path=path).delete()

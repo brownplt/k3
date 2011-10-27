@@ -114,7 +114,7 @@
 		(function () { throw 'unknown type'; })();
 	};
 */
-  window.toJSONString = function () {
+  window.toJSONString = function (o) {
        if(o instanceof Array) {
         return s.array(o);
        }
