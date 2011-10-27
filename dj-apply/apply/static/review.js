@@ -454,7 +454,7 @@ $(function() {
       }).
         filter_e(function(v) { return v.isNew; }).
           lift_e(function(v) { return v.value; }).
-            hold([]);
+            startsWith([]);
     
     var applicantsB = rec_e(function(aqE) {
         var lastChangeValB = aqE.transform_e(function(_) {return _.lastChange;}).startsWith(0);
