@@ -149,7 +149,6 @@ class Applicant(bcap.Grantable):
   gender = models.TextField(choices=genders, default='Unknown')
   ethnicity = models.TextField(choices=ethnicities, default='zu')
   rejected = models.BooleanField(default=False)
-  accepted = models.BooleanField(default=True)
   rtime = models.IntegerField(default=0)
   firstname = models.TextField()
   lastname = models.TextField()
@@ -202,7 +201,6 @@ class ScoreValue(bcap.Grantable):
 
 class Reviewer(bcap.Grantable):
   auth = models.ForeignKey(AuthInfo)
-  committee = models.BooleanField()
   department = models.ForeignKey(Department)
 
   def hiddenIds(self):
@@ -291,6 +289,7 @@ class Reference(bcap.Grantable):
   submitted = models.IntegerField()
   filesize = models.IntegerField()
   name = models.TextField()
+  institution = models.TextField()
   email = models.EmailField()
   department = models.ForeignKey(Department)
   lastRequested = models.IntegerField()
@@ -313,11 +312,9 @@ class ComponentType(bcap.Grantable):
     }
   # TODO(matt): effect of choices on data model?
   type = models.TextField(choices=choices)
-  value = models.TextField()
-  lastSubmitted = models.IntegerField()
+  name = models.TextField()
+  short = models.TextField()
   department = models.ForeignKey(Department)
-  verified = models.BooleanField(default=False)
-  date = models.DateField()
 
 class Component(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)
@@ -325,8 +322,6 @@ class Component(bcap.Grantable):
   value = models.TextField()
   lastSubmitted = models.IntegerField()
   department = models.ForeignKey(Department)
-  verified = models.BooleanField(default=False)
-  date = models.DateField()
 
 class AuthCookie(bcap.Grantable):
   value = models.TextField()
