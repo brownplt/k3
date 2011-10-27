@@ -1,0 +1,39 @@
+.modlist th 
+{
+  font-weight: bold;
+  text-align: left;
+  padding: 0.1em 0.5em;
+  }
+
+.modlist td 
+{
+  padding: 0.1em 0.5em;
+  }
+div.customizer 
+{
+  padding: 1em;
+  }
+.reviwer-list-moevement 
+{
+  float: left;
+  width: 50%;
+  }
+.reviewer-list-count
+{
+  text-align: right;
+  width: 100%;
+  }
+.reviewer-list-movement ul, .reviewer-list-count ul 
+{
+  margin: 0;
+  display: inline;
+  }
+.reviewer-list-movement li, .reviewer-list-count li 
+{
+  margin: 0 0.1em;
+  display: inline;
+  }
+.reviewer-list-table 
+{
+  width: 100%;
+  }
