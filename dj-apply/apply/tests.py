@@ -539,3 +539,4 @@ class TestReviewer(TestAdminLaunch):
     self.assertEqual(result['hiddens'], [])
     self.assertEqual(result['highlights'], [self.applicant.id])
     self.assertEqual(result['drafts'], [])
+

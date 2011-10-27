@@ -1,7 +1,6 @@
 import belaylibs.models as bcap
 from django.db import models
 
-
 class Department(bcap.Grantable):
   def my(self, cls):
     return cls.objects.filter(department=self)
@@ -91,6 +90,46 @@ class ApplicantPosition(bcap.Grantable):
   autoemail = models.BooleanField()
 
 class Applicant(bcap.Grantable):
+  def getAreas(self):
+    return []
+  def getReviews(self):
+    return []
+  def getComments(self):
+    return []
+  def getWeb(self):
+    return {}
+  def getStatements(self):
+    return []
+  def getTestScores(self):
+    return []
+  def institutions(self):
+    return []
+  def referrals(self):
+    return []
+  def getRefletters(self):
+    return []
+  def to_json(self):
+    return {
+      'id' : self.id,
+      'gender' : self.gender,
+      'ethname' : self.ethnicity,
+      'rejected' : self.rejected,
+      'accepted' : self.accepted,
+      'rtime' : self.rtime,
+      'firstname' : self.firstname,
+      'lastname' : self.lastname,
+      'country' : self.country,
+      'name' : self.firstname + ' ' + self.lastname,
+      'areas' : self.getAreas(),
+      'reviews' : self.getReviews(),
+      'comments' : self.getComments(),
+      'web' : self.getWeb(),
+      'statements' : self.getStatements(),
+      'test_scores' : self.getTestScores(),
+      'institutions' : self.institutions(),
+      'referrals' : self.referrals(),
+      'refletters' : self.getRefletters()
+    }
   genders = [\
     ('Unknown', 'Unknown'),\
     ('Male', 'Male'),\
@@ -178,6 +217,14 @@ class Reviewer(bcap.Grantable):
     reviews = Review.objects.filter(reviewer=self, draft=True)\
                 .exclude(comments='')
     return list(set([r.applicant.id for r in reviews]))
+
+  def getApplicants(self):
+    # TODO(joe): This should be filtered by department, figure out filter
+    applicants = Applicant.objects.all()
+    return list(applicants)
+
+  def getLastChange(self):
+    return self.department.lastChange
 
 class Hidden(bcap.Grantable):
   reviewer = models.ForeignKey(Reviewer)
