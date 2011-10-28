@@ -32,7 +32,7 @@ def make_some_applicants(cs):
 def setup(adminName):
   cses = Department.objects.filter(shortname='cs')
   if len(cses) == 0:
-    cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
+    cs = Department(name='Computer Science', shortname='cs', lastChange=0,\
       headerImage='', logoImage='', resumeImage='', headerBgImage='',\
       brandColor='blue', contactName='Donald Knuth', contactEmail='test@example.com',\
       techEmail='tech@example.com')

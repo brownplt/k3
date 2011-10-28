@@ -43,7 +43,17 @@ def index_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
 
-  return render_to_response('index.html', {})
+  deptkey = request.path_info
+  logger.warn("Path_info: %s" % request.path_info)
+  
+  try:
+    dept = Department.departmentByName(deptkey)
+    cap = bcap.grant('add-applicant', dept)
+    return render_to_response('index.html', {
+##      'create_applicant': bcap.grant('add-applicant', dept)
+    })
+  except Exception as e:
+    return logWith404("Looked up bad department: %s" % deptkey, level='error')
 
 # Django middleware class to set handlers on every request
 class ApplyInit():
@@ -57,6 +67,7 @@ class ApplyInit():
         'area-add' : AreaAddHandler,\
         'area-delete' : AreaDeleteHandler,\
         'add-reviewer': AddReviewerRelationshipHandler,
+        'add-applicant': AddApplicantRelationshipHandler,
         'add-admin': AddAdminRelationshipHandler,
         'launch-reviewer': ReviewerLaunchHandler,
         'launch-admin': AdminLaunchHandler,
@@ -78,6 +89,20 @@ def checkPostArgs(classname, args, keys):
     if not args.has_key(k):
       return logWith404(classname + ' error: post args missing ' + k)
   return 'OK'
+
+class AddApplicantRelationshipHandler(bcap.CapHandler):
+  def get(self, granted):
+    dept = granted.department
+    positions = dept.getPositions()
+    caps = {}
+    for p in positions:
+      caps[p.name] = bcap.grant('add-applicant-with-position', p)
+    return bcap.bcapResponse(caps)
+
+class AddApplicantWithPositionHandler(bcap.CapHandler):
+  def post(self, granted):
+    posn = granted.position
+    
 
 class AdminLaunchHandler(bcap.CapHandler):
   def get(self, granted):

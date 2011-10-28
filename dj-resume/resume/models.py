@@ -2,6 +2,15 @@ import belaylibs.models as bcap
 from django.db import models
 
 class Department(bcap.Grantable):
+  @classmethod
+  def departmentByName(name):
+    depts = Department.objects.filter(shortname=name)
+    if len(depts) == 0:
+      raise Exception("No such department")
+    elif len(depts) > 1:
+      raise Exception("Shouldn't happen, more than one %s department" % name)
+    else:
+      return depts[0]
   def my(self, cls):
     return cls.objects.filter(department=self)
   def getPending(self):
