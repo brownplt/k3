@@ -13,6 +13,8 @@ class Department(bcap.Grantable):
       return depts[0]
   def my(self, cls):
     return cls.objects.filter(department=self)
+  def getPositions(self):
+    return self.my(ApplicantPosition)
   def getPending(self):
     return self.my(UnverifiedUser).exclude(role='applicant')
   def getReviewers(self):
@@ -286,6 +288,11 @@ class UnverifiedUser(bcap.Grantable):
   name = models.TextField()
   role = models.TextField(choices=roles)
   department = models.ForeignKey(Department)
+
+class UnverifiedApplicant(bcap.Grantable):
+  email = models.EmailField()
+  department = models.ForeignKey(Department)
+  position = models.ForeignKey(ApplicantPosition)
 
 class PendingHighlight(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)

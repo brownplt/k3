@@ -50,8 +50,7 @@ def index_handler(request):
     dept = Department.departmentByName(deptkey)
     cap = bcap.grant('add-applicant', dept)
     return render_to_response('index.html', {
-##      'create_applicant': bcap.grant('add-applicant', dept)
-        'create_applicant' : 'hello world'
+      'create_applicant': bcap.grant('add-applicant', dept).serialize()
     })
   except Exception as e:
     return logWith404(logger, "Looked up bad department: %s, %s" % (deptkey, e), level='error')
@@ -72,6 +71,7 @@ class ResumeInit():
         'add-admin': AddAdminRelationshipHandler,
         'launch-reviewer': ReviewerLaunchHandler,
         'launch-admin': AdminLaunchHandler,
+        'launch-applicant' : ApplicantLaunchHandler,\
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
@@ -82,6 +82,8 @@ class ResumeInit():
         'set-basic' : SetBasicHandler,\
         'get-reviewer' : GetReviewerHandler,\
         'get-applicants' : GetApplicantsHandler,\
+        'add-applicant-with-position' : UnverifiedApplicantAddHandler,\
+        'add-verified-applicant' : AddVerifiedApplicantHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -100,11 +102,6 @@ class AddApplicantRelationshipHandler(bcap.CapHandler):
       caps[p.name] = bcap.grant('add-applicant-with-position', p)
     return bcap.bcapResponse(caps)
 
-class AddApplicantWithPositionHandler(bcap.CapHandler):
-  def post(self, granted):
-    posn = granted.position
-    
-
 class AdminLaunchHandler(bcap.CapHandler):
   def get(self, granted):
     department = granted.authinfo.department
@@ -122,6 +119,41 @@ class AdminLaunchHandler(bcap.CapHandler):
       'getCSV' : bcap.grant('get-csv', department)\
     }
     return bcap.bcapResponse(resp)
+
+class ApplicantLaunchHandler(bcap.CapHandler):
+  def get(self, granted):
+    return logWith404(logger, 'launch-applicant NYI')
+
+class AddVerifiedApplicantHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    ua = granted.unverifiedapplicant
+    if granted is None:
+      return HttpResponseNotFound()
+
+    auth_info = AuthInfo(
+      email=ua.email, \
+      # TODO(matt): fix or remove name from AuthInfo?
+      name='applicant name goes here',\
+      role='applicant', \
+      department=ua.department)
+    auth_info.save()
+
+    applicant = Applicant(\
+      firstname='applicant firstname',\
+      lastname='applicant lastname',\
+      country='applicant country',\
+      department=ua.department,\
+      position=ua.position\
+    )
+
+    ua.delete()
+    launch = bcap.grant('launch-applicant', applicant)
+    return bcap.bcapResponse({
+      'public_data': 'Application for %s' % ua.email,
+      'private_data': launch,
+      'domain': bcap.this_server_url_prefix(),
+      'url': '/static/application.html'
+    })
 
 # Adds a new relationship with an admin
 # One-shot capability
@@ -385,6 +417,51 @@ class AreaDeleteHandler(bcap.CapHandler):
     area.delete()
     return bcap.bcapNullResponse()
 
+class UnverifiedApplicantAddHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['email']
+
+  def name_str(self):
+    return 'UnverifiedApplicantAddHandler'
+
+  def post(self, granted, args):
+    posn = granted.applicantposition
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    email = args['email']
+    uu = UnverifiedApplicant(email=email, department=posn.department, position=posn)
+
+    try:
+      uu.save()
+    except:
+      resp = {'success' : False, 'message' : 'failed to create UnverifiedApplicant'}
+      return bcap.bcapResponse(resp)
+    
+    create_cap = bcap.grant('add-verified-applicant', uu)
+    activate_url = '%s/new-account/#%s' % \
+      (bcap.this_server_url_prefix(), create_cap.serialize())
+    return_url = bcap.this_server_url_prefix()
+    
+    emailstr = u"""Dear Applicant,
+
+A new Resume account is being created for you.  To activate it, visit:
+
+%s
+
+To regain access your account once it has been created, visit:
+
+%s
+"""
+    emailstr = emailstr % (activate_url, return_url)
+    sendLogEmail(emailstr, email)
+    resp = {\
+      'success' : True,\
+      'email' : email,\
+    }
+    return bcap.bcapResponse(resp)
+
 class UnverifiedUserAddRevHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['email', 'role', 'name']
@@ -418,7 +495,7 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
     
     emailstr = u"""Dear %s,
 
-A new Apply account is being created for you.  To activate it, visit:
+A new Resume account is being created for you.  To activate it, visit:
 
 %s
 
@@ -429,7 +506,6 @@ To regain access your account once it has been created, visit:
     emailstr = emailstr % (name, activate_url, return_url)
     sendLogEmail(emailstr, email)
 
-    delCap = bcap.grant('unverifieduser-delete', uu)
     resp = {\
       'success' : True,\
       'email' : email,\
