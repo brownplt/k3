@@ -3,7 +3,7 @@ from django.db import models
 
 class Department(bcap.Grantable):
   @classmethod
-  def departmentByName(name):
+  def departmentByName(cls, name):
     depts = Department.objects.filter(shortname=name)
     if len(depts) == 0:
       raise Exception("No such department")

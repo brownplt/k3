@@ -4,8 +4,8 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.core.management import setup_environ
 import settings
 import belaylibs.dj_belay as bcap
-from apply.models import UnverifiedUser, Department, Applicant, ApplicantPosition, AuthInfo
-from apply.views import ApplyInit
+from resume.models import UnverifiedUser, Department, Applicant, ApplicantPosition, AuthInfo
+from resume.views import ResumeInit
 import sys
 
 
@@ -49,7 +49,7 @@ def setup(adminName):
     department=cs)
   unverified_user.save()
 
-  ApplyInit().process_request(None)
+  ResumeInit().process_request(None)
 
   create_account = bcap.grant('add-admin', unverified_user)
   print("To get started, go here: %s/static/new_account.html#%s" % \

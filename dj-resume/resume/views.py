@@ -43,7 +43,7 @@ def index_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
 
-  deptkey = request.path_info
+  deptkey = request.path_info.split('/')[1]
   logger.warn("Path_info: %s" % request.path_info)
   
   try:
@@ -51,12 +51,13 @@ def index_handler(request):
     cap = bcap.grant('add-applicant', dept)
     return render_to_response('index.html', {
 ##      'create_applicant': bcap.grant('add-applicant', dept)
+        'create_applicant' : 'hello world'
     })
   except Exception as e:
-    return logWith404("Looked up bad department: %s" % deptkey, level='error')
+    return logWith404(logger, "Looked up bad department: %s, %s" % (deptkey, e), level='error')
 
 # Django middleware class to set handlers on every request
-class ApplyInit():
+class ResumeInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, \
       { 'scorecategory-delete' : ScoreCategoryDeleteHandler, \
