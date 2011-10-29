@@ -1,6 +1,7 @@
+from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpRequest
 from django.template.loader import render_to_string
-from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash
+from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash, PendingLogin
 from xml.dom import minidom
 import logging
 import uuid
@@ -170,25 +171,48 @@ def glogin(request):
   raw_uri = uris[0].firstChild.toxml()
   parsed = urlparse(raw_uri)
 
+  pending = str(uuid.uuid4())
+  pl = PendingLogin(key=pending)
+  pl.save()
+
   param_obj = {
       'openid.ns' : 'http://specs.openid.net/auth/2.0',
       'openid.claimed_id' : 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
-      'openid.return_to' : '%s/glogin_landing/' % settings.SITE_NAME,
+      'openid.return_to' : '%s/glogin_landing/%s' % (settings.SITE_NAME, pending),
       'openid.realm' : settings.SITE_NAME,
       'openid.mode' : 'checkid_setup'
   }
   params = encode_for_get(param_obj)
 
   req_url = ("https://" + parsed.netloc + parsed.path + "?%s") % params
-  f = urllib2.urlopen(req_url)
-  return HttpResponse(f.read())
+  return redirect(req_url)
+
+def check_pending(path_info):
+  parts = path_info.split("/")
+  try:
+    pending = str(uuid.UUID(str(parts[-1])))
+    logger.error(pending)
+    pl = PendingLogin.objects.filter(key=pending)
+    logger.error("Got something: %s, %s" % (pl, len(pl)))
+    if len(pl) == 1:
+      pl.delete()
+      return True
+    else:
+      logger.error('%s pendings.' % len(pl))
+      return False
+  except Exception as e:
+    logger.error('Exception during pending processing: %s' % e)
+    return False
 
 def glogin_landing(request):
   if request.method == 'GET':
     d = request.GET
   else:
     d = request.POST
+  if not check_pending(request.path_info):
+    return logWith404(logger, "Bad pending: %s" % request.path_info, level='error')
+
   identity = d['openid.identity']
 
   q = GoogleCredentials.objects.filter(identity=identity)
