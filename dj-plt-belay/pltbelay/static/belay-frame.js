@@ -1,9 +1,10 @@
 $(function() {
-  var stashURL = COMMON.urlPrefix + '/make-stash/';
+  console.log("Cookie: " + document.cookie);
   var stationInfo;
   var clientLocation;
+  var clientkey = null;
+  var sessionToken;
   var capServer = new CapServer(newUUIDv4());
-  var stash = capServer.restore(stashURL);
 
   function get_station(k) {
     $.ajax('/get_station/', {
@@ -25,6 +26,11 @@ $(function() {
     $('#login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').show();
+  });
+
+  $('#glogin').click(function() {
+    clientkey = newUUIDv4();
+    window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
   });
 
   var sessionID, checkLogin;
@@ -71,9 +77,23 @@ $(function() {
     if(stationInfo) go();
   });
 
+  $.pm.bind('login', function(data) {
+    console.log('maybe setting token: ', data);
+    console.log('client key: ', clientkey);
+    if(clientkey === data.clientkey) {
+      sessionToken = data.gid;
+      setCookie("session", 1, sessionToken);
+      console.log('setting token: ', sessionToken);
+      console.log('setting cookie: ', document.cookie);
+      data.loginInfo.station = capServer.restore(data.loginInfo.station);
+      data.loginInfo.makeStash = capServer.restore(data.loginInfo.makeStash);
+      handleLoginInfo(data.loginInfo);
+    }
+  });
+
   function launch(launchInfo) {
     console.log('Launching: ', launchInfo);
-    stash.post({
+    makeStash.post({
       sessionID: sessionID,
       private_data: launchInfo.private_data
     },
@@ -87,6 +107,14 @@ $(function() {
     },
     function(err) { 
       console.log('Make-stash failed: ', err);
+    });
+  }
+
+  function handleLoginInfo(loginInfo) {
+    makeStash = loginInfo.makeStash;
+    loginInfo.station.get(function(station_info) {
+      stationInfo = station_info;
+      go();
     });
   }
 
@@ -122,13 +150,14 @@ $(function() {
     function create() {
       console.log("Creating account");
       var createAccount = capServer.restore(COMMON.urlPrefix + '/create_plt_account/');
-      createAccount.post(
-        { username : uname, password : password1 }, 
-        function(response) {
-          window.location = COMMON.urlPrefix + response.redirectTo;
+      createAccount.post({
+          username : uname,
+          password : password1
+        }, 
+        function(loginInfo) {
+          handleLoginInfo(loginInfo);
         },
-        failure
-      );
+        failure);
     }
 
     var checkUname = capServer.restore(COMMON.urlPrefix + '/check_uname/');
@@ -145,13 +174,15 @@ $(function() {
 
   function instanceChoice(instanceInfos) {
     var accountsDiv = $('#account-frame');
+    $('#login-frame').hide();
+    $('#create-account').hide();
     console.log('choicing: ', instanceInfos);
     accountsDiv.show();
     instanceInfos.forEach(function(instance) {
       instance.get(function(instanceInfo) {
         var elt = $('<button></button>');
         if(typeof instanceInfo.public_data === 'string') {
-          elt.html(instanceInfo.public_data);
+          elt.text(instanceInfo.public_data);
         }
         else { return; } // Don't show the relationship
         accountsDiv.append(elt);

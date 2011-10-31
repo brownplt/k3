@@ -49,17 +49,27 @@ class NewInstanceHandler(bcap.CapHandler):
   def post(self, station, args):
     domain = args['domain']
     url = args['url']
-    private_data = bcap.dataPreProcess(args['private_data'])
-    public_data = bcap.dataPreProcess(args['public_data'])
-    launch_info = LaunchInfo(domain=domain, \
-                             url=url, \
-                             private_data=private_data, \
-                             public_data=public_data)
-    launch_info.save()
+    logger.error("Domain: %s, URL: %s" % (domain, url))
+    private_data = bcap.dataPreProcess(str(args['private_data']))
+    logger.error("PD: %s" % private_data)
+    logger.error("PuD: %s" % args['public_data'])
+    public_data = bcap.dataPreProcess(str(args['public_data']))
+    logger.error("PuDpp: %s" % args['public_data'])
+
+    try:
+      launch_info = LaunchInfo(domain=domain, \
+                               url=url, \
+                               private_data=private_data, \
+                               public_data=public_data)
+      launch_info.save()
+    except Exception as e:
+      logger.error("Exception: %s" % e)
+    logger.error("PD: %s, PUD: %s" % (private_data, public_data))
 
     instance_uuid = uuid.uuid4()
     instance_id = str(instance_uuid)
 
+    logger.error("iid: %s" % instance_id)
     instance = Relationship(station=station, \
         instance_id =instance_id, \
         launch_info = launch_info)
