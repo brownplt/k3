@@ -84,6 +84,9 @@ class ResumeInit():
         'get-applicants' : GetApplicantsHandler,\
         'add-applicant-with-position' : UnverifiedApplicantAddHandler,\
         'add-verified-applicant' : AddVerifiedApplicantHandler,\
+        'request-reference' : RequestReferenceHandler,\
+        'submit-contact-info' : SubmitContactInfoHandler,\
+        'get-applicant' : GetApplicantHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -122,7 +125,33 @@ class AdminLaunchHandler(bcap.CapHandler):
 
 class ApplicantLaunchHandler(bcap.CapHandler):
   def get(self, granted):
-    return logWith404(logger, 'launch-applicant NYI')
+    applicant = granted.applicant
+    department = applicant.department
+    resp = {\
+      'getBasic' : bcap.grant('get-basic', department),\
+      'requestReference' : bcap.grant('request-reference', applicant),\
+      'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
+      'get' : bcap.grant('get-applicant', applicant)\
+    }
+    return bcap.bcapResponse(resp)
+
+class RequestReferenceHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name', 'institution', 'email']
+
+  def name_str(self):
+    return 'RequestReferenceHandler'
+
+  def post(self, granted, args):
+    return logWith404('request-reference NYI')
+
+class SubmitContactInfoHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    return logWith404('submit-contact-info NYI')
+
+class GetApplicantHandler(bcap.CapHandler):
+  def get(self, granted):
+    return logWith404('get-applicant NYI')
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -139,12 +168,14 @@ class AddVerifiedApplicantHandler(bcap.CapHandler):
     auth_info.save()
 
     applicant = Applicant(\
+      auth = auth_info,\
       firstname='applicant firstname',\
       lastname='applicant lastname',\
       country='applicant country',\
       department=ua.department,\
       position=ua.position\
     )
+    applicant.save()
 
     ua.delete()
     launch = bcap.grant('launch-applicant', applicant)
