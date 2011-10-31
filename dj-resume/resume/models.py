@@ -21,8 +21,7 @@ class Department(bcap.Grantable):
     reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\
       'name' : r.auth.name,\
-      'role' : r.auth.role,\
-      'committee' : r.committee } for r in reviewers]
+      'role' : r.auth.role} for r in reviewers]
   def findRefs(self, email):
     refs = self.my(Reference).filter(email=email)
     return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,
@@ -321,10 +320,8 @@ class ComponentType(bcap.Grantable):
   def to_json(self):
     return {\
       'type' : self.type,\
-      'value' : self.value,\
-      'lastSubmitted' : self.lastSubmitted,\
-      'verified' : self.verified,\
-      'date' : str(self.date)\
+      'name' : self.name,\
+      'short' : self.short\
     }
   # TODO(matt): effect of choices on data model?
   type = models.TextField(choices=choices)

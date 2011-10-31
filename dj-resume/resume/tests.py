@@ -1,11 +1,11 @@
 import unittest
-from apply.models import *
-from apply.views import *
+from resume.models import *
+from resume.views import *
 from datetime import date
 
 import belaylibs.dj_belay as bcap
 
-class ApplyTest(unittest.TestCase):
+class ResumeTest(unittest.TestCase):
   def makeCSDept(self):
     cs = Department(name='Computer Science', shortname='CS', lastChange=0,\
       headerImage='', logoImage='', resumeImage='', headerBgImage='',\
@@ -14,10 +14,10 @@ class ApplyTest(unittest.TestCase):
     cs.save()
     self.department = cs
   def setUp(self):
-    init = ApplyInit()
+    init = ResumeInit()
     init.process_request(None)
 
-class TestNewAccount(ApplyTest):
+class TestNewAccount(ResumeTest):
   def setUp(self):
     super(TestNewAccount, self).setUp()
     department = Department(
@@ -44,7 +44,6 @@ class TestNewAccount(ApplyTest):
     info = AuthInfo.objects.filter(email="reviewer@fake")
     self.assertEqual(len(info), 1)
     revs = Reviewer.objects.filter(auth=info[0])
-    self.assertEqual(revs[0].committee, False)
 
     self.assertTrue(isinstance(reviewer_info['private_data'], bcap.Capability))
     self.assertEqual(reviewer_info['public_data'], 'Reviewer account for Fake Reviewer')
@@ -56,7 +55,7 @@ class TestNewAccount(ApplyTest):
     except:
       self.assertTrue(True)
 
-def TestAdminAccount(ApplyTest):
+def TestAdminAccount(ResumeTest):
   def setUp(self):
     super(TestAdminAccount, self).setUp()
     self.makeCSDept()
@@ -79,7 +78,7 @@ def TestAdminAccount(ApplyTest):
 
     self.assertTrue(isinstance(admin_info['private_data'], bcap.Capability))
 
-class TestScoreCategory(ApplyTest):
+class TestScoreCategory(ResumeTest):
   def setUp(self):
     super(TestScoreCategory, self).setUp()
     self.makeCSDept()
@@ -127,7 +126,7 @@ class TestScoreCategory(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestScoreValue(ApplyTest):
+class TestScoreValue(ResumeTest):
   def setUp(self):
     super(TestScoreValue, self).setUp()
     self.makeCSDept()
@@ -156,7 +155,7 @@ class TestScoreValue(ApplyTest):
     self.department.delete()
     self.category.delete()
 
-class TestApplicantPosition(ApplyTest):
+class TestApplicantPosition(ResumeTest):
   def setUp(self):
     super(TestApplicantPosition, self).setUp()
     self.makeCSDept()
@@ -173,7 +172,7 @@ class TestApplicantPosition(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestArea(ApplyTest):
+class TestArea(ResumeTest):
   def setUp(self):
     super(TestArea, self).setUp()
     self.makeCSDept()
@@ -198,7 +197,7 @@ class TestArea(ApplyTest):
   def tearDown(self):
     self.department.delete()
     
-class TestUnverifiedUser(ApplyTest):
+class TestUnverifiedUser(ResumeTest):
   def setUp(self):
     super(TestUnverifiedUser, self).setUp()
     self.makeCSDept()
@@ -239,14 +238,14 @@ class TestUnverifiedUser(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestGetReviewers(ApplyTest):
+class TestGetReviewers(ResumeTest):
   def setUp(self):
     super(TestGetReviewers, self).setUp()
     self.makeCSDept()
     a = AuthInfo(email='blah@blah.com', name='Matt', role='admin', \
       department=self.department)
     a.save()
-    r = Reviewer(auth=a, committee=True, department=self.department)
+    r = Reviewer(auth=a, department=self.department)
     r.save()
     self.auth = a
     self.reviewer = r
@@ -259,7 +258,6 @@ class TestGetReviewers(ApplyTest):
     self.assertEqual(r['email'], self.auth.email)
     self.assertEqual(r['name'], self.auth.name)
     self.assertEqual(r['role'], self.auth.role)
-    self.assertEqual(r['committee'], self.reviewer.committee)
 
     self.reviewer.delete()
     reviewers = getReviewersCap.get()
@@ -268,7 +266,7 @@ class TestGetReviewers(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestChangeContacts(ApplyTest):
+class TestChangeContacts(ResumeTest):
   def setUp(self):
     super(TestChangeContacts, self).setUp()
     self.makeCSDept()
@@ -296,7 +294,7 @@ class TestChangeContacts(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestFindRefs(ApplyTest):
+class TestFindRefs(ResumeTest):
   def setUp(self):
     super(TestFindRefs, self).setUp()
     self.makeCSDept()
@@ -326,7 +324,7 @@ class TestFindRefs(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestGetBasic(ApplyTest):
+class TestGetBasic(ResumeTest):
   def setUp(self):
     super(TestGetBasic, self).setUp()
     self.makeCSDept()
@@ -338,8 +336,8 @@ class TestGetBasic(ApplyTest):
     self.position = ApplicantPosition(department=self.department, name='thepos',\
       shortform='tp', autoemail=True)
     self.position.save()
-    self.component = ComponentType(type='type', value='value', lastSubmitted=0,\
-      department=self.department, date=date.today())
+    self.component = ComponentType(type='type', name='name', short='short',\
+      department=self.department)
     self.component.save()
     self.applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
       country='usa', department=self.department, position=self.position)
@@ -351,7 +349,7 @@ class TestGetBasic(ApplyTest):
     applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
       country='usa', department=self.department, position=self.position)
     applicant.save()
-    reviewer = Reviewer(auth=auth, committee=False, department=self.department)
+    reviewer = Reviewer(auth=auth, department=self.department)
     reviewer.save()
     review = Review(applicant=applicant, reviewer=reviewer, comments='comments',\
       draft=False, department=self.department)
@@ -396,9 +394,8 @@ class TestGetBasic(ApplyTest):
     self.assertEqual(len(response['components']), 1)
     c = response['components'][0]
     self.assertEqual(c['type'], 'type')
-    self.assertEqual(c['value'], 'value')
-    self.assertEqual(c['lastSubmitted'], 0)
-    self.assertEqual(c['date'], str(date.today()))
+    self.assertEqual(c['name'], 'name')
+    self.assertEqual(c['short'], 'short')
 
     self.assertTrue(response.has_key('scores'))
     s = response['scores'][0]
@@ -451,10 +448,10 @@ class TestGetBasic(ApplyTest):
   def tearDown(self):
     self.department.delete()
 
-class TestGetCSV(ApplyTest):
+class TestGetCSV(ResumeTest):
   pass
 
-class TestAdminLaunch(ApplyTest):
+class TestAdminLaunch(ResumeTest):
   def setUp(self):
     super(TestAdminLaunch, self).setUp()
     self.makeCSDept()
@@ -466,8 +463,8 @@ class TestAdminLaunch(ApplyTest):
     self.position = ApplicantPosition(department=self.department, name='thepos',\
       shortform='tp', autoemail=True)
     self.position.save()
-    self.component = ComponentType(type='type', value='value', lastSubmitted=0,\
-      department=self.department, date=date.today())
+    self.component = ComponentType(type='type', name='name', short='short',\
+      department=self.department)
     self.component.save()
     self.applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
       country='usa', department=self.department, position=self.position)
@@ -479,7 +476,7 @@ class TestAdminLaunch(ApplyTest):
     applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
       country='usa', department=self.department, position=self.position)
     applicant.save()
-    reviewer = Reviewer(auth=auth, committee=False, department=self.department)
+    reviewer = Reviewer(auth=auth, department=self.department)
     reviewer.save()
     self.reviewer = reviewer
     review = Review(applicant=applicant, reviewer=reviewer, comments='comments',\

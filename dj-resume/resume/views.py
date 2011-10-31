@@ -198,10 +198,7 @@ class AddReviewerRelationshipHandler(bcap.CapHandler):
       department=unverified_user.department)
     auth_info.save()
 
-    reviewer = Reviewer(
-      auth=auth_info, \
-      committee=False, \
-      department=unverified_user.department)
+    reviewer = Reviewer(auth=auth_info, department=unverified_user.department)
     reviewer.save()
 
     # Remove the unverified_user---this is a one-shot request
