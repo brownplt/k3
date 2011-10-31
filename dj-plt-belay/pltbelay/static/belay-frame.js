@@ -74,7 +74,8 @@ $(function() {
       console.log("Unexpected message from client: ", e);
       return;
     }
-    if(stationInfo) go();
+    console.log("CL: ", clientLocation);
+    if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
   });
 
   $.pm.bind('login', function(data) {
@@ -94,7 +95,6 @@ $(function() {
   function launch(launchInfo) {
     console.log('Launching: ', launchInfo);
     makeStash.post({
-      sessionID: sessionID,
       private_data: launchInfo.private_data
     },
     function(restoreCap) {
@@ -193,7 +193,10 @@ $(function() {
     });
   }
 
+  var launched = false;
   function go() {
+    if(launched) return;
+    launched = true;
     // TODO(joe): need to make sure we have a reasonable clientLocation
     // if we're going to launch here.
     var port = makePostMessagePort(window.parent, "belay");
@@ -206,12 +209,14 @@ $(function() {
     tunnel.setLocalResolver(function() { return capServer.publicInterface; });
     console.log('StationInfo: ', stationInfo);
 
-    stationInfo.instances.get(function(instanceInfos) {
-      console.log(instanceInfos);
-      if(instanceInfos.length > 0) {
-        instanceChoice(instanceInfos);
-      }
-    });
+    if(stationInfo) {
+      stationInfo.instances.get(function(instanceInfos) {
+        console.log(instanceInfos);
+        if(instanceInfos.length > 0) {
+          instanceChoice(instanceInfos);
+        }
+      });
+    }
 
     var stashser, stashcap;
     // NOTE(joe): We're only using stashes that point to the Belay server,
@@ -228,8 +233,7 @@ $(function() {
     }
 
     function launchInstance(stashcap) {
-      stashcap.post({ sessionID: sessionID },
-        function(stashed) {
+      stashcap.get(function(stashed) {
           tunnel.sendOutpost(capServer.dataPreProcess({
             services: {},
             launchInfo: stashed

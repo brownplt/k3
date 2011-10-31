@@ -125,8 +125,6 @@ def dataPreProcess(data):
     def default(self, obj):
       if isinstance(obj, Capability):
         return {'@': obj.serialize()}
-      if type(obj) == unicode:
-        return str(obj)
       else:
         return obj
 

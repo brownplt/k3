@@ -35,7 +35,9 @@ class StashHandler(bcap.CapHandler):
 
   def put(self, granted, args):
     stash = granted.stash
-    stash.stashed_content = bcap.dataPreProcess(args['private_data'])
+    pd = bcap.dataPreprocess(args['private_data'])
+    logger.error("PD: %s" % pd)
+    stash.stashed_content = bcap.dataPreProcess(pd)
     stash.save()
     return bcap.bcapNullResponse()
 
@@ -49,7 +51,8 @@ class MakeStashHandler(bcap.CapHandler):
   def post(self, granted, args):
     logger.error("Granted: %s" % dir(granted))
     stash = Stash(account=granted.belayaccount,\
-                  stashed_content=args['private_data'])
+                  stashed_content=bcap.dataPreProcess(args['private_data']))
+    stash.save()
     stash_handler = bcap.grant('stash', stash)
     return bcap.bcapResponse(stash_handler)
 
