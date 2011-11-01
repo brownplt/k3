@@ -1,13 +1,10 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render_to_response
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpRequest
 from django.template.loader import render_to_string
 from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash, PendingLogin
 from xml.dom import minidom
 import logging
 import uuid
-import hashlib
-import httplib
-import urllib
 import urllib2
 from urlparse import urlparse
 import hashlib
@@ -25,12 +22,40 @@ logger = logging.getLogger('default')
 
 class BelayInit():
   def process_request(self, request):
-    bcap.set_handlers(bcap.default_prefix, {'get-stash' : GetStashHandler})
+    bcap.set_handlers(bcap.default_prefix, {
+      'make-stash' : MakeStashHandler,
+      'stash' : StashHandler
+    })
     return None
+
+class StashHandler(bcap.CapHandler):
+  def get(self, granted):
+    stash = granted.stash
+    return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))
+
+  def put(self, granted, args):
+    stash = granted.stash
+    pd = bcap.dataPreProcess(args['private_data'])
+    stash.stashed_content = bcap.dataPreProcess(pd)
+    stash.save()
+    return bcap.bcapNullResponse()
+
+  def delete(self, granted):
+    granted.stash.delete()
+    return bcap.bcapNullResponse()
+
+class MakeStashHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['private_data']
+  def post(self, granted, args):
+    stash = Stash(account=granted.belayaccount,\
+                  stashed_content=bcap.dataPreProcess(args['private_data']))
+    stash.save()
+    stash_handler = bcap.grant('stash', stash)
+    return bcap.bcapResponse(stash_handler)
 
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
-  logging.debug('checking')
   return len(q) == 1
 
 HASH_ITERATIONS = 20
@@ -45,24 +70,6 @@ def get_hashed(rawpassword, salt):
 
   logging.debug("Salted: %s" % salted)
   return salted
-
-def accountForSession(session_id):
-  q = BelaySession.objects.filter(session_id=session_id)
-
-  if len(q) == 0:
-    return None
-  else:
-    return q[0].account
-
-def get_station(request):
-  if not 'session' in request.COOKIES:
-    logger.debug('Failed to find session')
-    return HttpResponse(status=500)
-    
-  sid = request.COOKIES['session']
-  acct = accountForSession(sid)
-
-  return HttpResponse(acct.station_url)
 
 # TODO(matt): restore instead of urlopen?
 def newStationCap():
@@ -106,14 +113,11 @@ def create_plt_account(request):
   session = BelaySession(session_id=session_id, account=account)
   session.save()
 
-  response = HttpResponse()
-  cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
-  response['Set-Cookie'] = cstr
-
-  redirect_url = '/static/belay-frame.html'
-  content = bcap.dataPreProcess({ "redirectTo" : redirect_url })
-  bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
-  return response
+  response = {
+    'station': station_cap,
+    'makeStash': bcap.regrant('make-stash', account)
+  }
+  return bcap.bcapResponse(response)
 
 def plt_login(request):
   if request.method != 'POST':
@@ -144,18 +148,20 @@ def plt_login(request):
   session = BelaySession(session_id=session_id, account=c.account)
   session.save()
 
-  response = HttpResponse()
-  cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
-  response['Set-Cookie'] = cstr
-
-  redirect_url = '/static/belay-frame.html'
-  content = bcap.dataPreProcess({'loggedIn' : True, 'redirectTo' : redirect_url})
-  bcap.xhr_content(response, content, 'text/plain;charset=UTF-8')
-  return response
+  response = {
+    'station': Capability(c.account.station_url),
+    'makeStash': bcap.regrant('make-stash', c.account)
+  }
+  return bcap.bcapResponse(response)
 
 # TODO : fix intermediate page (to get on google's domain)
 def glogin(request):
-  # I tried to use urllib.urlencode, but it translates slashes into escape sequences
+  if(request.method != 'GET'):
+    logwith404(logger, "pltbelay: Tried to glogin with method: " % request.method)
+
+  clientkey = str(request.GET['clientkey'])
+  # I tried to use urllib.urlencode, but it translates slashes into escape
+  # sequences
   def encode_for_get(param_obj):
     s = ""
     for nm in param_obj:
@@ -172,7 +178,7 @@ def glogin(request):
   parsed = urlparse(raw_uri)
 
   pending = str(uuid.uuid4())
-  pl = PendingLogin(key=pending)
+  pl = PendingLogin(key=pending, clientkey=clientkey)
   pl.save()
 
   param_obj = {
@@ -196,8 +202,9 @@ def check_pending(path_info):
     pl = PendingLogin.objects.filter(key=pending)
     logger.error("Got something: %s, %s" % (pl, len(pl)))
     if len(pl) == 1:
+      ret = pl[0].clientkey
       pl.delete()
-      return True
+      return ret
     else:
       logger.error('%s pendings.' % len(pl))
       return False
@@ -210,7 +217,8 @@ def glogin_landing(request):
     d = request.GET
   else:
     d = request.POST
-  if not check_pending(request.path_info):
+  maybe_client_key = check_pending(request.path_info)
+  if not maybe_client_key:
     return logWith404(logger, "Bad pending: %s" % request.path_info, level='error')
 
   identity = d['openid.identity']
@@ -230,9 +238,11 @@ def glogin_landing(request):
   session = BelaySession(account=account, session_id=session_id)
   session.save()
 
-  response = HttpResponse('Success')
-  cstr = 'session=%s; expires=Sun,31-May-2040 23:59:59 GMT; path=/;' % session_id
-  response['Set-Cookie'] = cstr
+  response = render_to_response('glogin.html', {
+    'clientkey': maybe_client_key,
+    'station': account.station_url,
+    'make_stash': bcap.regrant('make-stash', account).serialize()
+  })
   return response
 
 def check_uname(request):
@@ -270,50 +280,3 @@ def check_login(request):
   response['loggedIn'] = (len(sessions) > 0)
   return bcap.bcapResponse(response)
 
-def make_stash(request):
-  if not ('session' in request.COOKIES):
-    return logWith404(logger, 'make_stash: no session cookie')
-
-  if request.method != 'POST':
-    return HttpResponseNotAllowed(['POST'])
-
-  args = bcap.dataPostProcess(request.read())
-  if not (args.has_key('sessionID')):
-    return logWith404(logger, "make_stash: request didn't pass sessionID arg")
-  if not (args.has_key('private_data')):
-    return logWith404(logger, "make_stash: request didn't pass private_data arg")
-
-  stash_uuid = uuid.uuid4()
-  session_id = request.COOKIES['session']
-  req_session_id = args['sessionID']
-
-  if req_session_id != session_id:
-    return logWith404(logger, "make_stash: request session_id %s didn't match cookie\
-        session_id %s" % (req_session_id, session_id))
-
-  sessions = BelaySession.objects.filter(session_id=session_id)
-  if len(sessions) == 0:
-    return logWith404(logger, "make_stash: request session_id: %s didn't match any sessions"\
-        % session_id)
-  if len(sessions) != 1:
-    return logWith404(logger, 'make_stash: found duplicate BelaySessions', level='error')
-
-  session = sessions[0]
-  stashed_content = bcap.dataPreProcess(args['private_data'])
-  stash = Stash(session=session, stashed_content=stashed_content)
-  stash.save()
-
-  cap = bcap.grant('get-stash', stash)
-  return bcap.bcapResponse(cap)
-
-class GetStashHandler(bcap.CapHandler):
-  def get(self, grantable):
-    return HttpResponseNotAllowed(['POST'])
-  def post(self, grantable, args):
-    stash = grantable.stash
-    req_session_id = args['sessionID']
-
-    if stash.session.session_id != req_session_id:
-      return logWith404(logger, "GetStashHandler: request session_id didn't match")
-
-    return bcap.bcapResponse(bcap.dataPostProcess(stash.stashed_content))

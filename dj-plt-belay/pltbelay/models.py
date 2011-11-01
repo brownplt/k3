@@ -6,7 +6,11 @@ class BelayAccount(bcap.Grantable):
   station_url = models.CharField(max_length=200)
 
 class PendingLogin(bcap.Grantable):
+  # Key is for this server to trust the openID provider's request
   key = models.CharField(max_length=36)
+  # ClientKey is a secret provided by the client to trust that new
+  # windows were served from this server
+  clientkey = models.CharField(max_length=36)
 
 class PltCredentials(bcap.Grantable):
   username = models.CharField(max_length=200)
@@ -23,5 +27,5 @@ class BelaySession(bcap.Grantable):
   account = models.ForeignKey(BelayAccount)
 
 class Stash(bcap.Grantable):
-  session = models.ForeignKey(BelaySession)
-  stashed_content = models.CharField(max_length=200)
+  account = models.ForeignKey(BelayAccount)
+  stashed_content = models.TextField(max_length=1000)

@@ -44,6 +44,7 @@ $(function() {
     console.log('createCap is: ', createCap);
     createCap.post({},
       function(launchInfo) {
+        console.log("LaunchInfo is: ", launchInfo);
         belayBrowser.becomeInstance.post(launchInfo);
       },
       function(fail) {

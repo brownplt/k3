@@ -1,9 +1,10 @@
 $(function() {
-  var stashURL = COMMON.urlPrefix + '/make-stash/';
+  console.log("Cookie: " + document.cookie);
   var stationInfo;
   var clientLocation;
+  var clientkey = null;
+  var sessionToken;
   var capServer = new CapServer(newUUIDv4());
-  var stash = capServer.restore(stashURL);
 
   function get_station(k) {
     $.ajax('/get_station/', {
@@ -25,6 +26,11 @@ $(function() {
     $('#login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').show();
+  });
+
+  $('#glogin').click(function() {
+    clientkey = newUUIDv4();
+    window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
   });
 
   var sessionID, checkLogin;
@@ -68,13 +74,27 @@ $(function() {
       console.log("Unexpected message from client: ", e);
       return;
     }
-    if(stationInfo) go();
+    console.log("CL: ", clientLocation);
+    if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
+  });
+
+  $.pm.bind('login', function(data) {
+    console.log('maybe setting token: ', data);
+    console.log('client key: ', clientkey);
+    if(clientkey === data.clientkey) {
+      sessionToken = data.gid;
+      setCookie("session", 1, sessionToken);
+      console.log('setting token: ', sessionToken);
+      console.log('setting cookie: ', document.cookie);
+      data.loginInfo.station = capServer.restore(data.loginInfo.station);
+      data.loginInfo.makeStash = capServer.restore(data.loginInfo.makeStash);
+      handleLoginInfo(data.loginInfo);
+    }
   });
 
   function launch(launchInfo) {
     console.log('Launching: ', launchInfo);
-    stash.post({
-      sessionID: sessionID,
+    makeStash.post({
       private_data: launchInfo.private_data
     },
     function(restoreCap) {
@@ -87,6 +107,14 @@ $(function() {
     },
     function(err) { 
       console.log('Make-stash failed: ', err);
+    });
+  }
+
+  function handleLoginInfo(loginInfo) {
+    makeStash = loginInfo.makeStash;
+    loginInfo.station.get(function(station_info) {
+      stationInfo = station_info;
+      go();
     });
   }
 
@@ -122,13 +150,14 @@ $(function() {
     function create() {
       console.log("Creating account");
       var createAccount = capServer.restore(COMMON.urlPrefix + '/create_plt_account/');
-      createAccount.post(
-        { username : uname, password : password1 }, 
-        function(response) {
-          window.location = COMMON.urlPrefix + response.redirectTo;
+      createAccount.post({
+          username : uname,
+          password : password1
+        }, 
+        function(loginInfo) {
+          handleLoginInfo(loginInfo);
         },
-        failure
-      );
+        failure);
     }
 
     var checkUname = capServer.restore(COMMON.urlPrefix + '/check_uname/');
@@ -140,18 +169,19 @@ $(function() {
       },
       failure
     );
-
   });
 
   function instanceChoice(instanceInfos) {
     var accountsDiv = $('#account-frame');
+    $('#login-frame').hide();
+    $('#create-account').hide();
     console.log('choicing: ', instanceInfos);
     accountsDiv.show();
     instanceInfos.forEach(function(instance) {
       instance.get(function(instanceInfo) {
         var elt = $('<button></button>');
         if(typeof instanceInfo.public_data === 'string') {
-          elt.html(instanceInfo.public_data);
+          elt.text(instanceInfo.public_data);
         }
         else { return; } // Don't show the relationship
         accountsDiv.append(elt);
@@ -162,7 +192,10 @@ $(function() {
     });
   }
 
+  var launched = false;
   function go() {
+    if(launched) return;
+    launched = true;
     // TODO(joe): need to make sure we have a reasonable clientLocation
     // if we're going to launch here.
     var port = makePostMessagePort(window.parent, "belay");
@@ -175,12 +208,14 @@ $(function() {
     tunnel.setLocalResolver(function() { return capServer.publicInterface; });
     console.log('StationInfo: ', stationInfo);
 
-    stationInfo.instances.get(function(instanceInfos) {
-      console.log(instanceInfos);
-      if(instanceInfos.length > 0) {
-        instanceChoice(instanceInfos);
-      }
-    });
+    if(stationInfo) {
+      stationInfo.instances.get(function(instanceInfos) {
+        console.log(instanceInfos);
+        if(instanceInfos.length > 0) {
+          instanceChoice(instanceInfos);
+        }
+      });
+    }
 
     var stashser, stashcap;
     // NOTE(joe): We're only using stashes that point to the Belay server,
@@ -197,8 +232,7 @@ $(function() {
     }
 
     function launchInstance(stashcap) {
-      stashcap.post({ sessionID: sessionID },
-        function(stashed) {
+      stashcap.get(function(stashed) {
           tunnel.sendOutpost(capServer.dataPreProcess({
             services: {},
             launchInfo: stashed
