@@ -43,18 +43,17 @@ class LaunchHandler(bcap.CapHandler):
     return HttpResponse('LaunchHandler POST NYI')
 
 class NewInstanceHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['domain', 'url', 'private_data', 'public_data']
+
   def get(self, station):
     return HttpResponse('NewInstanceHandler GET NYI')
 
   def post(self, station, args):
     domain = args['domain']
     url = args['url']
-    logger.error("Domain: %s, URL: %s" % (domain, url))
-    private_data = bcap.dataPreProcess(str(args['private_data']))
-    logger.error("PD: %s" % private_data)
-    logger.error("PuD: %s" % args['public_data'])
-    public_data = bcap.dataPreProcess(str(args['public_data']))
-    logger.error("PuDpp: %s" % args['public_data'])
+    private_data = bcap.dataPreProcess(args['private_data'])
+    public_data = bcap.dataPreProcess(args['public_data'])
 
     try:
       launch_info = LaunchInfo(domain=domain, \
