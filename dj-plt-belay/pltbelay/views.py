@@ -35,8 +35,7 @@ class StashHandler(bcap.CapHandler):
 
   def put(self, granted, args):
     stash = granted.stash
-    pd = bcap.dataPreprocess(args['private_data'])
-    logger.error("PD: %s" % pd)
+    pd = bcap.dataPreProcess(args['private_data'])
     stash.stashed_content = bcap.dataPreProcess(pd)
     stash.save()
     return bcap.bcapNullResponse()
@@ -49,7 +48,6 @@ class MakeStashHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['private_data']
   def post(self, granted, args):
-    logger.error("Granted: %s" % dir(granted))
     stash = Stash(account=granted.belayaccount,\
                   stashed_content=bcap.dataPreProcess(args['private_data']))
     stash.save()
@@ -58,7 +56,6 @@ class MakeStashHandler(bcap.CapHandler):
 
 def unameExists(uname):
   q = PltCredentials.objects.filter(username=uname)
-  logging.debug('checking')
   return len(q) == 1
 
 HASH_ITERATIONS = 20
@@ -73,24 +70,6 @@ def get_hashed(rawpassword, salt):
 
   logging.debug("Salted: %s" % salted)
   return salted
-
-def accountForSession(session_id):
-  q = BelaySession.objects.filter(session_id=session_id)
-
-  if len(q) == 0:
-    return None
-  else:
-    return q[0].account
-
-def get_station(request):
-  if not 'session' in request.COOKIES:
-    logger.debug('Failed to find session')
-    return HttpResponse(status=500)
-    
-  sid = request.COOKIES['session']
-  acct = accountForSession(sid)
-
-  return HttpResponse(acct.station_url)
 
 # TODO(matt): restore instead of urlopen?
 def newStationCap():

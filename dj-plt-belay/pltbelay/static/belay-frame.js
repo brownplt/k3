@@ -169,7 +169,6 @@ $(function() {
       },
       failure
     );
-
   });
 
   function instanceChoice(instanceInfos) {
