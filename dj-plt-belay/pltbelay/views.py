@@ -36,7 +36,7 @@ class StashHandler(bcap.CapHandler):
   def put(self, granted, args):
     stash = granted.stash
     pd = bcap.dataPreProcess(args['private_data'])
-    stash.stashed_content = bcap.dataPreProcess(pd)
+    stash.stashed_content = pd
     stash.save()
     return bcap.bcapNullResponse()
 
@@ -149,7 +149,7 @@ def plt_login(request):
   session.save()
 
   response = {
-    'station': Capability(c.account.station_url),
+    'station': bcap.Capability(c.account.station_url),
     'makeStash': bcap.regrant('make-stash', c.account)
   }
   return bcap.bcapResponse(response)

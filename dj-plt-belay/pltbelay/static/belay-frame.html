@@ -11,6 +11,9 @@
 #login-frame {
   display: none;
 }
+#plt-login-frame {
+  display: none;
+}
 #account-frame {
   display: none;
 }
@@ -26,10 +29,15 @@
 <div style="font-size:small">
 <p>Don't have a Google Account?  Use Brown Apps instead.</br>
 <a href="javascript:void(0);" id="createplt">(Create an account)</a>
-<a href="login.html" id="loginplt">(Log in with your Brown Apps account)</a>
+<a href="javascript:void(0)" id="loginplt">(Log in with your Brown Apps account)</a>
 </p>
 </div>
 </div>
+</div>
+<div id="plt-login-frame">
+Username: <input type="text" id="username" value=""></input>
+Password: <input type="password" id="password" value=""></input>
+<button id="plt-submit" value="Submit">Submit</button>
 </div>
 <div id="account-frame">
   <h2>

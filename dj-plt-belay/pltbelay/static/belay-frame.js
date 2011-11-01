@@ -22,6 +22,43 @@ $(function() {
     $('#login-frame').show();
   }
 
+  function hideAll() {
+    $('#login-frame').hide();
+    $('#plt-login-frame').hide();
+    $('#account-frame').hide();
+    $('#create-account').hide();
+  }
+
+  $('#loginplt').click(function(e) {
+    hideAll();
+    $('#plt-login-frame').show();
+  });
+
+  $("#plt-submit").click(function(e) {
+    var username = $("#username").val();
+    var password = $("#password").val();
+
+    function login() {
+      if (!COMMON.validateLoginInfo(username, password)) {
+        alert('Invalid username/password');
+        return;
+      }
+
+      var pltLogin = capServer.restore(COMMON.urlPrefix + '/plt_login/');
+      pltLogin.post(
+        { username : username, password : password },
+        function(loginInfo) {
+          handleLoginInfo(loginInfo);
+        },
+        function(err) {
+          console.log('PLT login failed: ', err);
+        }
+      );
+    }
+
+    login();
+  });
+
   $('#createplt').click(function() {
     $('#login-frame').hide();
     $('#account-frame').hide();
