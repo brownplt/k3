@@ -151,7 +151,8 @@ class SubmitContactInfoHandler(bcap.CapHandler):
 
 class GetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
-    return logWith404('get-applicant NYI')
+    applicant = granted.applicant
+    return bcap.bcapResponse(applicant.to_json())
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):

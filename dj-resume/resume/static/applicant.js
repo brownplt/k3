@@ -49,6 +49,8 @@ function makeLetterTable(basicInfo,appInfo) {
 }
 
 function makeAppTable(basicInfo,appInfo) {
+  console.log('in makeAppTable, basicInfo = ', basicInfo);
+  console.log('in makeAppTable, appInfo = ', appInfo);
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
@@ -86,7 +88,6 @@ function makeAppTable(basicInfo,appInfo) {
 									url:'Submitter/submitContactInfo',
 									fields:fields});
 						}).dom;
-
 	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
 }
 
@@ -128,16 +129,14 @@ $(function () {
 
     var stmtSubE = iframeLoad_e('stmtsub',exceptsE);
 
-    var basicInfoE = getE(onLoadTimeE.constant_e(launchInfo)); 
+    var launchE = getE(onLoadTimeE.constant_e(launchInfo)); 
+    var basicInfoE = getE(launchE.transform_e(function(pd) { return pd.getBasic; }));
     var basicInfoB = basicInfoE.startsWith(null);
-    //var basicInfoE = getBasicInfoE(onLoadTimeE);
-    //var basicInfoB = basicInfoE.startsWith(null);
 
     basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
-    var appInfoB = merge_e(getFilteredWSO_e(onLoadTimeE.constant_e(genRequest(
-        {url:'Submitter/get',
-        fields:{}}))),
+    var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
+    var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
 
     insertDomB(appInfoB.lift_b(function(info) {
@@ -151,6 +150,7 @@ $(function () {
 
     var contcompB = lift_b(function(bi,ai) {return (ai && bi) ? makeAppTable(bi,ai): [DIVB(),DIVB()];},
             basicInfoB,appInfoB);
+    console.log('after makeAppTable');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
     insertDomB(switch_b(lift_b(function(bi,ai) {return (ai && bi) ? makeLetterTable(bi,ai) : DIVB();},

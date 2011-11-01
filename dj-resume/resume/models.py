@@ -1,5 +1,8 @@
 import belaylibs.models as bcap
 from django.db import models
+import logging
+
+logger = logging.getLogger('default')
 
 class Department(bcap.Grantable):
   @classmethod
@@ -100,16 +103,33 @@ class ApplicantPosition(bcap.Grantable):
   autoemail = models.BooleanField()
 
 class Applicant(bcap.Grantable):
+  def myReviews(self):
+    return Review.objects.filter(applicant=self, draft=False)\
+      .exclude(advocate='comment')
   def getAreas(self):
-    return []
+    return [a.to_json() for a in self.department.my(Area)]
   def getReviews(self):
-    return []
+    reviews = self.myReviews()
+    rtn = []
+    for r in reviews:
+      scores = Score.objects.filter(review=r) 
+      rtn.append({\
+        'id' : r.id,\
+        'rname' : r.reviewer.auth.name,\
+        'svals' : [s.value.id for s in scores]\
+      })
+    return rtn
   def getComments(self):
-    return []
+    reviews = self.myReviews()
+    return [{'id' : r.reviewer.id, 'rname' : r.reviewer.auth.name} for r in reviews]
   def getWeb(self):
-    return {}
+    components = Component.objects.filter(applicant=self).exclude(value='')
+    components = filter(lambda c: c.type.type == 'contactweb', components)
+    return [{'name' : c.type.short, 'value' : c.value} for c in components]
   def getStatements(self):
-    return []
+    components = Component.objects.filter(applicant=self).exclude(lastSubmitted=0)
+    components = filter(lambda c: c.type.type == 'statement', components)
+    return [c.type.id for c in components]
   def getTestScores(self):
     return []
   def institutions(self):
@@ -118,13 +138,16 @@ class Applicant(bcap.Grantable):
     return []
   def getRefletters(self):
     return []
+  def getComponents(self):
+    return [c.to_json() for c in Component.objects.filter(applicant=self)]
+  def getReferences(self):
+    return [r.to_json() for r in Reference.objects.filter(applicant=self)]
   def to_json(self):
     return {
       'id' : self.id,
       'gender' : self.gender,
       'ethname' : self.ethnicity,
       'rejected' : self.rejected,
-      'accepted' : self.accepted,
       'rtime' : self.rtime,
       'firstname' : self.firstname,
       'lastname' : self.lastname,
@@ -138,7 +161,10 @@ class Applicant(bcap.Grantable):
       'test_scores' : self.getTestScores(),
       'institutions' : self.institutions(),
       'referrals' : self.referrals(),
-      'refletters' : self.getRefletters()
+      'refletters' : self.getRefletters(),
+      'components' : self.getComponents(),
+      'position' : self.position.to_json(),
+      'references' : self.getReferences(),
     }
   genders = [\
     ('Unknown', 'Unknown'),\
@@ -330,6 +356,11 @@ class ComponentType(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Component(bcap.Grantable):
+  def to_json(self):
+    return {\
+      'value' : self.value,\
+      'lastSubmitted' : self.lastSubmitted,\
+    }
   applicant = models.ForeignKey(Applicant)
   type = models.ForeignKey(ComponentType)
   value = models.TextField()
