@@ -143,6 +143,8 @@ class Applicant(bcap.Grantable):
     return [c.to_json() for c in Component.objects.filter(applicant=self)]
   def getReferences(self):
     return [r.to_json() for r in Reference.objects.filter(applicant=self)]
+  def getReferencesOfEmail(self, email):
+    return [r.to_json() for r in Reference.objects.filter(applicant=self, email=email)]
   def componentUpdate(self, id, val):
     cts = ComponentType.objects.filter(department=self.department, id=int(id))
     if len(cts) > 0:
@@ -340,6 +342,16 @@ class PendingHighlight(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Reference(bcap.Grantable):
+  def to_json(self):
+    return {\
+      'code' : self.code,\
+      'submitted' : self.submitted,\
+      'filesize' : self.filesize,\
+      'name' : self.name,\
+      'institution' : self.institution,\
+      'email' : self.email,\
+      'lastRequested' : self.lastRequested\
+    }
   code = models.IntegerField()
   applicant = models.ForeignKey(Applicant)
   submitted = models.IntegerField()
@@ -348,7 +360,7 @@ class Reference(bcap.Grantable):
   institution = models.TextField()
   email = models.EmailField()
   department = models.ForeignKey(Department)
-  lastRequested = models.IntegerField()
+  lastRequested = models.IntegerField(default=0)
 
 class ComponentType(bcap.Grantable):
   choices = [\

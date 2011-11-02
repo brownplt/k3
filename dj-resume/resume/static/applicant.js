@@ -9,18 +9,20 @@ function ContactInfoRowWidget(ct,comp) {
 	this.behaviors.value = this.behaviors.value.transform_b(function(v) {return {id:ct.id,value:v};});
 }
 
-function makeLetterTable(basicInfo,appInfo) {
+function makeLetterTable(basicInfo,appInfo,refReq) {
 	var reqnew = new CombinedInputWidget([
 			new TextInputWidget('',30),
 			new TextInputWidget('',40),
 			new TextInputWidget('',20)],
 			function(name,inst,email) {return [TD(name),TD(inst),TD(email)];})
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
-		.serverSaving(function(val) {
+		.belayServerSaving(function(val) {
 			return genRequest(
 				{url:'Submitter/requestReference',
 				fields:{name:val[0],institution:val[1],email:val[2]}});
-		});
+		}, true, refReq, function(args) { 
+      return args.email !== '' && args.name !== '' && args.institution !== '';
+    });
 
   // Clear the input table
 	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
@@ -158,8 +160,10 @@ $(function () {
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
 
-    insertDomB(switch_b(lift_b(function(bi,ai) {return (ai && bi) ? makeLetterTable(bi,ai) : DIVB();},
-      basicInfoB,appInfoB)),'letters');
+    var refReqE = launchE.transform_e(function(pd) { return pd.requestReference; });
+    var refReqB = refReqE.startsWith(null);
+    insertDomB(switch_b(lift_b(function(bi,ai,refReq) {return (ai && bi && refReq) ? makeLetterTable(bi,ai,refReq) : DIVB();},
+      basicInfoB,appInfoB, refReqB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {
           var rstr = 'Thank you for your submission!';
           if(!ssc.error)

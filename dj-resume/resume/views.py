@@ -3,6 +3,7 @@ from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpR
 import os
 import logging
 import uuid
+import random
 from resume.models import *
 from django.db import IntegrityError
 import belaylibs.dj_belay as bcap
@@ -151,8 +152,35 @@ class RequestReferenceHandler(bcap.CapHandler):
   def name_str(self):
     return 'RequestReferenceHandler'
 
+  def exceptionResponse(self, msg):
+    return bcap.bcapResponse({'success' : False, 'message' : msg})
+
   def post(self, granted, args):
-    return logWith404('request-reference NYI')
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+    email = args['email']
+    name = args['name']
+    institution = args['institution']
+
+    applicant = granted.applicant
+    found = applicant.getReferencesOfEmail(email)
+    if len(found) > 0:
+      return self.exceptionResponse('You have already asked this person to write you a letter. If you wish to contact this person, please do so outside the Resume system.')
+    if name == '':
+      return self.exceptionResponse('No name was provided, please provide a name for the letter writer')
+    if email == '':
+      return self.exceptionResponse('No email was provided, please provide an email for the reference request')
+
+    ncode = random.randint(0,999999999)
+    ref = Reference(code=ncode, applicant=applicant, submitted=0, filesize=0,\
+      name=name, institution=institution, email=email,\
+      department=applicant.department)
+    ref.save()
+    if applicant.position.autoemail:
+      # TODO: implement sendReferenceRequest
+      logger.warn('sendReferenceRequest NYI')
+    return bcap.bcapResponse(ref.to_json())
 
 class SubmitContactInfoHandler(bcap.CapHandler):
   def post(self, granted, args):
