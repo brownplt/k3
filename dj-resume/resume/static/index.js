@@ -35,7 +35,8 @@ $(function() {
     var account = $('.make-account');
     account.show();
 
-    var createApplicantCap = capServer.restore(createApplicantCapURL);
+    capServer.instanceID = '0000';
+    var createApplicantCap = capServer.grant(function() {});
     createApplicantCap.get(function(response) {
       console.log('createApplicantCap get response: ', response);
       var positions = Object.keys(response);

@@ -5,6 +5,7 @@ from django.conf.urls.defaults import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+  (r'apply/', 'resume.views.cs_apply_handler'),
   (r'cs/', 'resume.views.index_handler'),
   (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
   (r'applicant/', 'resume.views.applicant_handler'),

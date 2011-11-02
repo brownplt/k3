@@ -15,6 +15,25 @@ logger = logging.getLogger('default')
 def sendLogEmail(msg, address):
   logger.error('send log email:\n %s \n%s' % (address, msg))
 
+def make_apply_handler(dept_name):
+  def apply_handler(request):
+    if request.method != 'GET':
+      return HttpResponseNotAllowed(['GET'])
+
+    try:
+      logger.error('Dept: %s' % dept_name)
+      dept = Department.departmentByName(dept_name)
+      cap = bcap.grant('add-applicant', dept)
+    except Exception as e:
+      return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
+    return render_to_response('apply.html', {
+      'create_applicant': cap.serialize()
+    })
+
+  return apply_handler
+
+cs_apply_handler = make_apply_handler('cs')
+
 def applicant_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
@@ -43,17 +62,7 @@ def index_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
 
-  deptkey = request.path_info.split('/')[1]
-  logger.warn("Path_info: %s" % request.path_info)
-  
-  try:
-    dept = Department.departmentByName(deptkey)
-    cap = bcap.grant('add-applicant', dept)
-    return render_to_response('index.html', {
-      'create_applicant': bcap.grant('add-applicant', dept).serialize()
-    })
-  except Exception as e:
-    return logWith404(logger, "Looked up bad department: %s, %s" % (deptkey, e), level='error')
+  return render_to_response('index.html', {})
 
 # Django middleware class to set handlers on every request
 class ResumeInit():
@@ -469,7 +478,8 @@ class UnverifiedApplicantAddHandler(bcap.CapHandler):
 
     try:
       uu.save()
-    except:
+    except Exception as e:
+      logger.error('Error: %s' % e)
       resp = {'success' : False, 'message' : 'failed to create UnverifiedApplicant'}
       return bcap.bcapResponse(resp)
     
