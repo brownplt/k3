@@ -153,7 +153,7 @@ class RequestReferenceHandler(bcap.CapHandler):
     return 'RequestReferenceHandler'
 
   def exceptionResponse(self, msg):
-    return bcap.bcapResponse({'success' : False, 'message' : msg})
+    return bcap.bcapResponse({'success' : False, 'error' : msg})
 
   def post(self, granted, args):
     response = self.checkPostArgs(args)

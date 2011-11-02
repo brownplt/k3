@@ -10,19 +10,22 @@ function ContactInfoRowWidget(ct,comp) {
 }
 
 function makeLetterTable(basicInfo,appInfo,refReq) {
+  var verifier = function(args) {
+    return args.email !== '' && args.name !== '' && args.institution !== '';
+  };
+  var toReqFn = function(val) {
+			return genRequest(
+				{url:'Submitter/requestReference',
+				fields:{name:val[0],institution:val[1],email:val[2]}});
+  };
+
 	var reqnew = new CombinedInputWidget([
 			new TextInputWidget('',30),
 			new TextInputWidget('',40),
 			new TextInputWidget('',20)],
 			function(name,inst,email) {return [TD(name),TD(inst),TD(email)];})
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
-		.belayServerSaving(function(val) {
-			return genRequest(
-				{url:'Submitter/requestReference',
-				fields:{name:val[0],institution:val[1],email:val[2]}});
-		}, true, refReq, function(args) { 
-      return args.email !== '' && args.name !== '' && args.institution !== '';
-    });
+		.belayServerSaving(toReqFn, true, refReq, verifier);
 
   // Clear the input table
 	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
@@ -30,7 +33,12 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 
 	var newLettersE = reqnew.events.serverResponse.filter_e(noErrors);
 	var refsB = collect_b(appInfo.references,newLettersE,function(newref,existing) {return existing.concat([newref]);});
-	var errorB = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : '')).startsWith(SPAN());
+
+  var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
+  var clientErrorE = reqnew.events.value.transform_e(toReqFn)
+    .filter_e(function(v) {return !verifier(v.fields);})
+    .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
+  var errorB = serverErrorE.merge_e(clientErrorE).startsWith(SPAN());
 
 	return DIVB(
 			errorB,
