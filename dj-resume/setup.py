@@ -45,13 +45,13 @@ def setup(adminName):
   unverified_user = UnverifiedUser( \
     role='admin',
     name=adminName,
-    email='default@fake',
+    email='%s@fake' % adminName,
     department=cs)
   unverified_user.save()
 
   ResumeInit().process_request(None)
 
-  create_account = bcap.grant('add-admin', unverified_user)
+  create_account = bcap.grant('get-admin-email-and-create', unverified_user)
   print("To get started, go here: %s/static/new_account.html#%s" % \
         (bcap.this_server_url_prefix(), create_account.serialize()))
 

@@ -1,7 +1,7 @@
 $(function() {
   console.log("Cookie: " + document.cookie);
   var stationInfo;
-  var clientLocation;
+  var clientLocation, clientEmail;
   var clientkey = null;
   var sessionToken;
   var capServer = new CapServer(newUUIDv4());
@@ -63,6 +63,12 @@ $(function() {
     $('#login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').show();
+    console.log('The client\'s email is: ', clientEmail);
+    if (clientEmail) {
+      $('#username-create').hide();
+      $('#username-preset').text(clientEmail);
+      $('#username-preset').show(clientEmail);
+    }
   });
 
   $('#glogin').click(function() {
@@ -106,6 +112,7 @@ $(function() {
   $.pm.bind('init', function(data) {
     console.log(data);
     clientLocation = data.clientLocation;
+    clientEmail = data.email;
     console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
       console.log("Unexpected message from client: ", e);
@@ -158,6 +165,9 @@ $(function() {
 
   $('#submit').click(function(e) {
     var uname = $('#username-create').val();
+    if($('#username-preset').text() !== '') {
+      uname = $('#username-preset').text();
+    }
     var password1 = $('#password1').val();
     var password2 = $('#password2').val();
 
