@@ -1,0 +1,69 @@
+<html>
+<head>
+  <title>Resume Faculty Applications</title>
+  <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+  <script src="/common.js"></script>
+  <script src="/static/lib/js/caps.js"></script>
+  <script>
+    var createApplicantCapURL = "{{ create_applicant }}";
+    var capServer = new CapServer(newUUIDv4());
+    var createApplicant = capServer.restore(createApplicantCapURL);
+    $(function() {
+      $('#create-relationship').click(function() {
+        // TODO(joe): assuming a single position
+        createApplicant.get(function(positionCaps) {
+          var thePos;
+          for(var i in positionCaps) {
+            if(!positionCaps.hasOwnProperty(i)) continue;
+            thePos = positionCaps[i];
+            break;
+          }
+          var email = $('#relationship-email').val();
+          thePos.post({email: email}, function (response) {
+                $('#success').show();
+              },
+              function(err) {
+                var elt = $('#failure');
+                if(err.message) elt.text(err.message);
+                else {
+                  elt.text("Oops!  There was an error on our end.  Send " +
+                           "an email to the address below to let us know, we're " + 
+                           "already on it.");
+                }
+                elt.show();
+              });
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+
+<h1 id="ptitle">
+  <img id="header" src="/static/images/header.png"></img>
+  <img id="logo" src="/static/images/logo.png"></img>
+  <img id="resume" src="/static/images/resume.png"></img>
+</h1>
+<div class="content" style="max-width:70em">
+    <div class='left-part'>
+    <h2>welcome!</h2>
+      <div class="make-account" style="text-align:center;margin-top:5em">
+
+        <p style="font-size:large">Enter your email address below, and we'll
+send you a message with instructions for creating an account.</p>
+
+        <div id="start" style="padding-top:2em">
+          <input type="text" id="relationship-email" style="border-width:4px;font-size:16pt;width:18em;max-width=100%;height:2em;text-align:center"></input>
+          <br/>
+          <button id="create-relationship" style="width:8em;height:3em;font-size:large;margin-top:2em">Get Started!</button> 
+          <p id="success" style="display:none;color:green;font-size:large">
+          Success!  Check your mail!
+          </p>
+          <p id="failure" style="display:none;color:red;font-size:large">
+          </p>
+        </div>
+      </div>
+    </div>
+</body>
+</html>
