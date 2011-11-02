@@ -147,7 +147,12 @@ class RequestReferenceHandler(bcap.CapHandler):
 
 class SubmitContactInfoHandler(bcap.CapHandler):
   def post(self, granted, args):
-    return logWith404('submit-contact-info NYI')
+    applicant = granted.applicant
+    for (key, val) in args.iteritems():
+      if key.find('comp-') == 0:
+        id = key[5:]
+        applicant.componentUpdate(id, val)
+    return bcap.bcapResponse({'success' : True})
 
 class GetApplicantHandler(bcap.CapHandler):
   def get(self, granted):

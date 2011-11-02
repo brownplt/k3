@@ -48,9 +48,7 @@ function makeLetterTable(basicInfo,appInfo) {
 				)));
 }
 
-function makeAppTable(basicInfo,appInfo) {
-  console.log('in makeAppTable, basicInfo = ', basicInfo);
-  console.log('in makeAppTable, appInfo = ', appInfo);
+function makeAppTable(basicInfo,appInfo, submit) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
@@ -79,15 +77,16 @@ function makeAppTable(basicInfo,appInfo) {
 		}
 	},basicInfo.components);
 	
+
 	var ciTblB = new CombinedInputWidget(ciWidgets,function() {return TABLEB({className:'key-value'},TBODYB(slice (arguments,0)));})
-						.serverSaving(
+						.belayServerSaving(
 							function(cifs) {
 								var fields = {};
 								map(function(c) {fields['comp-'+c.id] = c.value;},cifs);
 								return genRequest({
 									url:'Submitter/submitContactInfo',
 									fields:fields});
-						}).dom;
+						}, true, submit).dom;
 	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
 }
 
@@ -148,11 +147,17 @@ $(function () {
       }
     }),'position');
 
-    var contcompB = lift_b(function(bi,ai) {return (ai && bi) ? makeAppTable(bi,ai): [DIVB(),DIVB()];},
-            basicInfoB,appInfoB);
-    console.log('after makeAppTable');
+    var submitE = launchE.transform_e(function(pd) {
+      console.log('firing submitE transform to submitContact', pd);
+      return pd.submitContactInfo; });
+    var submitB = submitE.startsWith(null);
+    var contcompB = lift_b(function(bi,ai,submit) {
+      console.log('Building new contcompB out of: ', [bi, ai]);
+      return (ai && bi && submit) ? makeAppTable(bi,ai, submit): [DIVB(),DIVB()];},
+            basicInfoB,appInfoB,submitB);
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
+
     insertDomB(switch_b(lift_b(function(bi,ai) {return (ai && bi) ? makeLetterTable(bi,ai) : DIVB();},
       basicInfoB,appInfoB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {

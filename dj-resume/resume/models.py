@@ -1,6 +1,7 @@
 import belaylibs.models as bcap
 from django.db import models
 import logging
+import time
 
 logger = logging.getLogger('default')
 
@@ -142,6 +143,20 @@ class Applicant(bcap.Grantable):
     return [c.to_json() for c in Component.objects.filter(applicant=self)]
   def getReferences(self):
     return [r.to_json() for r in Reference.objects.filter(applicant=self)]
+  def componentUpdate(self, id, val):
+    cts = ComponentType.objects.filter(department=self.department, id=int(id))
+    if len(cts) > 0:
+      ct = cts[0]
+      oldcomps = Component.objects.filter(department=self.department,\
+        applicant=self, type=ct)
+      if len(oldcomps) > 0:
+        oldcomp = oldcomps[0]
+        oldcomp.value = val
+        oldcomp.lastSubmitted = int(time.time())
+      else:
+        oldcomp = Component(applicant=self, type=ct, value=val,\
+          lastSubmitted=int(time.time()), department=self.department)
+      oldcomp.save()
   def to_json(self):
     return {
       'id' : self.id,
@@ -345,6 +360,7 @@ class ComponentType(bcap.Grantable):
   ]
   def to_json(self):
     return {\
+      'id' : self.id,\
       'type' : self.type,\
       'name' : self.name,\
       'short' : self.short\
@@ -358,6 +374,7 @@ class ComponentType(bcap.Grantable):
 class Component(bcap.Grantable):
   def to_json(self):
     return {\
+      'typeID' : self.type.id,\
       'value' : self.value,\
       'lastSubmitted' : self.lastSubmitted,\
     }
