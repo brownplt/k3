@@ -35,8 +35,8 @@ $(function() {
   });
 
   $("#plt-submit").click(function(e) {
-    var username = $("#username").val();
-    var password = $("#password").val();
+    var username = $("#username-login").val();
+    var password = $("#password-login").val();
 
     function login() {
       if (!COMMON.validateLoginInfo(username, password)) {
@@ -148,6 +148,7 @@ $(function() {
   }
 
   function handleLoginInfo(loginInfo) {
+    console.log("Login-infoing", loginInfo);
     makeStash = loginInfo.makeStash;
     loginInfo.station.get(function(station_info) {
       stationInfo = station_info;
@@ -156,7 +157,7 @@ $(function() {
   }
 
   $('#submit').click(function(e) {
-    var uname = $('#username').val();
+    var uname = $('#username-create').val();
     var password1 = $('#password1').val();
     var password2 = $('#password2').val();
 
