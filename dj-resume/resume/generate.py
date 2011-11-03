@@ -28,7 +28,9 @@ def generate(request):
     logger.info('used existing component type')
     ct = ct_objs[0]
 
-  auth_objs = rmod.AuthInfo.objects.filter(email='matt@matt.com')
+  auth_objs = rmod.AuthInfo.objects.all()
+  if len(auth_objs) == 0:
+    return "No auth_info objects to use"
   auth = auth_objs[0]
 
   pos_objs = rmod.ApplicantPosition.objects.filter(name='pos1')

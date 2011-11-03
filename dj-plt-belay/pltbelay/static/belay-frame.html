@@ -20,16 +20,28 @@
 #create-account {
   display: none;
 }
+#glogin {
+  width: 80%;
+  height: 50%;
+  max-width: 15em;
+  max-height: 5em;
+  font-size: x-large;
+}
+.launchButton {
+  font-size: large;
+}
 </style>
 <body>
 <div id="login-frame">
 <p>
-<button id="glogin" style="width:20em;height:5em;font-size:larger">Log in with Google</button>
+<button id="glogin">Log in with Google</button>
 </p>
 <div style="font-size:small">
-<p>Don't have a Google Account?  Use Brown Apps instead.</br>
+
+<p>We prefer you use Google login, but you can also make an account just for
+Resume.<br/>
 <a href="javascript:void(0);" id="createplt">(Create an account)</a>
-<a href="javascript:void(0);" id="loginplt">(Log in with your Brown Apps account)</a>
+<a href="javascript:void(0);" id="loginplt">(Log in)</a>
 </p>
 </div>
 </div>
@@ -40,14 +52,12 @@ Password: <input type="password" id="password-login" value=""></input>
 <button id="plt-submit" value="Submit">Submit</button>
 </div>
 <div id="account-frame">
-  <h2>
-    Your Existing Accounts:
-  </h2>
 </div>
 <div id="create-account">
-Username: <input type="text" id="username-create" value=""></input>
-Password: <input type="password" id="password1" value=""></input>
-Password again: <input type="password" id="password2" value=""></input>
+Email: <input type="text" id="username-create" value=""></input>
+<span id='username-preset' style='display:none;'></span> <br/>
+Password: <input type="password" id="password1" value=""></input> <br/>
+Password again: <input type="password" id="password2" value=""></input> <br/>
 <button id="submit" value="Submit">Submit</button>
 </div>
 </body>

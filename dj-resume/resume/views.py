@@ -16,8 +16,8 @@ logger = logging.getLogger('default')
 def sendLogEmail(msg, address):
   logger.error('send log email:\n %s \n%s' % (address, msg))
 
-def make_apply_handler(dept_name):
-  def apply_handler(request):
+def make_index_handler(dept_name):
+  def index_handler(request):
     if request.method != 'GET':
       return HttpResponseNotAllowed(['GET'])
 
@@ -27,13 +27,13 @@ def make_apply_handler(dept_name):
       cap = bcap.grant('add-applicant', dept)
     except Exception as e:
       return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
-    return render_to_response('apply.html', {
+    return render_to_response('index.html', {
       'create_applicant': cap.serialize()
     })
 
-  return apply_handler
+  return index_handler
 
-cs_apply_handler = make_apply_handler('cs')
+cs_index_handler = make_index_handler('cs')
 
 def applicant_handler(request):
   if request.method != 'GET':
@@ -94,12 +94,48 @@ class ResumeInit():
         'get-applicants' : GetApplicantsHandler,\
         'add-applicant-with-position' : UnverifiedApplicantAddHandler,\
         'add-verified-applicant' : AddVerifiedApplicantHandler,\
+        'get-applicant-email-and-create' : ApplicantEmailAndCreateHandler,\
+        'get-reviewer-email-and-create' : ReviewerEmailAndCreateHandler,\
+        'get-admin-email-and-create' : AdminEmailAndCreateHandler,\
         'request-reference' : RequestReferenceHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
         'get-applicant' : GetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
         'get-csv' : GetCSVHandler })
     return None
+
+class ApplicantEmailAndCreateHandler(bcap.CapHandler):
+  # granted: UnverifiedApplicant
+  def get(self, granted):
+    ua = granted.unverifiedapplicant
+    email = ua.email
+    create_cap = bcap.regrant('add-verified-applicant', ua)
+    return bcap.bcapResponse({
+      'email': email,
+      'create': create_cap
+    })
+
+class AdminEmailAndCreateHandler(bcap.CapHandler):
+  # granted: UnverifiedUser
+  def get(self, granted):
+    uu = granted.unverifieduser
+    email = uu.email
+    create_cap = bcap.regrant('add-admin', uu)
+    return bcap.bcapResponse({
+      'email': email,
+      'create': create_cap
+    })
+
+class ReviewerEmailAndCreateHandler(bcap.CapHandler):
+  # granted: UnverifiedUser
+  def get(self, granted):
+    uu = granted.unverifieduser
+    email = uu.email
+    create_cap = bcap.regrant('add-reviewer', uu)
+    return bcap.bcapResponse({
+      'email': email,
+      'create': create_cap
+    })
 
 def checkPostArgs(classname, args, keys):
   for k in keys:
@@ -208,9 +244,9 @@ class SubmitStatementHandler(bcap.CapHandler):
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
-    ua = granted.unverifiedapplicant
     if granted is None:
       return HttpResponseNotFound()
+    ua = granted.unverifiedapplicant
 
     auth_info = AuthInfo(
       email=ua.email, \
@@ -521,7 +557,7 @@ class UnverifiedApplicantAddHandler(bcap.CapHandler):
       resp = {'success' : False, 'message' : 'failed to create UnverifiedApplicant'}
       return bcap.bcapResponse(resp)
     
-    create_cap = bcap.grant('add-verified-applicant', uu)
+    create_cap = bcap.grant('get-applicant-email-and-create', uu)
     activate_url = '%s/new-account/#%s' % \
       (bcap.this_server_url_prefix(), create_cap.serialize())
     return_url = bcap.this_server_url_prefix()
@@ -567,8 +603,8 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
       resp = {'success' : False, 'message' : 'failed to create UnverifiedUser'}
       return bcap.bcapResponse(resp)
 
-    if role == 'admin': create_cap = bcap.grant('add-admin', uu)
-    elif role == 'reviewer': create_cap = bcap.grant('add-reviewer', uu)
+    if role == 'admin': create_cap = bcap.grant('get-admin-email-and-create', uu)
+    elif role == 'reviewer': create_cap = bcap.grant('get-reviewer-email-and-create', uu)
     else: return logWith404(logger, 'UnverifiedUserAddRevHandler: role type not allowed: %s' % role)
 
     activate_url = '%s/new-account/#%s' % \

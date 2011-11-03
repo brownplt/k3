@@ -1,7 +1,7 @@
 $(function() {
   console.log("Cookie: " + document.cookie);
   var stationInfo;
-  var clientLocation;
+  var clientLocation, clientEmail;
   var clientkey = null;
   var sessionToken;
   var capServer = new CapServer(newUUIDv4());
@@ -63,6 +63,12 @@ $(function() {
     $('#login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').show();
+    console.log('The client\'s email is: ', clientEmail);
+    if (clientEmail) {
+      $('#username-create').hide();
+      $('#username-preset').text(clientEmail);
+      $('#username-preset').show(clientEmail);
+    }
   });
 
   $('#glogin').click(function() {
@@ -70,42 +76,12 @@ $(function() {
     window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
   });
 
-  var sessionID, checkLogin;
-  var matchInfo = COMMON.sessionRegExp.exec(document.cookie);
-  if (matchInfo === null) {
-    notLoggedIn();
-  }
-  else {
-    sessionID = matchInfo[1];
-    checkLogin = capServer.restore(COMMON.urlPrefix + '/check_login/');
-    console.log('Request to: ' + checkLogin.serialize());
-    checkLogin.post(
-      { sessionID : sessionID },
-      function(response) {
-        console.log('Got login response');
-        if(response.loggedIn) {
-          console.log('Logged in');
-          get_station(function(station) {
-            capServer.restore(station).get(function(station_info) {
-              stationInfo = station_info;
-              go();
-            },
-            function(err) {
-              console.log('Couldn\'t get station info: ', err);
-            });
-          });
-        }
-        else { notLoggedIn(); }
-      },
-      function(response) {
-        console.log("Getting logged in status failed: ", {r : response});
-      }
-    );
-  }
+  notLoggedIn();
 
   $.pm.bind('init', function(data) {
     console.log(data);
     clientLocation = data.clientLocation;
+    clientEmail = data.email;
     console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
       console.log("Unexpected message from client: ", e);
@@ -158,6 +134,9 @@ $(function() {
 
   $('#submit').click(function(e) {
     var uname = $('#username-create').val();
+    if($('#username-preset').text() !== '') {
+      uname = $('#username-preset').text();
+    }
     var password1 = $('#password1').val();
     var password2 = $('#password2').val();
 
@@ -217,12 +196,14 @@ $(function() {
     accountsDiv.show();
     instanceInfos.forEach(function(instance) {
       instance.get(function(instanceInfo) {
-        var elt = $('<button></button>');
+        var div = $('<div></div>');
+        var elt = $('<button class="launchButton"></button>');
         if(typeof instanceInfo.public_data === 'string') {
-          elt.text(instanceInfo.public_data);
+          elt.text('Launch ' + instanceInfo.public_data);
         }
         else { return; } // Don't show the relationship
-        accountsDiv.append(elt);
+        div.append(elt);
+        accountsDiv.append(div);
         elt.click(function() {
           launch(instanceInfo);
         });
@@ -232,8 +213,9 @@ $(function() {
 
   var launched = false;
   function go() {
-    if(launched) return;
+    if(launched) { console.log('Refusing to launch twice'); return; }
     launched = true;
+    console.log('Launching...');
     // TODO(joe): need to make sure we have a reasonable clientLocation
     // if we're going to launch here.
     var port = makePostMessagePort(window.parent, "belay");

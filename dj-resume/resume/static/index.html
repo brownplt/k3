@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Apply Graduate Admissions</title>
+  <title>Resume Faculty Applications</title>
   <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
   <script src="/common.js"></script>
@@ -10,25 +10,42 @@
   <script src="/static/lib/js/makeBelayFrame.js"></script>
   <script src="/static/lib/js/belay-client.js"></script>
   <script src="/static/index.js"></script>
+  <script>
+    var createApplicantCapURL = "{{ create_applicant }}";
+  </script>
 </head>
 <body>
 
 <h1 id="ptitle">
-  <img src="/static/images/apply.png"></img>
+  <img id="header" src="/static/images/header.png"></img>
+  <img id="logo" src="/static/images/logo.png"></img>
+  <img id="resume" src="/static/images/resume.png"></img>
 </h1>
 <div class="content">
   <div class="left-part">
-    <p>
-      This is where we tell you how great our software is.
-    </p>
+    <h2>new applicants</h2>
+    <div class="make-account" style="margin-top:5em">
+
+      <p style="font-size:large">Welcome to the application service for Brown
+CS faculty applications.</p>
+
+      <p style="font-size:large">Enter your email address below, and we'll
+send you a message with instructions for creating an account.</p>
+
+      <div id="start" style="padding-top:2em;text-align:center">
+        <input type="text" id="relationship-email" style="border-width:4px;font-size:16pt;width:18em;max-width=100%;height:2em;text-align:center"></input>
+        <br/>
+        <button id="create-relationship" style="width:8em;height:3em;font-size:large;margin-top:2em">Apply!</button> 
+        <p id="success" style="display:none;color:green;font-size:large">
+        Success!  Check your mail!
+        </p>
+        <p id="failure" style="display:none;color:red;font-size:large">
+        </p>
+      </div>
+    </div>
   </div>
   <div class="right-part">
-    <h2>welcome!</h2>
-    <div class="make-account">
-      <label>Enter the email you'd like to use with Apply:</label>
-      <input type="text" id="relationship-email"></input>
-      <button id="create-relationship">Get Started!</button> 
-    </div>
+    <h2>existing users</h2>
   </div>
 
 </body>
