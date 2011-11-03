@@ -97,6 +97,7 @@ class ResumeInit():
         'request-reference' : RequestReferenceHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
         'get-applicant' : GetApplicantHandler,\
+        'submit-statement' : SubmitStatementHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -141,6 +142,7 @@ class ApplicantLaunchHandler(bcap.CapHandler):
       'getBasic' : bcap.grant('get-basic', department),\
       'requestReference' : bcap.grant('request-reference', applicant),\
       'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
+      'submitStatement' : bcap.grant('submit-statement', applicant),\
       'get' : bcap.grant('get-applicant', applicant)\
     }
     return bcap.bcapResponse(resp)
@@ -195,6 +197,14 @@ class GetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
     applicant = granted.applicant
     return bcap.bcapResponse(applicant.to_json())
+
+class SubmitStatementHandler(bcap.CapHandler):
+  def files_needed(self):
+    return ['statement']
+  def post_files(self, granted, args, files):
+    # TODO(matt): actually save file
+    applicant = granted.applicant
+    return bcap.bcapResponse({})
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):

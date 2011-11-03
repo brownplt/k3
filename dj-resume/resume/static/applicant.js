@@ -58,23 +58,26 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 				)));
 }
 
-function makeAppTable(basicInfo,appInfo, submit) {
+function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
 	map(function(c) {
 		if(c.type == 'statement') {
 			var subWidg = INPUT({type:'submit',value:'OK'});
+      var fileInputWidg = INPUT({type:'file',name:'statement'});
 			var expandA = new ToggleWidget('[+]','[-]'); 
 			var svisB = expandA.behaviors.toggled.transform_b(function(t) {return {className:'subnew',style:{display:(t ? 'block':'none')}};});
 			var stmtDivB = DIVB(svisB,
-				FORM({target:'stmtsub',action:'Submitter/submitStatement',method:'post',encoding:'multipart/form-data'},
-					INPUT({type:'hidden',name:'cookie'}),
-					INPUT({type:'hidden',name:'comp',value:c.id}),
+				//FORM({target:'stmtsub',action:'Submitter/submitStatement',method:'post',encoding:'multipart/form-data'},
+				FORM({target:'stmtsub',action:submitStatement.ser,method:'post',encoding:'multipart/form-data'},
+					//INPUT({type:'hidden',name:'cookie'}),
+					//INPUT({type:'hidden',name:'comp',value:c.id}),
 					SPAN('Submit New: ',
 						IMG({src:'images/pdficon_small.gif',alt:'[PDF Files accepted]'}),
 						IMG({src:'images/word_icon_small.gif',alt:'[MS Word Files accepted]'}),
-						' ',INPUT({type:'file',name:'newcomp'}),subWidg)));
+						' ',fileInputWidg,subWidg)));
+      console.log('stmtDivB: ', stmtDivB);
 			statementDoms.push(
 				TRB(
 					TH(c.name),
@@ -96,7 +99,7 @@ function makeAppTable(basicInfo,appInfo, submit) {
 								return genRequest({
 									url:'Submitter/submitContactInfo',
 									fields:fields});
-						}, true, submit).dom;
+						}, true, submitContactInfo).dom;
 	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
 }
 
@@ -157,14 +160,13 @@ $(function () {
       }
     }),'position');
 
-    var submitE = launchE.transform_e(function(pd) {
-      console.log('firing submitE transform to submitContact', pd);
-      return pd.submitContactInfo; });
-    var submitB = submitE.startsWith(null);
-    var contcompB = lift_b(function(bi,ai,submit) {
+    var submitContactB = launchE.transform_e(function(pd){return pd.submitContactInfo;}).startsWith(null);
+    var submitStatementB = launchE.transform_e(function(pd){return pd.submitStatement;}).startsWith(null);
+
+    var contcompB = lift_b(function(bi,ai,submitC,submitS) {
       console.log('Building new contcompB out of: ', [bi, ai]);
-      return (ai && bi && submit) ? makeAppTable(bi,ai, submit): [DIVB(),DIVB()];},
-            basicInfoB,appInfoB,submitB);
+      return (ai && bi && submitC && submitS) ? makeAppTable(bi,ai,submitC,submitS): [DIVB(),DIVB()];},
+            basicInfoB,appInfoB,submitContactB, submitStatementB);
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
 

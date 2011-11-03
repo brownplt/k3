@@ -149,6 +149,12 @@ def dataPostProcess(serialized):
 # Base class for handlers that process capability invocations.
 class CapHandler(object):
   methods = ['get', 'put', 'post', 'delete']
+
+  # Subclasses override if they handle file uploads
+  myFiles = {}
+  def files_needed(self):
+    return []
+
   def allowedMethods(self):
     return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
 
@@ -161,15 +167,17 @@ class CapHandler(object):
       if not args.has_key(k):
         return logWith404(logger, self.name_str() + ' error: post args missing ' + k)
     return 'OK'
-
+  
+  def notAllowedResponse(self):
+    return HttpResponseNotAllowed(self.allowedMethods())
   def get(self, grantable):
-    return HttpResponseNotAllowed(self.allowedMethods())
+    return self.notAllowedResponse()
   def put(self, grantable, args):
-    return HttpResponseNotAllowed(self.allowedMethods())
+    return self.notAllowedResponse()
   def post(self, grantable, args):
-    return HttpResponseNotAllowed(self.allowedMethods())
+    return self.notAllowedResponse()
   def delete(self, grantable):
-    return HttpResponseNotAllowed(self.allowedMethods())
+    return self.notAllowedResponse()
 
 default_prefix = '/cap/'
 
@@ -228,7 +236,7 @@ def set_handler(path, handler):
   handlerData.path_to_handler[path] = handler
 
 
-def handle(cap_id, method, args):
+def handle(cap_id, method, args, files):
   grants = Grant.objects.filter(cap_id=cap_id)
 
   if len(grants) == 0:
@@ -246,6 +254,11 @@ def handle(cap_id, method, args):
   handler_class = get_handler(str(grant.internal_path))
   handler = handler_class()
 
+  files_needed = handler.files_needed()
+  using_files = len(files_needed) > 0
+  if using_files:
+    files_granted = dict([(n, files[n]) for n in files_needed if files.has_key(n)])
+
   item = grant.db_entity
 
 # TODO(joe): make sure this is legit
@@ -259,6 +272,8 @@ def handle(cap_id, method, args):
   elif method == 'PUT':
     return handler.put(item, args)
   elif method == 'POST':
+    if using_files:
+      return handler.post_files(item, args, files_granted)
     return handler.post(item, args)
   elif method == 'DELETE':
     return handler.delete(item)
@@ -288,13 +303,14 @@ def proxyHandler(request):
     xhr_content(response, "", "text/plain;charset=UTF-8")
     return response
 
+  req_files = request.FILES
   args = dataPostProcess(request.read())
 
   if request.method == 'OPTIONS':
     return options()
   else:
     return handle(request.path_info[len(handlerData.cap_prefix):], \
-        request.method, args)
+        request.method, args, req_files)
 
 def grant(path, entity):
   cap_id = str(uuid.uuid4())
