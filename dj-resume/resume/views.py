@@ -16,8 +16,8 @@ logger = logging.getLogger('default')
 def sendLogEmail(msg, address):
   logger.error('send log email:\n %s \n%s' % (address, msg))
 
-def make_apply_handler(dept_name):
-  def apply_handler(request):
+def make_index_handler(dept_name):
+  def index_handler(request):
     if request.method != 'GET':
       return HttpResponseNotAllowed(['GET'])
 
@@ -27,13 +27,13 @@ def make_apply_handler(dept_name):
       cap = bcap.grant('add-applicant', dept)
     except Exception as e:
       return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
-    return render_to_response('apply.html', {
+    return render_to_response('index.html', {
       'create_applicant': cap.serialize()
     })
 
-  return apply_handler
+  return index_handler
 
-cs_apply_handler = make_apply_handler('cs')
+cs_index_handler = make_index_handler('cs')
 
 def applicant_handler(request):
   if request.method != 'GET':
