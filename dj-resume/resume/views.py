@@ -31,6 +31,11 @@ def save_file(f, filename):
   if file_type is 'unknown':
     raise FileUploadException('The file you uploaded is neither a PDF nor a Word document.')
 
+  if not os.path.exists(settings.SAVEDFILES_DIR):
+    raise Exception(\
+      'directory specified by settings.SAVEDFILES_DIR does not exist: %s'\
+      % settings.SAVEDFILES_DIR)
+
   path = os.path.join(settings.SAVEDFILES_DIR, '%s.%s' % (filename, file_type))
   try:
     os.remove(path)
