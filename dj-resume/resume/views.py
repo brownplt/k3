@@ -4,13 +4,40 @@ import os
 import logging
 import uuid
 import random
+import settings
 from resume.models import *
 from django.db import IntegrityError
 import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
 from belaylibs.models import Grant
+import os
 
 logger = logging.getLogger('default')
+
+class FileUploadException(Exception):
+	pass
+
+def get_file_type(contents):
+  if contents[0:4] == '%PDF':
+    return 'pdf'
+  elif contents[0:8] == '\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
+    return 'doc'
+  else:
+    return 'unknown'
+
+def save_file(f, filename):
+  contents = f.read()
+  file_type = get_file_type(contents)
+  if file_type is 'unknown':
+    raise FileUploadException('The file you uploaded is neither a PDF nor a Word document.')
+
+  path = os.path.join(settings.SAVEDFILES_DIR, '%s.%s' % (filename, file_type))
+  if os.path.exists(path):
+    raise Exception('file %s already exists' % path)
+
+  target = open(path, 'w')
+  target.write(contents) 
+  target.close()
 
 # TODO: implement
 def sendLogEmail(msg, address):
@@ -235,12 +262,50 @@ class GetApplicantHandler(bcap.CapHandler):
     return bcap.bcapResponse(applicant.to_json())
 
 class SubmitStatementHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['comp']
+
+  def name_str(self):
+    return 'SubmitStatementHandler'
+
   def files_needed(self):
     return ['statement']
+
   def post_files(self, granted, args, files):
-    # TODO(matt): actually save file
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
     applicant = granted.applicant
-    return bcap.bcapResponse({})
+    statement = files['statement']
+    cid = int(args['comp'])
+    cts = applicant.getComponentTypeById(cid)
+    if len(cts) == 0:
+      return logWith404(logger, 'no component type by id = %s' % cid, level='error')
+    ct = cts[0]
+
+    file_id = '%d-%d' % (applicant.id,ct.id)
+    try:
+      save_file(statement, file_id)
+    except FileUploadException as e:
+      return bcap.bcapResponse({'error' : str(e)})
+    except Exception as e:
+      return logWith404(logger, 'save_file exception: %s' % e)
+
+    components = applicant.getComponentByType(ct)
+    if len(components) > 0:
+      component = components[0]
+    else:
+      component = Component(applicant=applicant, type=ct, value='',\
+        department=applicant.department)
+    component.lastSubmitted = int(time.time())
+    component.value = file_id
+    component.save()
+
+    return bcap.bcapResponse({\
+      'component' : ct.name,\
+      'app' : applicant.to_json(),\
+    })
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):

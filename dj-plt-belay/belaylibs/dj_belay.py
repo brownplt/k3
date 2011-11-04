@@ -304,7 +304,14 @@ def proxyHandler(request):
     return response
 
   req_files = request.FILES
+  post_args = request.POST
   args = dataPostProcess(request.read())
+
+  if len(post_args) > 0:
+    if args is None:
+      args = post_args
+    else:
+      args.update(post_args)
 
   if request.method == 'OPTIONS':
     return options()

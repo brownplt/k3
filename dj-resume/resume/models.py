@@ -120,6 +120,8 @@ class Applicant(bcap.Grantable):
         'svals' : [s.value.id for s in scores]\
       })
     return rtn
+  def getComponentTypeById(self, id):
+    return ComponentType.objects.filter(id=id, department=self.department)
   def getComments(self):
     reviews = self.myReviews()
     return [{'id' : r.reviewer.id, 'rname' : r.reviewer.auth.name} for r in reviews]
@@ -141,6 +143,9 @@ class Applicant(bcap.Grantable):
     return []
   def getComponents(self):
     return [c.to_json() for c in Component.objects.filter(applicant=self)]
+  def getComponentByType(self, component_type):
+    return Component.objects.filter(department=self.department, applicant=self,\
+      type=component_type)
   def getReferences(self):
     return [r.to_json() for r in Reference.objects.filter(applicant=self)]
   def getReferencesOfEmail(self, email):

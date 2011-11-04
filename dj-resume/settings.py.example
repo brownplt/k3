@@ -1,4 +1,4 @@
-# Django settings for dj_apply project.
+# Django settings for dj_resume project.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -75,7 +75,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
-  '/path/to/k3/dj-apply/apply/static'
+  '/path/to/k3/dj-resume/resume/static'
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -84,7 +84,7 @@ TEMPLATE_DIRS = (
 INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'apply',
+    'resume',
     'belaylibs'
 )
 
@@ -110,3 +110,5 @@ LOGGING = {
         },
     }
 }
+
+SAVEDFILES_DIR = '/path/to/k3/dj-resume/savedfiles/'
