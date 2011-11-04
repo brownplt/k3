@@ -1,6 +1,9 @@
 There are several applications in this repository:
 
-[TODO: finalize paths, fill in here]
+plt-belay
+station
+apply
+resume
 
 -----------
 DEVELOPMENT
@@ -8,15 +11,75 @@ DEVELOPMENT
 
 You need Django installed: https://www.djangoproject.com/download/
 
-Start apply at localhost:8001 and belay at localhost:8000  :
+Start the various applications at the right spots:
 
 $ cd dj-apply
+$ mkdir .db
 $ python manage.py syncdb
+$ cp settings.py.example settings.py
+# Fidget with settings.py, replacing global paths, etc
 $ python manage.py runserver 8001
 
-$ cd dj-plt-belay
+$ cd dj-resume
+$ mkdir .db
 $ python manage.py syncdb
+$ cp settings.py.example settings.py
+# Fidget with settings.py, replacing global paths, etc
+$ python manage.py runserver 8003
+
+$ cd dj-plt-belay
+$ mkdir .db
+$ python manage.py syncdb
+$ cp settings.py.example settings.py
+# Fidget with settings.py, replacing global paths, etc
 $ python manage.py runserver 8000
+
+$ cd dj-plt-station
+$ mkdir .db
+$ python manage.py syncdb
+$ cp settings.py.example settings.py
+# Fidget with settings.py, replacing global paths, etc
+$ python manage.py runserver 8002
+
+
+In dj-apply and dj-resume, there are useful scripts called setup.py.  To use
+it, run it with a username you want the admin to have (all other parameters,
+like department, are hardcoded in setup for now):
+
+$ python setup.py <username>
+
+To get started, go here: http://localhost:8003/static/new_account.html#http://localhost:8003/cap/c54b0234-4ed3-454d-b50c-8239e7f1f572
+
+If you go to that link, you'll be given the opportunity to create an account
+(using Google login or making your own account), and you should reach the admin
+page.
+
+You can also visit:
+
+http://localhost:8003/cs/
+
+And you can sign up as an applicant, or get back to other accounts that you
+have, by going through the right hand pane.
+
+-------
+TESTING
+-------
+
+Resume and Apply have test suites:
+
+$ cd dj-resume
+$ python manage.py test
+
+$ cd dj-apply
+$ python manage.py test
+
+Tests are in dj-resume/resume/tests.py and dj-apply/apply/tests.py
+
+
+Resume and Apply have generate scripts for test data.  You can run generate.py,
+or just visit (after adding an entry for generate in urls.py):
+
+http://localhost:8003/generate
 
 ----------
 PRODUCTION
