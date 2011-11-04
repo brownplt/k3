@@ -1,7 +1,8 @@
 from django.db import models
 
 class Grantable(models.Model):
-  pass
+  def my_grants(self):
+    return Grant.objects.filter(db_entity=self)
 
 class Grant(models.Model):
   cap_id = models.CharField(max_length=200)

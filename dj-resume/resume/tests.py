@@ -119,7 +119,7 @@ class TestScoreCategory(ResumeTest):
     
     sc = new_scs[0]
     delCap = bcap.grant('scorecategory-delete', sc)
-    sc.delete()
+    delCap.delete()
     new_scs = ScoreCategory.objects.filter(name=new_args['name'],\
       shortform=new_args['shortform'])
 

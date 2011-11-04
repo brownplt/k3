@@ -63,7 +63,7 @@ def invokeCapURL(capURL, meth, data=""):
   parsed_prefix = parsed.scheme + "://" + parsed.netloc
 
   if parsed_prefix == prefix:
-    result = handle(cap_id_from_url(capURL), meth, data)
+    result = handle(cap_id_from_url(capURL), meth, data, {})
     # TODO(jpolitz): other Content-Types
     if re.match('image/.*', result['Content-Type']):
       # TODO(jpolitz): is this sufficient wrapping?

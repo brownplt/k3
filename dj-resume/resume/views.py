@@ -440,7 +440,7 @@ class GetApplicantsHandler(bcap.CapHandler):
 
 class ScoreCategoryDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
-    grants = Grant.objects.filter(db_entity=grantable)
+    grants = grantable.my_grants()
     if len(grants) == 0:
       return logWith404(logger, 'ScoreCategoryDeleteHandler fatal error: no grant')
     grantable.scorecategory.delete()
@@ -600,7 +600,7 @@ class AreaAddHandler(bcap.CapHandler):
 
 class AreaDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
-    grants = Grant.objects.filter(db_entity=grantable)
+    grants = grantable.my_grants()
     if len(grants) == 0:
       return logWith404(logger, 'ARDeleteHandler fatal error: no grant')
     area = grantable.area
@@ -707,7 +707,7 @@ To regain access your account once it has been created, visit:
 
 class UnverifiedUserDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
-    grants = Grant.objects.filter(db_entity=grantable)
+    grants = grantable.my_grants()
     if len(grants) == 0:
       return logWith404(logger, 'UnverifiedUserDeleteHandler fatal error: no grant')
     uu = grantable.unverifieduser
