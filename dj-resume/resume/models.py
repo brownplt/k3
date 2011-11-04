@@ -5,6 +5,9 @@ import time
 
 logger = logging.getLogger('default')
 
+def convert_time(secs):
+  return time.strftime("%A, %B %d, %I:%M %p",time.localtime(secs))
+
 class Department(bcap.Grantable):
   @classmethod
   def departmentByName(cls, name):
@@ -394,6 +397,7 @@ class Component(bcap.Grantable):
       'typeID' : self.type.id,\
       'value' : self.value,\
       'lastSubmitted' : self.lastSubmitted,\
+      'lastSubmittedStr' : convert_time(self.lastSubmitted)\
     }
   applicant = models.ForeignKey(Applicant)
   type = models.ForeignKey(ComponentType)

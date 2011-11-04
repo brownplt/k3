@@ -138,7 +138,9 @@ $(function () {
     var demoEventsE = receiver_e();
     document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);})};
 
-    var stmtSubE = iframeLoad_e('stmtsub',exceptsE);
+    var stmtSubE = iframeLoad_e('stmtsub',exceptsE).transform_e(function(v){
+      return capServer.dataPostProcess(toJSONString(v));
+    });;
 
     var launchE = getE(onLoadTimeE.constant_e(launchInfo)); 
     var basicInfoE = getE(launchE.transform_e(function(pd) { return pd.getBasic; }));

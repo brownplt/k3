@@ -32,8 +32,10 @@ def save_file(f, filename):
     raise FileUploadException('The file you uploaded is neither a PDF nor a Word document.')
 
   path = os.path.join(settings.SAVEDFILES_DIR, '%s.%s' % (filename, file_type))
-  if os.path.exists(path):
-    raise Exception('file %s already exists' % path)
+  try:
+    os.remove(path)
+  except OSError,e:
+    pass
 
   target = open(path, 'w')
   target.write(contents) 
@@ -284,11 +286,13 @@ class SubmitStatementHandler(bcap.CapHandler):
       return logWith404(logger, 'no component type by id = %s' % cid, level='error')
     ct = cts[0]
 
-    file_id = '%d-%d' % (applicant.id,ct.id)
+    error = False
     try:
-      save_file(statement, file_id)
+      save_file(statement, '%d-%d' % (applicant.id,ct.id))
     except FileUploadException as e:
-      return bcap.bcapResponse({'error' : str(e)})
+      msg = str(e)
+      logger.info('submit-statement FileUploadException: %s' % msg)
+      error = msg
     except Exception as e:
       return logWith404(logger, 'save_file exception: %s' % e)
 
@@ -299,13 +303,15 @@ class SubmitStatementHandler(bcap.CapHandler):
       component = Component(applicant=applicant, type=ct, value='',\
         department=applicant.department)
     component.lastSubmitted = int(time.time())
-    component.value = file_id
+    component.value = statement.size
     component.save()
 
-    return bcap.bcapResponse({\
-      'component' : ct.name,\
-      'app' : applicant.to_json(),\
-    })
+    app_info = applicant.to_json()
+
+    resp = {'component' : ct.name, 'app' : app_info}
+    if error:
+      resp['error'] = error
+    return bcap.bcapResponse(resp)
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
