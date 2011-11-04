@@ -291,13 +291,12 @@ class SubmitStatementHandler(bcap.CapHandler):
       return logWith404(logger, 'no component type by id = %s' % cid, level='error')
     ct = cts[0]
 
-    error = False
     try:
       save_file(statement, '%d-%d' % (applicant.id,ct.id))
     except FileUploadException as e:
       msg = str(e)
       logger.info('submit-statement FileUploadException: %s' % msg)
-      error = msg
+      return bcap.bcapResponse({'error' : msg})
     except Exception as e:
       return logWith404(logger, 'save_file exception: %s' % e)
 
@@ -314,8 +313,6 @@ class SubmitStatementHandler(bcap.CapHandler):
     app_info = applicant.to_json()
 
     resp = {'component' : ct.name, 'app' : app_info}
-    if error:
-      resp['error'] = error
     return bcap.bcapResponse(resp)
 
 class AddVerifiedApplicantHandler(bcap.CapHandler):
