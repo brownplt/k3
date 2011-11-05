@@ -218,6 +218,8 @@ class Applicant(bcap.Grantable):
   # TODO(matt): does the department of the ApplicantPosition have to be the
   # same as the department of this Applicant?
   position = models.ForeignKey(ApplicantPosition)
+  def fullname(self):
+    return self.firstname + ' ' + self.lastname
 
 class Degree(bcap.Grantable):
   def to_json(self):
@@ -352,23 +354,22 @@ class PendingHighlight(bcap.Grantable):
 class Reference(bcap.Grantable):
   def to_json(self):
     return {\
-      'code' : self.code,\
       'submitted' : self.submitted,\
       'filesize' : self.filesize,\
       'name' : self.name,\
       'institution' : self.institution,\
       'email' : self.email,\
-      'lastRequested' : self.lastRequested\
+      'lastRequested' : self.lastRequested
     }
-  code = models.IntegerField()
   applicant = models.ForeignKey(Applicant)
-  submitted = models.IntegerField()
+  submitted = models.IntegerField(default=0)
   filesize = models.IntegerField()
   name = models.TextField()
   institution = models.TextField()
   email = models.EmailField()
   department = models.ForeignKey(Department)
   lastRequested = models.IntegerField(default=0)
+  filename = models.TextField()
 
 class ComponentType(bcap.Grantable):
   choices = [\

@@ -39,7 +39,7 @@ def generate(request):
 
   auth_objs = rmod.AuthInfo.objects.all()
   if len(auth_objs) == 0:
-    return "No auth_info objects to use"
+    return HttpResponse("No auth_info objects to use")
   auth = auth_objs[0]
 
   pos_objs = rmod.ApplicantPosition.objects.filter(name='pos1')

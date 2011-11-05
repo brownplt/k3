@@ -93,11 +93,11 @@ def review_handler(request):
 
   return render_to_response('review.html', {})
 
-def index_handler(request):
+def reference_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])
 
-  return render_to_response('index.html', {})
+  return render_to_response('reference.html', {})
 
 # Django middleware class to set handlers on every request
 class ResumeInit():
@@ -132,6 +132,8 @@ class ResumeInit():
         'get-reviewer-email-and-create' : ReviewerEmailAndCreateHandler,\
         'get-admin-email-and-create' : AdminEmailAndCreateHandler,\
         'request-reference' : RequestReferenceHandler,\
+        'launch-reference' : LaunchReferenceHandler,\
+        'reference-letter' : ReferenceLetterHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
         'get-applicant' : GetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
@@ -217,6 +219,80 @@ class ApplicantLaunchHandler(bcap.CapHandler):
     }
     return bcap.bcapResponse(resp)
 
+class ReferenceLetterHandler(bcap.CapHandler):
+  def files_needed(self):
+    return ['letter']
+
+  def post_arg_names(self):
+    return []
+
+  def post_files(self, granted, args, files):
+    response = self.checkPostArgs(args)
+    if response != 'OK':
+      return response
+
+    reference = granted.reference
+    letter = files['letter']
+
+    filename = 'letter-%d-%d'
+
+    try:
+      save_file(letter, 'letter-%d-%d' % (reference.applicant.id, reference.id))
+    except FileUploadException as e:
+      msg = str(e)
+      logger.info('submit-reference FileUploadException: %s' % msg)
+      return bcap.bcapResponse({'error' : msg})
+    except Exception as e:
+      return logWith404(logger, 'save_file exception: %s' % e)
+
+    reference.lastSubmitted = int(time.time())
+    reference.filename = filename
+    reference.filesize = len(letter)
+    reference.save()
+
+    resp = reference.to_json()
+    resp['appname'] = reference.applicant.to_json()
+    return bcap.bcapResponse(resp)
+
+class LaunchReferenceHandler(bcap.CapHandler):
+  def get(self, granted):
+    ref = granted.reference
+    launch_info = ref.to_json()
+    letter = bcap.grant('reference-letter', ref)
+    launch_info['currentLetter'] = letter
+    launch_info['appname'] = ref.applicant.fullname()
+
+    return bcap.bcapResponse(launch_info)
+    
+
+def makeReferenceRequest(applicant, ref, launch_cap, orgname):
+  return u"""Dear %(name)s,
+%(appname)s has requested that you provide a letter of reference to
+%(orgname)s.
+
+To submit your letter, please visit the URL:
+
+%(servername)s/submit-reference/#%(launch_cap)s
+	
+If you have trouble with this procedure, visit
+%(servername)s/contact.html
+for information on contacting the server administrator.
+
+%(orgname)s""" % {
+          'appname'    : applicant.fullname(),
+          'name'       : ref.name,
+          'launch_cap' : launch_cap.serialize(),
+          'servername' : bcap.this_server_url_prefix(),
+          'orgname'    : orgname
+        }
+
+def sendReferenceRequest(applicant, ref):
+  launch_cap = bcap.grant('launch-reference', ref)
+  orgname = applicant.department.name
+  message = makeReferenceRequest(applicant, ref, launch_cap, orgname)
+  sendLogEmail(message, ref.email)
+  return launch_cap
+
 class RequestReferenceHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['name', 'institution', 'email']
@@ -244,14 +320,13 @@ class RequestReferenceHandler(bcap.CapHandler):
     if email == '':
       return self.exceptionResponse('No email was provided, please provide an email for the reference request')
 
-    ncode = random.randint(0,999999999)
-    ref = Reference(code=ncode, applicant=applicant, submitted=0, filesize=0,\
+    ref = Reference(applicant=applicant, submitted=0, filesize=0,\
       name=name, institution=institution, email=email,\
       department=applicant.department)
     ref.save()
     if applicant.position.autoemail:
       # TODO: implement sendReferenceRequest
-      logger.warn('sendReferenceRequest NYI')
+      sendReferenceRequest(applicant, ref)
     return bcap.bcapResponse(ref.to_json())
 
 class SubmitContactInfoHandler(bcap.CapHandler):

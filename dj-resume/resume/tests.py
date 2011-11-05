@@ -3,6 +3,7 @@ from resume.models import *
 from resume.views import *
 from datetime import date
 
+from belaylibs.dj_belay import Grant
 import belaylibs.dj_belay as bcap
 
 class ResumeTest(unittest.TestCase):
@@ -307,7 +308,7 @@ class TestFindRefs(ResumeTest):
     self.applicant = Applicant(auth=self.auth, firstname='foo', lastname='foo',\
       country='usa', department=self.department, position=self.position)
     self.applicant.save()
-    self.reference = Reference(code=0, applicant=self.applicant, submitted=0,\
+    self.reference = Reference(applicant=self.applicant, submitted=0,\
       filesize=0, name='bar', email='bar@bar.com', department=self.department,\
       lastRequested=0)
     self.reference.save()
@@ -537,6 +538,34 @@ class TestReviewer(TestAdminLaunch):
     self.assertEqual(result['highlights'], [self.applicant.id])
     self.assertEqual(result['drafts'], [])
 
+def cap_grants(cap):
+  return Grant.objects.filter(cap_id=bcap.cap_id_from_url(cap.serialize()))
+  
+
 class TestReference(TestAdminLaunch):
   def setUp(self):
     super(TestReference, self).setUp()
+
+  def testLaunchReference(self):
+    applicant = self.applicant
+    reference = Reference(\
+      submitted=0, applicant=applicant, name="Henry Kissinger",\
+      institution="Podunk University", email="henry@podunk", filesize=0,\
+      department=self.department)
+    reference.save()
+
+    launch_cap = sendReferenceRequest(applicant, reference)
+
+    launch_info = launch_cap.get()
+
+    self.assertEqual(launch_info['name'], "Henry Kissinger")
+    self.assertEqual(launch_info['institution'], "Podunk University")
+    self.assertEqual(launch_info['lastRequested'], 0)
+    self.assertEqual(launch_info['filesize'], 0)
+    self.assertEqual(launch_info['email'], "henry@podunk")
+    self.assertTrue(isinstance(launch_info['currentLetter'], bcap.Capability))
+    grantable = cap_grants(launch_info['currentLetter'])[0].db_entity.reference
+    self.assertEqual(grantable, (reference))
+    self.assertTrue(not 'code' in launch_info)
+    self.assertEqual(launch_info['appname'], self.applicant.fullname())
+
