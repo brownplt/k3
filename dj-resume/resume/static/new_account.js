@@ -41,7 +41,8 @@ $(function() {
     }
 
     console.log('Belay callback ready');
-    onBelayReady(function() {
+    onBelayReady(function(readyBundle) {
+      var belayBrowser = readyBundle.belayBrowser;
       console.log('Belay is ready');
       var createCap = eAndC.create;
       console.log('createCap is: ', createCap);

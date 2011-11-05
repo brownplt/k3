@@ -423,7 +423,9 @@ $(function() {
 
   window.belay.belayInit(makeBelayFrame, addFrame);
 
-  onBelayReady(function() {
+  onBelayReady(function(readyBundle) {
+    var launchInfo = readyBundle.launchInfo;
+
     console.log('Belay is ready');
 
     console.log('launchInfo: ', launchInfo);

@@ -127,7 +127,10 @@ $(function () {
 
   window.belay.belayInit(makeBelayFrame, addFrame);
 
-  onBelayReady(function() {
+  onBelayReady(function(readyBundle) {
+    var launchInfo = readyBundle.launchInfo;
+    var capServer = readyBundle.capServer;
+
     console.log('Belay is ready: ', launchInfo);
 
     var onLoadTimeE = receiver_e();
