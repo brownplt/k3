@@ -28,6 +28,15 @@ def generate(request):
     logger.info('used existing component type')
     ct = ct_objs[0]
 
+  ct_objs = rmod.ComponentType.objects.filter(short='stmt')
+  if len(ct_objs) == 0:
+    logger.info('created component type')
+    ct = rmod.ComponentType(type='statement', name='Research Statement', short='stmt', department=cs)
+    ct.save()
+  else:
+    logger.info('used existing component type')
+    ct = ct_objs[0]
+
   auth_objs = rmod.AuthInfo.objects.all()
   if len(auth_objs) == 0:
     return "No auth_info objects to use"

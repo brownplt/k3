@@ -537,3 +537,6 @@ class TestReviewer(TestAdminLaunch):
     self.assertEqual(result['highlights'], [self.applicant.id])
     self.assertEqual(result['drafts'], [])
 
+class TestReference(TestAdminLaunch):
+  def setUp(self):
+    super(TestReference, self).setUp()

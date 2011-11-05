@@ -41,6 +41,8 @@ USE_I18N = True
 # calendars according to the current locale
 USE_L10N = True
 
+SAVEDFILES_DIR = '/path/to/resume/uploads'
+
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.

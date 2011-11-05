@@ -70,7 +70,7 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 			var svisB = expandA.behaviors.toggled.transform_b(function(t) {return {className:'subnew',style:{display:(t ? 'block':'none')}};});
 			var stmtDivB = DIVB(svisB,
 				//FORM({target:'stmtsub',action:'Submitter/submitStatement',method:'post',encoding:'multipart/form-data'},
-				FORM({target:'stmtsub',action:submitStatement.ser,method:'post',encoding:'multipart/form-data'},
+				FORM({target:'stmtsub',action:submitStatement.serialize(),method:'post',encoding:'multipart/form-data'},
 					INPUT({type:'hidden',name:'comp',value:c.id}),
 					SPAN('Submit New: ',
 						IMG({src:'images/pdficon_small.gif',alt:'[PDF Files accepted]'}),
