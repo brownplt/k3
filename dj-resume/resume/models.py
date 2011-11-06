@@ -355,11 +355,13 @@ class Reference(bcap.Grantable):
   def to_json(self):
     return {\
       'submitted' : self.submitted,\
+      'submittedStr' : convert_time(self.submitted),\
       'filesize' : self.filesize,\
       'name' : self.name,\
       'institution' : self.institution,\
       'email' : self.email,\
-      'lastRequested' : self.lastRequested
+      'lastRequested' : self.lastRequested,\
+      'lastRequestedStr' : self.lastRequested
     }
   applicant = models.ForeignKey(Applicant)
   submitted = models.IntegerField(default=0)

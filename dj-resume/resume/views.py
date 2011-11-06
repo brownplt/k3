@@ -245,7 +245,7 @@ class ReferenceLetterHandler(bcap.CapHandler):
     except Exception as e:
       return logWith404(logger, 'save_file exception: %s' % e)
 
-    reference.lastSubmitted = int(time.time())
+    reference.submitted = int(time.time())
     reference.filename = filename
     reference.filesize = len(letter)
     reference.save()
