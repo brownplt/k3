@@ -1,3 +1,19 @@
+function makeNameUpdateBoxes(info, updateCap) {
+  var nameBoxesB = DIVB([
+    TR(['First Name: ', TD(new TextInputWidget(info.firstname, 20)
+      .belayServerSaving(function(v) {
+        console.log('saving first name: ', v);
+        return {'fields' : {'firstname' : v}};
+      }, true, updateCap).dom)]),
+    TR(['Last Name: ', TD(new TextInputWidget(info.lastname, 20)
+      .belayServerSaving(function(v) {
+        console.log('saving last name: ', v);
+        return {'fields' : {'lastname' : v}};
+      }, true, updateCap).dom)])
+  ]);
+  insertDomB(nameBoxesB, 'nameboxes');
+}
+
 function ContactInfoRowWidget(ct,comp) {
 	if(ct.type == 'contactlong')
 	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,20]);
@@ -154,6 +170,15 @@ $(function () {
     var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
     var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
+
+    launchE.transform_e(function(li) {
+      appInfoB.lift_b(function(info) {
+        if (info !== null) {
+          console.log('calling makeNameUpdateBoxes: ', li.updateName);
+          makeNameUpdateBoxes(info, li.updateName);
+        }
+      });
+    });
 
     insertDomB(appInfoB.lift_b(function(info) {
       if (info && info.position && info.position.name) {

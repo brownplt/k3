@@ -116,6 +116,7 @@ class ResumeInit():
         'launch-reviewer': ReviewerLaunchHandler,
         'launch-admin': AdminLaunchHandler,
         'launch-applicant' : ApplicantLaunchHandler,\
+        'update-applicant-name' : ApplicantUpdateNameHandler,\
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
@@ -215,9 +216,27 @@ class ApplicantLaunchHandler(bcap.CapHandler):
       'requestReference' : bcap.grant('request-reference', applicant),\
       'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
       'submitStatement' : bcap.grant('submit-statement', applicant),\
+      'updateName' : bcap.grant('update-applicant-name', applicant),\
       'get' : bcap.grant('get-applicant', applicant)\
     }
     return bcap.bcapResponse(resp)
+
+class ApplicantUpdateNameHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    applicant = granted.applicant
+    if args.has_key('firstname'):
+      applicant.firstname = args['firstname']
+    if args.has_key('lastname'):
+      applicant.lastname = args['lastname']
+    try:
+      applicant.save()
+    except IntegrityError:
+      return logWith404(logger, "failed to update applicant name: %s %s"\
+        % (applicant.firstname, applicant.lastname), level='error')
+    return bcap.bcapResponse({\
+      'firstname' : applicant.firstname,\
+      'lastname' : applicant.lastname,\
+    })
 
 class ReferenceLetterHandler(bcap.CapHandler):
   def files_needed(self):
