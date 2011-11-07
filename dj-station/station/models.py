@@ -3,7 +3,7 @@ import belaylibs.models as bcap
 from django.db import models
 
 class StationData(bcap.Grantable):
-  sid = models.CharField(max_length=500, primary_key=True)
+  sid = models.CharField(max_length=255, primary_key=True)
 
 class LaunchInfo(bcap.Grantable):
   domain = models.CharField(max_length=200)
