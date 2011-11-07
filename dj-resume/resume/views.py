@@ -22,6 +22,8 @@ def get_file_type(contents):
     return 'pdf'
   elif contents[0:8] == '\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
     return 'doc'
+  elif contents[0:8] == '\x50\x4b\x03\x04\x14\x00\x06\x00':
+    return 'docx'
   else:
     return 'unknown'
 
