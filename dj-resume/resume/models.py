@@ -102,7 +102,8 @@ class ApplicantPosition(bcap.Grantable):
       'autoemail' : self.autoemail
     }
   department = models.ForeignKey(Department)
-  name = models.TextField()
+  # Changing this because mysql complains about textfields' uniqueness
+  name = models.CharField(max_length=100)
   shortform = models.TextField()
   autoemail = models.BooleanField()
 
@@ -250,7 +251,7 @@ class ScoreCategory(bcap.Grantable):
   def to_json(self):
     values = [v.to_json() for v in self.getValues()]
     return {'name' : self.name, 'shortform' : self.shortform, 'values' : values}
-  name = models.TextField()
+  name = models.CharField(max_length=100)
   shortform = models.TextField()
   department = models.ForeignKey(Department)
 
@@ -321,7 +322,7 @@ class Area(bcap.Grantable):
     unique_together = (('department', 'name'))
   def to_json(self):
     return {'name' : self.name, 'abbr' : self.abbr}
-  name = models.TextField()
+  name = models.CharField(max_length=100)
   abbr = models.TextField()
   department = models.ForeignKey(Department)
 
