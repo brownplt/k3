@@ -569,3 +569,35 @@ class TestReference(TestAdminLaunch):
     self.assertTrue(not 'code' in launch_info)
     self.assertEqual(launch_info['appname'], self.applicant.fullname())
 
+class TestUpdateApplicantName(ResumeTest):
+  def setUp(self):
+    super(TestUpdateApplicantName, self).setUp()
+    self.makeCSDept()
+    auth = AuthInfo(email='foo@foo.com', name='foo', role='applicant',\
+      department=self.department)
+    auth.save()
+    position = ApplicantPosition(department=self.department, name='thepos',\
+      shortform='tp', autoemail=True)
+    position.save()
+    self.applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=position)
+    self.applicant.save()
+
+  def testUpdate(self):
+    applicant = self.applicant
+    update_cap = bcap.grant('update-applicant-name', applicant)
+
+    update_cap.post({'firstname' : 'updated foo'})
+    applicants = Applicant.objects.filter(firstname='foo')
+    self.assertEqual(len(applicants), 0)
+    applicants = Applicant.objects.filter(firstname='updated foo')
+    self.assertEqual(len(applicants), 1)
+
+    update_cap.post({'lastname' : 'updated foo2'})
+    applicants = Applicant.objects.filter(lastname='foo')
+    self.assertEqual(len(applicants), 0)
+    applicants = Applicant.objects.filter(lastname='updated foo2')
+    self.assertEqual(len(applicants), 1)
+
+  def tearDown(self):
+    self.department.delete()
