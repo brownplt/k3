@@ -286,7 +286,7 @@ class LaunchReferenceHandler(bcap.CapHandler):
     launch_info['appname'] = ref.applicant.fullname()
 
     return bcap.bcapResponse(launch_info)
-    
+
 
 def makeReferenceRequest(applicant, ref, launch_cap, orgname):
   return u"""Dear %(name)s,
