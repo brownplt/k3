@@ -262,11 +262,9 @@ def handle(cap_id, method, args, files):
 
   item = grant.db_entity
 
-# TODO(joe): make sure this is legit
-#  if(hasattr(handler, 'post_arg_names')):
-#    maybe_error_response = handler.checkPostArgs(args)
-#    if maybe_error_response != 'OK':
-#      return maybe_error_response
+  maybe_error_response = handler.checkPostArgs(args)
+  if maybe_error_response != 'OK':
+    return maybe_error_response
 
   if method == 'GET':
     return handler.get(item)

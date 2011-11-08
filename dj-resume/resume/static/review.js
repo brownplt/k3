@@ -491,8 +491,6 @@ $(function() {
     insertValueE(applicantsB.changes().once_e().constant_e('none'),'loading','style','display');
 
     lift_e(function(basicInfo,curAuth) {
-        setHeadAndTitle(basicInfo,'Review Applicants',
-            []);
 
         basicInfo.statements = filter(function(c) {return c.type == 'statement';},basicInfo.components);
         basicInfo.test_scores = filter(function(c) {return c.type == 'test_score';},basicInfo.components);

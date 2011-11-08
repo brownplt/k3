@@ -89,8 +89,8 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 				FORM({target:'stmtsub',action:submitStatement.serialize(),method:'post',encoding:'multipart/form-data'},
 					INPUT({type:'hidden',name:'comp',value:c.id}),
 					SPAN('Submit New: ',
-						IMG({src:'images/pdficon_small.gif',alt:'[PDF Files accepted]'}),
-						IMG({src:'images/word_icon_small.gif',alt:'[MS Word Files accepted]'}),
+						IMG({src:'/static/images/pdficon_small.gif',alt:'[PDF Files accepted]'}),
+						IMG({src:'/static/images/word_icon_small.gif',alt:'[MS Word Files accepted]'}),
 						' ',fileInputWidg,subWidg)));
       console.log('stmtDivB: ', stmtDivB);
 			statementDoms.push(
@@ -165,7 +165,7 @@ $(function () {
     var basicInfoE = getE(launchE.transform_e(function(pd) { return pd.getBasic; }));
     var basicInfoB = basicInfoE.startsWith(null);
 
-    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
+//    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
     var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
     var appInfoB = merge_e(submitterGetE,

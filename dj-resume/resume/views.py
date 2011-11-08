@@ -71,41 +71,20 @@ def make_index_handler(dept_name):
 
 cs_index_handler = make_index_handler('cs')
 
-def applicant_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
+def make_get_handler(template):
+  def handler(request):
+    if request.method != 'GET':
+      return HttpResponseNotAllowed(['GET'])
 
-  return render_to_response('application.html', {})
+    return render_to_response(template, {})
+  return handler
 
-def new_account_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('new_account.html', {})
-
-def admin_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('admin.html', {})
-
-def review_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('review.html', {})
-
-def reference_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('reference.html', {})
-
-def appreview_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('appreview.html', {})
+appreview_handler = make_get_handler('appreview.html')
+reference_handler = make_get_handler('reference.html')
+review_handler = make_get_handler('review.html')
+admin_handler = make_get_handler('admin.html')
+new_account_handler = make_get_handler('new_account.html')
+applicant_handler = make_get_handler('application.html')
 
 # Django middleware class to set handlers on every request
 class ResumeInit():
@@ -184,12 +163,6 @@ class ReviewerEmailAndCreateHandler(bcap.CapHandler):
       'create': create_cap
     })
 
-def checkPostArgs(classname, args, keys):
-  for k in keys:
-    if not args.has_key(k):
-      return logWith404(classname + ' error: post args missing ' + k)
-  return 'OK'
-
 class AddApplicantRelationshipHandler(bcap.CapHandler):
   def get(self, granted):
     dept = granted.department
@@ -256,9 +229,6 @@ class ReferenceLetterHandler(bcap.CapHandler):
     return []
 
   def post_files(self, granted, args, files):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     reference = granted.reference
     letter = files['letter']
@@ -383,9 +353,6 @@ class SubmitStatementHandler(bcap.CapHandler):
     return ['statement']
 
   def post_files(self, granted, args, files):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     applicant = granted.applicant
     statement = files['statement']
@@ -578,9 +545,7 @@ class ScoreCategoryChangeHandler(bcap.CapHandler):
     return 'ScoreCategoryChangeHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
+
     sc = grantable.scorecategory
     sc.name = args['name']
     sc.shortform = args['shortform']
@@ -604,9 +569,6 @@ class ScoreCategoryAddHandler(bcap.CapHandler):
     return 'ScoreCategoryAddHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     name = args['name']
     shortform = args['shortform']
@@ -649,9 +611,7 @@ class ScoreValueChangeHandler(bcap.CapHandler):
     return 'ScoreValueChangeHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
+
     sv = grantable.scorevalue
     sv.explanation = args['explanation']
     try:
@@ -670,9 +630,6 @@ class ApplicantPositionAddHandler(bcap.CapHandler):
     return 'ApplicantPositionAddHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     name = args['name']
     shortform = args['shortform']
@@ -700,9 +657,6 @@ class AreaAddHandler(bcap.CapHandler):
     return 'AreaAddHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     name = args['name']
     abbr = args['abbr']
@@ -740,9 +694,6 @@ class UnverifiedApplicantAddHandler(bcap.CapHandler):
 
   def post(self, granted, args):
     posn = granted.applicantposition
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     email = args['email']
     uu = UnverifiedApplicant(email=email, department=posn.department, position=posn)
@@ -785,9 +736,6 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
     return 'UnverifiedUserAddRevHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     email = args['email']
     name = args['name']
@@ -862,9 +810,6 @@ class ChangeContactsHandler(bcap.CapHandler):
     return 'ChangeContactsHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     dept = grantable.department
     dept.contactName = args['contactName']
@@ -887,9 +832,6 @@ class FindRefsHandler(bcap.CapHandler):
     return 'FindRefsHandler'
 
   def post(self, grantable, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     refs = grantable.department.findRefs(args['email'])
     return bcap.bcapResponse(refs)
@@ -925,9 +867,6 @@ class SetBasicHandler(bcap.CapHandler):
     return 'SetBasicHandler'
 
   def post(self, granted, args):
-    response = self.checkPostArgs(args)
-    if response != 'OK':
-      return response
 
     dept = granted.department
     dept.name = args['name']
