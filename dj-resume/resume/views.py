@@ -71,41 +71,20 @@ def make_index_handler(dept_name):
 
 cs_index_handler = make_index_handler('cs')
 
-def applicant_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
+def make_get_handler(template):
+  def handler(request):
+    if request.method != 'GET':
+      return HttpResponseNotAllowed(['GET'])
 
-  return render_to_response('application.html', {})
+    return render_to_response(template, {})
+  return handler
 
-def new_account_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('new_account.html', {})
-
-def admin_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('admin.html', {})
-
-def review_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('review.html', {})
-
-def reference_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('reference.html', {})
-
-def appreview_handler(request):
-  if request.method != 'GET':
-    return HttpResponseNotAllowed(['GET'])
-
-  return render_to_response('appreview.html', {})
+appreview_handler = make_get_handler('appreview.html')
+reference_handler = make_get_handler('reference.html')
+review_handler = make_get_handler('review.html')
+admin_handler = make_get_handler('admin.html')
+new_account_handler = make_get_handler('new_account.html')
+applicant_handler = make_get_handler('application.html')
 
 # Django middleware class to set handlers on every request
 class ResumeInit():
