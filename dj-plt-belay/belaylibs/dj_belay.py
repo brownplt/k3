@@ -241,6 +241,7 @@ def handle(cap_id, method, args, files):
 
   if len(grants) == 0:
     response = HttpResponse()
+    return logWith404(logger, "Cap not found: %s" % cap_id)
     content = dataPreProcess("proxyHandler: Cap not found: %s" % cap_id)
     xhr_content(response, content, "text/plain;charset=UTF-8")
     response.status_code = 404

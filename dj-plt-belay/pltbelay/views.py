@@ -40,6 +40,13 @@ class StashHandler(bcap.CapHandler):
     stash.save()
     return bcap.bcapNullResponse()
 
+  # TODO(joe): this isn't exactly what I want
+  def post(self, granted, args):
+    stash = Stash(stashed_content=bcap.dataPreProcess(args['private_data']))
+    stash.save()
+    stash_handler = bcap.grant('stash', stash)
+    return bcap.bcapResponse(stash_handler)
+
   def delete(self, granted):
     granted.stash.delete()
     return bcap.bcapNullResponse()
@@ -48,8 +55,7 @@ class MakeStashHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['private_data']
   def post(self, granted, args):
-    stash = Stash(account=granted.belayaccount,\
-                  stashed_content=bcap.dataPreProcess(args['private_data']))
+    stash = Stash(stashed_content=bcap.dataPreProcess(args['private_data']))
     stash.save()
     stash_handler = bcap.grant('stash', stash)
     return bcap.bcapResponse(stash_handler)
