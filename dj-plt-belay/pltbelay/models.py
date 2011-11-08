@@ -27,5 +27,4 @@ class BelaySession(bcap.Grantable):
   account = models.ForeignKey(BelayAccount)
 
 class Stash(bcap.Grantable):
-  account = models.ForeignKey(BelayAccount)
   stashed_content = models.TextField(max_length=1000)

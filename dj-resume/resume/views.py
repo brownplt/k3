@@ -101,6 +101,12 @@ def reference_handler(request):
 
   return render_to_response('reference.html', {})
 
+def appreview_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllowed(['GET'])
+
+  return render_to_response('appreview.html', {})
+
 # Django middleware class to set handlers on every request
 class ResumeInit():
   def process_request(self, request):
@@ -119,6 +125,8 @@ class ResumeInit():
         'launch-admin': AdminLaunchHandler,
         'launch-applicant' : ApplicantLaunchHandler,\
         'update-applicant-name' : ApplicantUpdateNameHandler,\
+        'launch-app-review' : LaunchAppReviewHandler,\
+        'get-app-review' : GetAppReviewHandler,\
         'unverifieduser-addrev' : UnverifiedUserAddRevHandler, 
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
@@ -284,7 +292,7 @@ class LaunchReferenceHandler(bcap.CapHandler):
     launch_info['appname'] = ref.applicant.fullname()
 
     return bcap.bcapResponse(launch_info)
-    
+
 
 def makeReferenceRequest(applicant, ref, launch_cap, orgname):
   return u"""Dear %(name)s,
@@ -521,13 +529,33 @@ class GetReviewerHandler(bcap.CapHandler):
     }
     return bcap.bcapResponse(ret)
 
+
+class LaunchAppReviewHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return bcap.bcapResponse('Applicant page')
+
+class GetAppReviewHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return bcap.bcapResponse({
+      'public_data' : 'Applicant review page for %s' % applicant.fullname(),
+      'private_data' : bcap.regrant('launch-app-review', applicant),
+      'domain': bcap.this_server_url_prefix(),
+      'url' : '/appreview',
+    })
+
 class GetApplicantsHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['lastChange']
 
   def post(self, grantable, args):
     reviewer = grantable.reviewer
-    applicant_json = [a.to_json() for a in reviewer.getApplicants()]
+    applicant_json = []
+    for applicant in reviewer.getApplicants():
+      a_json = applicant.to_json()
+      a_json['launchCap'] = bcap.regrant('get-app-review', applicant)
+      applicant_json.append(a_json)
     return bcap.bcapResponse({
       'changed': True,
       'lastChange': reviewer.getLastChange(),

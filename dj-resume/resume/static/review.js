@@ -33,6 +33,7 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
   this.info = app;
   this.id = this.info.id;
   this.statements = {};
+  this.launchCap = app.launchCap;
   map(function(s) {me.statements[s] = true;},this.info.statements);
 
   this.rstatus = 'none';
@@ -230,6 +231,18 @@ function getAvgApplicantScore(scoreId,basicInfo,app) {
 }
 
 
+function mkAppLauncher(applicant) {
+  var link = A({href:'javascript:void(0)'},
+               applicant.info.lastname + ', ' + applicant.info.firstname);
+  clicks_e(link).transform_e(function(_) {
+    belayBrowser.launchWithoutSaving.post(applicant.launchCap,
+        function(result) { /* no-op; */ },
+        function(err) { console.log('Failed to launch: ', applicant, err); }
+    );
+  });
+  return link;
+}
+
 function getTblColumns(bi,reviewer) {
   var scoresHeader = makeScoreCategorySelector(bi);
   var scoreTypeB = scoresHeader.scoreTypeB;
@@ -237,12 +250,11 @@ function getTblColumns(bi,reviewer) {
 
   var standardCols = [
 		      makeColumn('name-col','Name',function(a,b) {return a.nsorder - b.nsorder;},
-				 function(a,cookie) {
-				   return TD(A({href:'appreview.html?id='+a.id,
-						       target:'app'+a.id},a.info.lastname + ', ' + a.info.firstname),
-        // TODO(joe): what to do about admin weaving
-					     /* reviewer.auth.role == 'admin' ? DIV(A({href:'login.html?switch='+authCookie+'&user_id='+a.id},'(Log in as)')) : */ SPAN());
-				 }),
+              function(a,cookie) {
+                return TD(mkAppLauncher(a),
+                // TODO(joe): what to do about admin weaving
+                     /* reviewer.auth.role == 'admin' ? DIV(A({href:'login.html?switch='+authCookie+'&user_id='+a.id},'(Log in as)')) : */ SPAN());
+              }),
 /*		      makeColumn('info-col','Position',
 				 function(a,b) { return stringCmp(a.info.position,b.info.position); },
 				 function(a,cookie) { 
@@ -425,6 +437,8 @@ $(function() {
 
   onBelayReady(function(readyBundle) {
     var launchInfo = readyBundle.launchInfo;
+    console.log('ready: ', readyBundle);
+    window.belayBrowser = readyBundle.belayBrowser;
 
     console.log('Belay is ready');
 

@@ -105,9 +105,9 @@ $(function() {
     }
   });
 
-  function launch(launchInfo) {
+  function launchWithLauncher(launchInfo, stasher, launcher) {
     console.log('Launching: ', launchInfo);
-    makeStash.post({
+    stasher.post({
       private_data: launchInfo.private_data
     },
     function(restoreCap) {
@@ -116,12 +116,19 @@ $(function() {
                 "#" +
                 encodeURI(restoreCap.serialize());
       console.log('Nav: ', nav);
-      window.parent.location.href = nav;
+      launcher(nav);
     },
     function(err) { 
       console.log('Make-stash failed: ', err);
     });
   }
+
+  function launch(launchInfo) {
+    launchWithLauncher(launchInfo, makeStash, function(nav) {
+        window.parent.location.href = nav;
+      });
+  }
+
 
   function handleLoginInfo(loginInfo) {
     console.log("Login-infoing", loginInfo);
@@ -251,10 +258,25 @@ $(function() {
       launchNonInstance();
     }
 
+    function launchWithoutSaving(launchCap) {
+      console.log('Getting: ', launchCap);
+      launchCap.get(function(launchInfo) {
+        console.log('Got launchCap: ', launchInfo);
+        launchWithLauncher(launchInfo, stashcap, function(nav) {
+            window.open(nav);
+          });
+        },
+        function(err) {
+          console.log('LaunchWOSaving: ', err);
+        });  
+    }
+
     function launchInstance(stashcap) {
       stashcap.get(function(stashed) {
           tunnel.sendOutpost(capServer.dataPreProcess({
-            services: {},
+            services: {
+              launchWithoutSaving: capServer.grant(launchWithoutSaving)
+            },
             launchInfo: stashed
           }));
         },
