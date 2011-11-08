@@ -101,6 +101,12 @@ def reference_handler(request):
 
   return render_to_response('reference.html', {})
 
+def appreview_handler(request):
+  if request.method != 'GET':
+    return HttpResponseNotAllowed(['GET'])
+
+  return render_to_response('appreview.html', {})
+
 # Django middleware class to set handlers on every request
 class ResumeInit():
   def process_request(self, request):
