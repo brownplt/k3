@@ -58,7 +58,7 @@ def make_index_handler(dept_name):
       return HttpResponseNotAllowed(['GET'])
 
     try:
-      logger.error('Dept: %s' % dept_name)
+      logger.info('Dept: %s' % dept_name)
       dept = Department.departmentByName(dept_name)
       cap = bcap.grant('add-applicant', dept)
     except Exception as e:

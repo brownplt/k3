@@ -11,7 +11,7 @@ $(function() {
       width: '80%',
       height: '50%',
       'margin-top': '5em',
-      'margin-left': '3em',
+      'margin-left': '3em'
     });
     theFrame = frame;
     return frame;

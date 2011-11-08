@@ -115,7 +115,7 @@ div.blank-left {
 }
 
 div.right-part {
-    padding: 0 0 0 52%;
+    float : right;
     width: 46%;
     background: #fff
 }
