@@ -478,7 +478,7 @@ $(function() {
           return launchData.getApplicants;
         }).startsWith(null);
         var postB = transform_b(function(applicantsCap, lcv) {
-          return [applicantsCap, { lastChangeVal: lcv }];
+          return [applicantsCap, { lastChange: lcv }];
         }, applicantsCapB, lastChangeValB);
         var applicantChangesE = postE(timer_e(120000).
                                         merge_e(launchE).
