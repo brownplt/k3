@@ -91,7 +91,8 @@ $(function() {
     if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
   });
 
-  $.pm.bind('login', function(data) {
+  window.login = function(data) {
+    data = JSON.parse(data);
     console.log('maybe setting token: ', data);
     console.log('client key: ', clientkey);
     if(clientkey === data.clientkey) {
@@ -103,6 +104,8 @@ $(function() {
       data.loginInfo.makeStash = capServer.restore(data.loginInfo.makeStash);
       handleLoginInfo(data.loginInfo);
     }
+  };
+  $.pm.bind('login', function(data) {
   });
 
   function launchWithLauncher(launchInfo, stasher, launcher) {

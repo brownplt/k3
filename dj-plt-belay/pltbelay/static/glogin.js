@@ -10,17 +10,12 @@ $(function() {
   // The belay-frame that opened the glogin window
   var target = window.opener;
 
-  $.pm({
-    target: target,
-    type: 'login',
-    data: {
+  window.opener.login(JSON.stringify({
       loginInfo: {
-        station: STATION,
-        makeStash: MAKESTASH,
+	station: STATION,
+	makeStash: MAKESTASH
       },
       clientkey: CLIENTKEY
-    },
-  });
-
+  }));
   window.close();
 });
