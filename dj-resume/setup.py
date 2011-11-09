@@ -4,9 +4,62 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.core.management import setup_environ
 import settings
 import belaylibs.dj_belay as bcap
-from resume.models import UnverifiedUser, Department, Applicant, ApplicantPosition, AuthInfo
+from resume.models import UnverifiedUser, Department, Applicant, ApplicantPosition, AuthInfo, ComponentType
 from resume.views import ResumeInit
 import sys
+
+
+def startDeptDefault(adminName, adminEmail, techEmail, deptname, shortname):
+  dept = Department(
+    name=deptname,
+    shortname=shortname,
+    lastChange=0,
+    headerImage='',
+    logoImage='',
+    resumeImage='',
+    headerBgImage='',
+    contactName=adminName,
+    contactEmail=adminEmail,
+    techEmail=techEmail)
+  dept.save()
+
+  unverified_user = UnverifiedUser( \
+    role='admin',
+    name=adminName,
+    email=adminEmail,
+    department=dept)
+  unverified_user.save()
+
+  ResumeInit().process_request(None)
+
+  create_account = bcap.grant('get-admin-email-and-create', unverified_user)
+
+  posn = ApplicantPosition(department=dept, name='Assistant Professor',
+    shortform='AsstProf', autoemail=True)
+
+  c = ComponentType(department=dept,type='statement',name='Cover Letter',short='Cover')
+  c.save()
+  c = ComponentType(department=dept,type='statement',name='Curriculum Vitae',short='CV')
+  c.save()
+  c = ComponentType(department=dept,type='statement',name='Research Statement',short='Research')
+  c.save()
+  c = ComponentType(department=dept,type='statement',name='Teaching Statement',short='Teaching')
+  c.save()
+  c = ComponentType(department=dept,type='contactweb',name='Home Page',short='home')
+  c.save()
+  c = ComponentType(department=dept,type='contactweb',name='Application Web Page',short='app')
+  c.save()
+  c = ComponentType(department=dept,type='contactshort',name='Home Phone',short='homephone')
+  c.save()
+  c = ComponentType(department=dept,type='contactshort',name='Work Phone',short='workphone')
+  c.save()
+  c = ComponentType(department=dept,type='contactshort',name='Mobile Phone',short='mobilephone')
+  c.save()
+  c = ComponentType(department=dept,type='contactlong',name='Postal Address',short='postal')
+  c.save()
+
+  return "To get started, go here: %s/new-account/#%s" % \
+    (bcap.this_server_url_prefix(), create_account.serialize())
 
 
 def make_some_applicants(cs):
