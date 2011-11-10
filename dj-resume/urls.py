@@ -5,8 +5,9 @@ from django.conf.urls.defaults import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-  (r'cs/', 'resume.views.cs_index_handler'),
-  (r'cap/.*', 'belaylibs.dj_belay.proxyHandler'),
+  (r'^cs/$', 'resume.views.cs_index_handler'),
+  (r'^bhort/$', 'resume.views.bhort_index_handler'),
+  (r'^cap/.*', 'belaylibs.dj_belay.proxyHandler'),
   (r'^applicant/$', 'resume.views.applicant_handler'),
   (r'^new-account/$', 'resume.views.new_account_handler'),
   (r'^admin/$', 'resume.views.admin_handler'),

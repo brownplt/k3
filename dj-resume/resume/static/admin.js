@@ -183,6 +183,7 @@ function reviewerTable(allrevs) {
 }
 
 $(function() {
+  alert(window.location.hash);
   var flapjax = flapjaxInit();
   var exceptsE = captureServerExcepts(); 
   exceptsE.filter_e(function(_) {return _.value == 'denied';}).transform_e(function(_) {window.location='login.html?expired=true'});
@@ -198,9 +199,8 @@ $(function() {
       'name': 'belay'
     });
     frame.css({
-      display: 'none',
-      width: '1px',
-      height: '1px'
+      width: '30em',
+      height: '30em'
     });
     theFrame = frame;
     return frame;

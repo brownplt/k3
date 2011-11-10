@@ -36,6 +36,7 @@ def startDeptDefault(adminName, adminEmail, techEmail, deptname, shortname):
 
   posn = ApplicantPosition(department=dept, name='Assistant Professor',
     shortform='AsstProf', autoemail=True)
+  posn.save()
 
   c = ComponentType(department=dept,type='statement',name='Cover Letter',short='Cover')
   c.save()
@@ -61,6 +62,28 @@ def startDeptDefault(adminName, adminEmail, techEmail, deptname, shortname):
   return "To get started, go here: %s/new-account/#%s" % \
     (bcap.this_server_url_prefix(), create_account.serialize())
 
+
+def newAdmin(deptshortname, adminName, adminEmail):
+  depts = Department.objects.filter(shortname=deptshortname)
+  if len(depts) == 1:
+    dept = depts[0]
+  else:
+    raise Exception('Couldn\'t find department %s' % deptshortname)
+
+  unverified_user = UnverifiedUser( 
+    role='admin',
+    name=adminName,
+    email=adminEmail,
+    department=dept)
+  unverified_user.save()
+
+  ResumeInit().process_request(None)
+
+  create_account = bcap.grant('get-admin-email-and-create', unverified_user)
+
+  return "To get started, go here: %s/new-account/#%s" % \
+    (bcap.this_server_url_prefix(), create_account.serialize())
+  
 
 def make_some_applicants(cs):
   print("There are %s applicants." % len(Applicant.objects.all()))

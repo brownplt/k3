@@ -1,21 +1,25 @@
-from django.shortcuts import render_to_response
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpResponseNotFound
 import os
 import logging
-import uuid
 import random
+import uuid
+
+import smtplib
+
 import settings
 from resume.models import *
-from django.db import IntegrityError
 import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
 from belaylibs.models import Grant
-import os
+
+from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpResponseNotFound, HttpResponseServerError
+from django.core.mail import send_mail
+from django.db import IntegrityError
 
 logger = logging.getLogger('default')
 
 class FileUploadException(Exception):
-	pass
+  pass
 
 def get_file_type(contents):
   if contents[0:4] == '%PDF':
@@ -48,9 +52,33 @@ def save_file(f, filename):
   target.write(contents) 
   target.close()
 
-# TODO: implement
-def sendLogEmail(msg, address):
+def notFoundResponse():
+  return bcap.bcapResponse({
+    'emailError': True,
+    'message': 'We didn\'t recognize your email.  Please check what you \
+entered and try again'
+  })
+
+def emailErrorResponse():
+  return bcap.bcapResponse({
+    'emailError': True,
+    'message': 'We had trouble sending you a message.  If this problem \
+persists, contact the system maintainer.'
+  })
+
+# TODO: exceptions
+def sendLogEmail(subject, msg, address):
+  logger.info('Trying to send e-mail')
+  try:
+    send_mail(subject, msg, 'resume@spindle.cs.brown.edu', [address], fail_silently=False)
+  except smtplib.SMTPRecipientsRefused as e:
+    logger.error('Couldn\'t send email (refused): %s' % e)
+    return notFoundResponse()
+  except Exception as e:
+    logger.error('Couldn\'t send email (unknown): %s' % e)
+    return emailErrorResponse()
   logger.error('send log email:\n %s \n%s' % (address, msg))
+  return False
 
 def make_index_handler(dept_name):
   def index_handler(request):
@@ -70,6 +98,7 @@ def make_index_handler(dept_name):
   return index_handler
 
 cs_index_handler = make_index_handler('cs')
+bhort_index_handler = make_index_handler('bhort')
 
 def make_get_handler(template):
   def handler(request):
@@ -300,7 +329,8 @@ def sendReferenceRequest(applicant, ref):
   launch_cap = bcap.grant('launch-reference', ref)
   orgname = applicant.department.name
   message = makeReferenceRequest(applicant, ref, launch_cap, orgname)
-  sendLogEmail(message, ref.email)
+  emailResponse = sendLogEmail('Reference request', message, ref.email)
+  if emailResponse: return emailResponse
   return launch_cap
 
 class RequestReferenceHandler(bcap.CapHandler):
@@ -454,7 +484,7 @@ class AddAdminRelationshipHandler(bcap.CapHandler):
       'public_data': 'Admin account for %s' % auth_info.name,
       'private_data': launch,
       'domain': bcap.this_server_url_prefix(),
-      'url': '/admin'
+      'url': '/admin/'
     })
 
 # Adds a new relationship with a reviewer
@@ -620,7 +650,9 @@ class GetApplicantsHandler(bcap.CapHandler):
     applicant_json = []
     for applicant in reviewer.getApplicants():
       a_json = applicant.to_json()
-      a_json['launchCap'] = bcap.regrant('get-app-review', applicant)
+      launchCap = bcap.regrant('launch-app-review', applicant)
+      a_json['launchURL'] = '%s/appreview/#%s' % \
+         (bcap.this_server_url_prefix(), launchCap.serialize())
       applicant_json.append(a_json)
     return bcap.bcapResponse({
       'changed': True,
@@ -820,7 +852,8 @@ To regain access your account once it has been created, visit:
 %s
 """
     emailstr = emailstr % (activate_url, return_url)
-    sendLogEmail(emailstr, email)
+    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email)
+    if emailResponse: return emailResponse
     resp = {\
       'success' : True,\
       'email' : email,\
@@ -866,8 +899,8 @@ To regain access your account once it has been created, visit:
 %s
 """
     emailstr = emailstr % (name, activate_url, return_url)
-    sendLogEmail(emailstr, email)
-
+    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email)
+    if emailResponse: return emailResponse
     resp = {\
       'success' : True,\
       'email' : email,\

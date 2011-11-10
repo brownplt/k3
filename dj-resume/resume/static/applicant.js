@@ -31,8 +31,7 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
   };
   var toReqFn = function(val) {
 			return genRequest(
-				{url:'Submitter/requestReference',
-				fields:{name:val[0],institution:val[1],email:val[2]}});
+				{fields:{name:val[0],institution:val[1],email:val[2]}});
   };
 
 	var reqnew = new CombinedInputWidget([
