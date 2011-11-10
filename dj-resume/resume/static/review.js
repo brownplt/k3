@@ -33,7 +33,8 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
   this.info = app;
   this.id = this.info.id;
   this.statements = {};
-  this.launchCap = app.launchCap;
+  console.log('applicant: ', app);
+  this.launchURL = app.launchURL;
   map(function(s) {me.statements[s] = true;},this.info.statements);
 
   this.rstatus = 'none';
@@ -232,14 +233,12 @@ function getAvgApplicantScore(scoreId,basicInfo,app) {
 
 
 function mkAppLauncher(applicant) {
-  var link = A({href:'javascript:void(0)'},
-               applicant.info.lastname + ', ' + applicant.info.firstname);
-  clicks_e(link).transform_e(function(_) {
-    belayBrowser.launchWithoutSaving.post(applicant.launchCap,
-        function(result) { /* no-op; */ },
-        function(err) { console.log('Failed to launch: ', applicant, err); }
-    );
-  });
+  console.log('applicant: ', applicant);
+  var link = A({
+      href: applicant.launchURL,
+      target: applicant.id
+    },
+    applicant.info.lastname + ', ' + applicant.info.firstname);
   return link;
 }
 
@@ -478,7 +477,7 @@ $(function() {
           return launchData.getApplicants;
         }).startsWith(null);
         var postB = transform_b(function(applicantsCap, lcv) {
-          return [applicantsCap, { lastChangeVal: lcv }];
+          return [applicantsCap, { lastChange: lcv }];
         }, applicantsCapB, lastChangeValB);
         var applicantChangesE = postE(timer_e(120000).
                                         merge_e(launchE).

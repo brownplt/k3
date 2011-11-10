@@ -36,17 +36,17 @@ $(function() {
       }
       var email = $('#relationship-email').val();
       thePos.post({email: email}, function (response) {
-            $('#success').show();
+            if(response.emailError) {
+              var elt = $('#failure');
+              elt.text(response.message);
+              elt.fadeIn();
+              $('#success').hide();
+              return;
+            }
+            $('#success').fadeIn();
+            $('#failure').hide();
           },
           function(err) {
-            var elt = $('#failure');
-            if(err.message) elt.text(err.message);
-            else {
-              elt.text("Oops!  There was an error on our end.  Send " +
-                       "an email to the address below to let us know, we're " + 
-                       "already on it.");
-            }
-            elt.show();
           });
     });
   });

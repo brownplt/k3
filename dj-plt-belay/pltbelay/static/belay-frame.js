@@ -1,3 +1,15 @@
+if(false)
+window.console = {
+  log: function(str) {
+    var rest = "";
+    for(var i = 1; i < arguments.length; i++) {
+      rest += arguments[i] + ", ";
+    }
+    $(document.body).append('<p>' + str + ' '  + rest + '</p>');
+  }
+};
+}
+
 $(function() {
   console.log("Cookie: " + document.cookie);
   var stationInfo;
@@ -88,6 +100,7 @@ $(function() {
       return;
     }
     console.log("CL: ", clientLocation);
+    console.log("CLH: ", clientLocation.hash);
     if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
   });
 
@@ -110,6 +123,7 @@ $(function() {
 
   function launchWithLauncher(launchInfo, stasher, launcher) {
     console.log('Launching: ', launchInfo);
+    console.log('With stasher: ', stasher.serialize());
     stasher.post({
       private_data: launchInfo.private_data
     },
@@ -128,6 +142,7 @@ $(function() {
 
   function launch(launchInfo) {
     launchWithLauncher(launchInfo, makeStash, function(nav) {
+        console.log("About to launch: ", nav);
         window.parent.location.href = nav;
       });
   }
@@ -138,6 +153,8 @@ $(function() {
     makeStash = loginInfo.makeStash;
     loginInfo.station.get(function(station_info) {
       stationInfo = station_info;
+      console.log('station_info: ', station_info);
+      console.log('stationInfo: ', stationInfo);
       go();
     });
   }
@@ -199,6 +216,7 @@ $(function() {
   });
 
   function instanceChoice(instanceInfos) {
+    console.log('Making an instance choice');
     var accountsDiv = $('#account-frame');
     $('#login-frame').hide();
     $('#create-account').hide();
@@ -229,7 +247,9 @@ $(function() {
     // TODO(joe): need to make sure we have a reasonable clientLocation
     // if we're going to launch here.
     var port = makePostMessagePort(window.parent, "belay");
+    console.log('Made a belay port...');
     var tunnel = new CapTunnel(port);
+    console.log('Made a belay tunnel...');
     capServer.setResolver(function(instanceID) {
       if(instanceID !== this.instanceID) {
         return tunnel.sendInterface;
@@ -239,34 +259,41 @@ $(function() {
     console.log('StationInfo: ', stationInfo);
 
     if(stationInfo) {
+      console.log('StationInfo.instances[@]: ', stationInfo.instances['@']);
       stationInfo.instances.get(function(instanceInfos) {
-        console.log(instanceInfos);
+        console.log('Instance infos: ', instanceInfos, instanceInfos.length);
         if(instanceInfos.length > 0) {
           instanceChoice(instanceInfos);
         }
+        console.log('Done callback');
       });
     }
 
+    console.log('Checking things');
     var stashser, stashcap;
     // NOTE(joe): We're only using stashes that point to the Belay server,
     // which this check is ensuring.
+    // TODO(joe): Is this necessary?  How badly can a client screw us up here?
     if (typeof clientLocation === 'object' &&
         typeof clientLocation.hash === 'string' &&
-        clientLocation.hash.indexOf(COMMON.urlPrefix) !== -1) {
+        clientLocation.hash.length > 2// &&
+/*        clientLocation.hash.indexOf(COMMON.urlPrefix) !== -1 */) {
+      console.log('Launching instance');
       stashser = clientLocation.hash.substr(1);
       stashcap = capServer.restore(stashser);
       launchInstance(stashcap);
     }
     else {
+      console.log('Launching non-instance');
       launchNonInstance();
     }
 
-    function launchWithoutSaving(launchCap) {
+    function launchWithoutSaving(launchCap, sk, fk) {
       console.log('Getting: ', launchCap);
       launchCap.get(function(launchInfo) {
         console.log('Got launchCap: ', launchInfo);
         launchWithLauncher(launchInfo, stashcap, function(nav) {
-            window.open(nav);
+            sk(nav);
           });
         },
         function(err) {
