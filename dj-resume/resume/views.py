@@ -127,6 +127,17 @@ class ResumeInit():
         'submit-contact-info' : SubmitContactInfoHandler,\
         'get-applicant' : GetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
+        'get-review' : GetReviewHandler,\
+        'change-applicant' : ChangeApplicantHandler,\
+        'set-position' : SetPositionHandler,\
+        'get-statement' : GetStatementHandler,\
+        'get-combined' : GetCombinedHandler,\
+        'upload-material' : UploadMaterialHandler,\
+        'revert-review' : RevertReviewHandler,\
+        'submit-review' : SubmitReviewHandler,\
+        'toggle-highlight' : ToggleHighlightHandler,\
+        'reject-applicant' : RejectApplicantHandler,\
+        'hide-applicant' : HideApplicantHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -500,7 +511,95 @@ class GetReviewerHandler(bcap.CapHandler):
 class LaunchAppReviewHandler(bcap.CapHandler):
   def get(self, granted):
     applicant = granted.applicant
-    return bcap.bcapResponse('Applicant page')
+    resp = {\
+      'getBasic' : bcap.grant('get-basic', applicant.department),\
+      'getApplicant' : bcap.grant('get-applicant', applicant),\
+      'getReviewers' : bcap.grant('get-reviewers', applicant.department),\
+      'getReview' : bcap.grant('get-review', applicant),\
+      'setAreas' : bcap.grant('set-areas', applicant),\
+      # setGender/Ethnicity mapped to changeApplicant
+      'changeApplicant' : bcap.grant('change-applicant', applicant),\
+      'setPosition' : bcap.grant('set-position', applicant),\
+      'getStatement' : bcap.grant('get-statement', applicant),\
+      'getCombined' : bcap.grant('get-combined', applicant),\
+      'uploadMaterial' : bcap.grant('upload-material', applicant),\
+      'revertReview' : bcap.grant('revert-review', applicant),\
+      'submitReview' : bcap.grant('submit-review', applicant),\
+      'toggleHighlight' : bcap.grant('toggle-highlight', applicant),\
+      'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
+      'hideApplicant' : bcap.grant('hide-applicant', applicant),\
+    }
+    return bcap.bcapResponse(resp)
+
+class GetReviewHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return logWith404(logger, 'GetReviewHandler NYI')
+
+class SetAreasHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return logWith404(logger, 'SetAreasHandler NYI')
+
+class ChangeApplicantHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'ChangeApplicantHandler'
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'ChangeApplicantHandler NYI')
+
+class SetPositionHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'SetPositionHandler'
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'SetPositionHandler NYI')
+
+class GetStatementHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return logWith404(logger, 'GetStatementHandler NYI')
+
+class GetCombinedHandler(bcap.CapHandler):
+  def get(self, granted):
+    applicant = granted.applicant
+    return logWith404(logger, 'GetCombinedHandler NYI')
+
+class UploadMaterialHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'UploadMaterialHandler'
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'UploadMaterialHandler NYI')
+
+class RevertReviewHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'RevertReviewHandler'
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'RevertReviewHandler NYI')
+
+class SubmitReviewHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'SubmitReviewHandler'
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'SubmitReviewHandler NYI')
+
+class ToggleHighlightHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'ToggleHighlightHandler NYI')
+
+class RejectApplicantHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'RejectApplicantHandler NYI')
+
+class HideApplicantHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    applicant = granted.applicant
+    return logWith404(logger, 'HideApplicantHandler NYI')
 
 class GetAppReviewHandler(bcap.CapHandler):
   def get(self, granted):

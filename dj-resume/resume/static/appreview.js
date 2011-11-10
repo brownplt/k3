@@ -30,7 +30,6 @@ function makeUnsubmittedRequest(letter) {
 };
 
 $(function() {
-  console.log('in appreview.js');
 	var flapjax = flapjaxInit();
 	var exceptsE = captureServerExcepts(); 
 	exceptsE.filter_e(function(_) {return _.value == 'denied';}).transform_e(function(_) {window.location='login.html?expired=true'});
@@ -71,7 +70,7 @@ $(function() {
     var launchE = getE(onLoadTimeE.constant_e(readyBundle.launchInfo)); 
     var basicInfoE = getE(launchE.transform_e(function(pd) { console.log('launch info pd: ', pd); return pd.getBasic; }));
 
-    basicInfoE.lift_e(function(v) { basicInfo = v; });
+    basicInfoE.lift_e(function(v) { console.log('basicInfo: ', v); basicInfo = v; });
     
     var appReloadsE = receiver_e();
     var applicantB = merge_e(getFilteredWSO_e(merge_e(onLoadTimeE,extractEvent_e('upletter','load')).constant_e(genRequest(
@@ -96,6 +95,8 @@ $(function() {
     });
 
     lift_e(function(basicInfo,curAuth) {
+      console.log('inside ginormous lift_e: basicInfo = ', basicInfo);
+      console.log('inside ginormous lift_e: curAuth = ', curAuth);
       applicantB.transform_b(function(a) {
           setHeadAndTitle(basicInfo,a.name,
         [A({href:'login.html?logout='},'Log Out'),
@@ -360,7 +361,7 @@ $(function() {
       applicantB.transform_b(function(app) {
           return P(STRONG('username: '),SPAN(app.uname));
       }),'uname');
-      },basicInfoE,curAuthE);
+    },basicInfoE,curAuthE);
       onLoadTimeE.sendEvent('Loaded!');
   });
 });
