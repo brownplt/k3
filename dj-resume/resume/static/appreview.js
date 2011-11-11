@@ -80,9 +80,8 @@ $(function() {
     var revsB = belayGetWSO_e(onLoadTimeE.constant_e(genRequest(
         {request:'get'})), launchInfo.getReviewers).startsWith([]);
 
-    var myInitRevB = getFilteredWSO_e(onLoadTimeE.constant_e(genRequest(
-        {url:'Applicant/'+$URL('id')+'/Review/get',
-        fields:{}}))).startsWith(null);
+
+    var myInitRevB = getE(onLoadTimeE.constant_e(launchInfo.getReview)).startsWith(null);
 
     var unlockEdits = extractEvent_e('unlockClassificationEdits','click')
     .collect_e(true /* initially disabled */,function(_,disabled) {

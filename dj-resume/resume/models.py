@@ -175,6 +175,8 @@ class Applicant(bcap.Grantable):
   def getHiddenUNames(self):
     hiddens = Hidden.objects.filter(applicant=self)
     return [h.reviewer.auth.name for h in hiddens]
+  def getPairsOfReviewer(self, reviewer):
+    return AppRevPair.objects.filter(applicant=self, reviewer=reviewer)
   def to_json(self):
     return {
       'id' : self.id,
@@ -309,10 +311,28 @@ class Review(bcap.Grantable):
     ('none', 'none'),\
     ('comment', 'comment')\
   ]
+  def to_json(self):
+    return {\
+      'ord' : self.ord,\
+      'advocate' : self.advocate,\
+      'comments' : self.comments,\
+      'scoreValues' : [s.value.id for s in Score.objects.filter(review=self)],\
+      'draft' : self.draft\
+    }
+  def destroy_scores(self):
+    for s in Score.objects.filter(review=self):
+      s.delete()
+  def get_new_score(self, val_id):
+    # TODO(matt): this is the wrong way to do it, but the frontend is written
+    # to pass ScoreValue IDs back and forth
+    values = ScoreValue.objects.filter(id=val_id)
+    if len(values) != 1:
+      return None
+    return Score(value=values[0], review=self, department=self.department)
   applicant = models.ForeignKey(Applicant)
   reviewer = models.ForeignKey(Reviewer)
   ord = models.IntegerField(default=0)
-  # TODO(matt): using choices may only have an effect through the Djang
+  # TODO(matt): using choices may only have an effect through the Django
   # admin interface, and not on the actual data model. needs more research.
   advocate = models.TextField(choices=advocate_choices, default='none')
   comments = models.TextField()
@@ -423,3 +443,10 @@ class AuthCookie(bcap.Grantable):
   ipaddr = models.IPAddressField()
   user = models.ForeignKey(AuthInfo)
   expires = models.IntegerField()
+
+class AppRevPair(bcap.Grantable):
+  def getReviews(self, draft):
+    return Review.objects.filter(applicant=self.applicant,\
+      reviewer = self.reviewer, draft=draft)
+  applicant = models.ForeignKey(Applicant)
+  reviewer = models.ForeignKey(Reviewer)

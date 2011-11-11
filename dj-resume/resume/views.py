@@ -540,12 +540,13 @@ class GetReviewerHandler(bcap.CapHandler):
 
 class LaunchAppReviewHandler(bcap.CapHandler):
   def get(self, granted):
-    applicant = granted.applicant
+    pair = granted.apprevpair
+    applicant = pair.applicant
     resp = {\
       'getBasic' : bcap.grant('get-basic', applicant.department),\
       'getApplicant' : bcap.grant('get-applicant', applicant),\
       'getReviewers' : bcap.grant('get-reviewers', applicant.department),\
-      'getReview' : bcap.grant('get-review', applicant),\
+      'getReview' : bcap.grant('get-review', pair),\
       'setAreas' : bcap.grant('set-areas', applicant),\
       # setGender/Ethnicity mapped to changeApplicant
       'changeApplicant' : bcap.grant('change-applicant', applicant),\
@@ -554,7 +555,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'getCombined' : bcap.grant('get-combined', applicant),\
       'uploadMaterial' : bcap.grant('upload-material', applicant),\
       'revertReview' : bcap.grant('revert-review', applicant),\
-      'submitReview' : bcap.grant('submit-review', applicant),\
+      'submitReview' : bcap.grant('submit-review', pair),\
       'toggleHighlight' : bcap.grant('toggle-highlight', applicant),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', applicant),\
@@ -563,8 +564,12 @@ class LaunchAppReviewHandler(bcap.CapHandler):
 
 class GetReviewHandler(bcap.CapHandler):
   def get(self, granted):
-    applicant = granted.applicant
-    return logWith404(logger, 'GetReviewHandler NYI')
+    pair = granted.apprevpair
+    drafts = pair.getReviews(draft=True)
+    if len(drafts) == 0:
+      return bcap.bcapResponse(False)
+    draft = drafts[0]
+    return bcap.bcapResponse(draft.to_json())
 
 class SetAreasHandler(bcap.CapHandler):
   def get(self, granted):
@@ -612,9 +617,51 @@ class RevertReviewHandler(bcap.CapHandler):
 class SubmitReviewHandler(bcap.CapHandler):
   def name_str(self):
     return 'SubmitReviewHandler'
+  def post_arg_names(self):
+    return ['draft', 'advdet', 'comments']
+  def convert_scores_argument(self, scores):
+    if scores == '':
+      scores = []
+    if not isinstance(scores, list):
+      scores = [scores]
+    return [int(s) for s in scores]
+  def process_scoreval_ids(self, review, scores):
+    # TODO(matt): this is the wrong way to do it, but the frontend is written
+    # to pass ScoreValue IDs back and forth
+    maybe_scores = [(val_id, review.get_new_score(val_id)) for val_id in scores]
+    scores = filter(lambda s: not(s[1] is None), maybe_scores)
+    errors = filter(lambda s: s[1] is None, maybe_scores)
+    for (val_id, new_score) in scores:
+      new_score.save() 
+    for (val_id, none) in errors:
+      logger.error('SubmitReviewHandler: no score value with id %s'\
+        % str(val_id))
+  def fillReview(self, scores, advdet, comments, pair, draft):
+    reviews = pair.getReviews(draft=draft)
+    if len(reviews) > 0:
+      review = reviews[0]
+      review.comments = comments
+      review.advocate = str(advdet)
+    else:
+      review = Review(department=pair.applicant.department,\
+        applicant=pair.applicant, reviewer=pair.reviewer, comments=comments,\
+        advocate=str(advdet), draft=draft)
+    review.destroy_scores()
+    self.process_scoreval_ids(review, scores)
+    review.save()
   def post(self, granted, args):
-    applicant = granted.applicant
-    return logWith404(logger, 'SubmitReviewHandler NYI')
+    pair = granted.apprevpair
+    draft = args['draft']
+    advdet = args['advdet']
+    comments = args['comments']
+    if not args.has_key('scores'):
+      scores = []
+    else:
+      scores = args['scores']
+    scores = self.convert_scores_argument(scores)
+    self.fillReview(scores, advdet, comments, pair, draft)
+    return bcap.bcapResponse(pair.applicant.to_json())
+    #return logWith404(logger, 'SubmitReviewHandler NYI')
 
 class ToggleHighlightHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -649,8 +696,14 @@ class GetApplicantsHandler(bcap.CapHandler):
     reviewer = grantable.reviewer
     applicant_json = []
     for applicant in reviewer.getApplicants():
+      pairs = applicant.getPairsOfReviewer(reviewer)
+      if len(pairs) > 0:
+        pair = pairs[0]
+      else:
+        pair = AppRevPair(applicant=applicant, reviewer=reviewer)
+        pair.save()
       a_json = applicant.to_json()
-      launchCap = bcap.regrant('launch-app-review', applicant)
+      launchCap = bcap.regrant('launch-app-review', pair)
       a_json['launchURL'] = '%s/appreview/#%s' % \
          (bcap.this_server_url_prefix(), launchCap.serialize())
       applicant_json.append(a_json)
