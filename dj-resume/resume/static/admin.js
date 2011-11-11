@@ -183,7 +183,6 @@ function reviewerTable(allrevs) {
 }
 
 $(function() {
-  alert(window.location.hash);
   var flapjax = flapjaxInit();
   var exceptsE = captureServerExcepts(); 
   exceptsE.filter_e(function(_) {return _.value == 'denied';}).transform_e(function(_) {window.location='login.html?expired=true'});
