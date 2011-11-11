@@ -8,7 +8,6 @@ window.console = {
     $(document.body).append('<p>' + str + ' '  + rest + '</p>');
   }
 };
-}
 
 $(function() {
   console.log("Cookie: " + document.cookie);

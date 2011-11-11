@@ -97,6 +97,7 @@ class ApplicantPosition(bcap.Grantable):
     unique_together = (('department', 'name'))
   def to_json(self):
     return {\
+      'id' : self.id,\
       'name' : self.name,\
       'shortform' : self.shortform,\
       'autoemail' : self.autoemail
@@ -168,6 +169,12 @@ class Applicant(bcap.Grantable):
         oldcomp = Component(applicant=self, type=ct, value=val,\
           lastSubmitted=int(time.time()), department=self.department)
       oldcomp.save()
+  def getHighlights(self):
+    highlights = Highlight.objects.filter(applicant=self)
+    return [{'highlighteeName' : h.highlightee.auth.name} for h in highlights]
+  def getHiddenUNames(self):
+    hiddens = Hidden.objects.filter(applicant=self)
+    return [h.reviewer.auth.name for h in hiddens]
   def to_json(self):
     return {
       'id' : self.id,
@@ -191,6 +198,8 @@ class Applicant(bcap.Grantable):
       'components' : self.getComponents(),
       'position' : self.position.to_json(),
       'references' : self.getReferences(),
+      'highlights' : self.getHighlights(),
+      'hiddenunames' : self.getHiddenUNames()
     }
   genders = [\
     ('Unknown', 'Unknown'),\

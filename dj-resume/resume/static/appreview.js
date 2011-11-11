@@ -61,27 +61,25 @@ $(function() {
 
   onBelayReady(function(readyBundle) {
     console.log('belay is ready: ', readyBundle);
+    var launchInfo = readyBundle.launchInfo;
 
     demoEventsE = receiver_e();
     document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);})};
 
     var curAuthE = getAuthE(onLoadTimeE);
 
-    var launchE = getE(onLoadTimeE.constant_e(readyBundle.launchInfo)); 
-    var basicInfoE = getE(launchE.transform_e(function(pd) { console.log('launch info pd: ', pd); return pd.getBasic; }));
+    var basicInfoE = getE(onLoadTimeE.constant_e(launchInfo.getBasic));
 
     basicInfoE.lift_e(function(v) { console.log('basicInfo: ', v); basicInfo = v; });
     
     var appReloadsE = receiver_e();
-    var applicantB = merge_e(getFilteredWSO_e(merge_e(onLoadTimeE,extractEvent_e('upletter','load')).constant_e(genRequest(
-      {url:'Applicant/'+$URL('id')+'/get',
-      fields:{},
-      asynchronous: false}))),appReloadsE).startsWith({name:'',highlights:{},areas:[],gender:'Unknown',position: { name: 'Loading...' }, ethnicity:'zu',components:[],email:'',uname:'',refletters:[],reviews:[],hiddenunames:[]});
+    var getApplicantE = belayGetWSO_e(merge_e(onLoadTimeE,extractEvent_e('upletter','load')).constant_e(genRequest(
+      {request:'get',asynchronous: false})), launchInfo.getApplicant);
+    var applicantB = merge_e(getApplicantE, appReloadsE).startsWith({name:'',highlights:{},areas:[],gender:'Unknown',position: { name: 'Loading...' }, ethnicity:'zu',components:[],email:'',uname:'',refletters:[],reviews:[],hiddenunames:[]});
     
-    var revsB = getFilteredWSO_e(onLoadTimeE.constant_e(genRequest(
-        {url:'getReviewers',
-        fields:{id:$URL('id')}}))).startsWith([]);
-    
+    var revsB = belayGetWSO_e(onLoadTimeE.constant_e(genRequest(
+        {request:'get'})), launchInfo.getReviewers).startsWith([]);
+
     var myInitRevB = getFilteredWSO_e(onLoadTimeE.constant_e(genRequest(
         {url:'Applicant/'+$URL('id')+'/Review/get',
         fields:{}}))).startsWith(null);
@@ -267,25 +265,24 @@ $(function() {
         sw,ad,BR(),saveBtn.dom,subBtn.dom,revBtn.dom,ta);})
           );
     var cChangeE = cbw.behaviors.value.changes().calm_e(10000);
-    cbw = cbw.draftSaving(
+    cbw = cbw.belayDraftSaving(
       merge_e(merge_e(cChangeE,saveBtn.events.click).constant_e('save'),subBtn.events.click.constant_e('submit')),
       function(ss,info) {
         demoEventsE.sendEvent({action:'subreview'});
         return genRequest({url:'Applicant/'+$URL('id')+'/Review/submit',
           fields: {scores:filter(function(k) {return k != -1;},info[1]), comments:info[0], advdet:info[2],
             draft:(ss == 'save' ? 'yes' : 'no')}});
-      }
-        );
+      }, launchInfo.submitReview);
 
     insertDomB(cbw.dom,'revform');
 
-    var appRevsB = merge_e(applicantB.changes(),cbw.events.serverResponse).startsWith(applicantB.valueNow()).transform_b(function(app) {return app.reviews;});
+    var appRevsB = merge_e(applicantB.changes(),cbw.events.serverResponse).startsWith(applicantB.valueNow()).transform_b(function(app) {console.log('appRevsB fired, app = ', app); return app.reviews;});
 
     insertDomB(appRevsB.transform_b(function(revs) {
       function getScoreList(rev) {
           var slist = map(function(sid) {
         return basicInfo.svcs[sid].name + ': '+basicInfo.svnum[sid];
-        },rev.scoreValues);
+        },rev.svals);
           slist.sort();
           return ' '+slist.join(', ');
       }
