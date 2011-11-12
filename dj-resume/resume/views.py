@@ -559,6 +559,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'toggleHighlight' : bcap.grant('toggle-highlight', applicant),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', applicant),\
+      'requestReference' : bcap.grant('request-reference', applicant)\
     }
     return bcap.bcapResponse(resp)
 

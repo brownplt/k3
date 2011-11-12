@@ -11,7 +11,7 @@ function disableInputs(rootElement,isDisabled) {
   for (var ix = 0; ix < elts.length; ix++) { elts[ix].disabled = isDisabled; };
 };
 
-function makeUnsubmittedRequest(letter) {
+function makeUnsubmittedRequest(letter, requestReference) {
   var requestAgain = A({ href: 'javascript:undefined' }, "request again");
 
   var requestLine = SPAN({ style: { fontSize: 'smaller' } },
@@ -21,11 +21,9 @@ function makeUnsubmittedRequest(letter) {
     requestAgain,")");
 
 
-  getFilteredWSO_e(extractEvent_e(requestAgain,'click').lift_e(function(_) {
+  belayGetWSO_E(extractEvent_e(requestAgain,'click').lift_e(function(_) {
     requestLine.innerHTML = "(request sent)";
-    })
-    .constant_e(genRequest({url: 'Admins/requestReference', 
-                 fields: { id: letter.id } })));
+    }).constant_e(genRequest({fields:{id:letter.id}})), requestReference);
   return requestLine;
 };
 
@@ -105,10 +103,10 @@ $(function() {
         var widget = new CheckboxListWidget(
         map(function(a) {return {k:a.id,v:a.name};},basicInfo.areas),
         map(function(a) {return a.id;},ai.areas)	
-          ).serverSaving(function(careas) {
+          ).belayServerSaving(function(careas) {
         demoEventsE.sendEvent({action:'areaSet'});
-        return genRequest({url:'Applicant/'+$URL('id')+'/setAreas',fields:{areas:careas}});
-          }).dom;
+        return genRequest({fields:{areas:careas}});
+          }, true, launchInfo.setAreas).dom;
 
         disableInputs(widget,true);
 
@@ -119,8 +117,8 @@ $(function() {
       insertDomB(applicantB.transform_b(function(ai) {
         var widget = new SelectWidget(ai.gender,
         map(function(g) {return OPTION({value:g},g);},basicInfo.genders))
-        .serverSaving(function(gen) {
-            return genRequest({url:'Applicant/'+$URL('id')+'/setGender',fields:{gender:gen}});}).dom;
+        .belayServerSaving(function(gen) {
+            return genRequest({fields:{gender:gen}});}, true, launchInfo.changeApplicant).dom;
         widget.disabled = true;
         unlockEdits.lift_e(function(v) { widget.disabled = v; });
 
@@ -130,11 +128,10 @@ $(function() {
       insertDomB(applicantB.transform_b(function(ai) {
         var widget = new SelectWidget(ai.position.name,
           map(makePositionOption,basicInfo.positions))
-          .serverSaving(function(gen) {
+          .belayServerSaving(function(gen) {
             return genRequest({
-              url: 'Applicant/'+$URL('id')+'/setPosition',
               fields: { id: gen } }); 
-          }).dom;
+          }, true, launchInfo.setPosition).dom;
         widget.disabled = true;
             
         unlockEdits.lift_e(function(v) { widget.disabled = v; });  
@@ -147,8 +144,8 @@ $(function() {
         for(var k in basicInfo.ethnicities)
           if (basicInfo.ethnicities.hasOwnProperty(k))
             ethopts.push(OPTION({value:k},basicInfo.ethnicities[k]));
-        var widget = new SelectWidget(ai.ethnicity,ethopts).serverSaving(function(eth) {
-          return genRequest({url:'Applicant/'+$URL('id')+'/setEthnicity',fields:{ethnicity:eth}});}).dom;
+        var widget = new SelectWidget(ai.ethnicity,ethopts).belayServerSaving(function(eth) {
+          return genRequest({fields:{ethnicity:eth}});}, true, launchInfo.changeApplicant).dom;
 
         widget.disabled = true;
         unlockEdits.lift_e(function(v) { widget.disabled = v; });
@@ -207,7 +204,7 @@ $(function() {
                       INPUT({type:'submit',value:'Upload'}))) : SPAN();});
                 return LIB({className:'unsubmitted'},lttr.name, 
                            " (" + lttr.email + ") ", upl.dom,
-                           uplBoxB,' ', makeUnsubmittedRequest(lttr));
+                           uplBoxB,' ', makeUnsubmittedRequest(lttr, launchInfo.requestReference));
               }
               return LI({className:'unsubmitted'}, lttr.name);
             }
@@ -232,11 +229,10 @@ $(function() {
 
     var myRevB = merge_e(
       myInitRevB.changes(),
-      getFilteredWSO_e(revBtn.events.click
+      belayGetWSO_e(revBtn.events.click
           .filter_e(function(_) {return confirm('Are you sure you want to replace your draft with your published review? All changes will be lost!');})
           .constant_e(genRequest(
-        {url:'Applicant/'+$URL('id')+'/Review/revert',
-        fields:{}})))).startsWith(myInitRevB.valueNow());
+        {request:'post', fields:{}})), launchInfo.revertReview)).startsWith(myInitRevB.valueNow());
 
     var cbw = new InputWidgetB(
       CombinedInputWidget,
@@ -300,9 +296,8 @@ $(function() {
         var remSelf = fold(function(v, acc) {return (v.highlighteeName == curAuth.username ? true : acc);},false,app.highlights);
         if(remSelf) {
           var rsLink = A({href:'javascript:undefined',className:'remself'},'(remove me)');
-          getFilteredWSO_e(extractEvent_e(rsLink,'click').constant_e(genRequest(
-            {url:'Applicant/'+app.id+'/unhighlight',
-            fields:{}}))).transform_e(function(unhl) {
+          belayGetWSO_e(extractEvent_e(rsLink,'click').constant_e(genRequest(
+            {request:'post', fields:{}})), launchInfo.toggleHighlight).transform_e(function(unhl) {
                appReloadsE.sendEvent(unhl);
             });
         }
@@ -315,6 +310,8 @@ $(function() {
 
     insertDomB(
       switch_b(lift_b(function(app,revs) {
+        console.log('defining hladd: launchInfo = ', launchInfo);
+        console.log(launchInfo.toggleHighlight);
         var hls = toObj(app.highlights,function(a) {return a.highlighteeName;});
         var hladd = new SelectWidget(null,
           map(function(revr) {return OPTION({value:revr.id,disabled:hls[revr.uname]?true:false},revr.uname);},
@@ -322,10 +319,9 @@ $(function() {
         ).withButton(
             new ButtonWidget('OK'),
             function(sel,btn) {return P('Bring this applicant to the attention of ',sel,btn);}
-        ).serverSaving(function(selectee) {
-          return genRequest({url:'Applicant/'+app.id+'/highlight',
-            fields:{highlightee:selectee}});
-        });
+        ).belayServerSaving(function(selectee) {
+          return genRequest({fields:{highlightee:selectee}});
+        }, true, launchInfo.toggleHighlight);
         hladd.events.serverResponse.transform_e(function(sr) {appReloadsE.sendEvent(sr);});
         return (hladd.dom instanceof Behaviour ? hladd.dom : constant_b(hladd.dom));
       },applicantB,revsB)),'highlight-add');
@@ -333,9 +329,9 @@ $(function() {
     insertDomB(
       switch_b(applicantB.transform_b(function(app) {
         if(curAuth.role == 'admin') {
-          var rejectBox = new CheckboxWidget(app.rejected).serverSaving(function(rej) {
-            return genRequest({url:'Applicant/'+app.id+'/reject',fields:{reject:(rej?'yes':'no')}});
-          });
+          var rejectBox = new CheckboxWidget(app.rejected).belayServerSaving(function(rej) {
+            return genRequest({fields:{reject:(rej?'yes':'no')}});
+          }, true, launchInfo.rejectApplicant);
           return PB('Reject Applicant? ',rejectBox.dom);
         }
         else {
@@ -345,9 +341,9 @@ $(function() {
     insertDomB(
       switch_b(applicantB.transform_b(function(app) {
         var isHidden = fold(function(v, acc) {return acc || v == curAuth.username;},false,app.hiddenunames);
-        var hideBox = new CheckboxWidget(isHidden).serverSaving(function(hide) {
-          return genRequest({url:'Applicant/'+app.id+'/hide',fields:{hide:(hide?'yes':'no')}});
-        });
+        var hideBox = new CheckboxWidget(isHidden).belayServerSaving(function(hide) {
+          return genRequest({fields:{hide:(hide?'yes':'no')}});
+        }, true, launchInfo.hideApplicant);
         return PB('Hide Applicant? ',hideBox.dom,' (this will stop you from seeing this applicant ever again, unless you specifically check "show hidden applicants" when filtering the applicant list.)');
       })),'hide');
     insertDomE(iframeLoad_e('upletter').transform_e(resultTrans('You have successfully uploaded the reference letter.')),'ls-result');
