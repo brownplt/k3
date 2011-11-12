@@ -211,6 +211,7 @@ class Applicant(bcap.Grantable):
       'reviews' : self.getReviews(),
       'comments' : self.getComments(),
       'web' : self.getWeb(),
+      'email' : self.auth.email,
       'statements' : self.getStatements(),
       'test_scores' : self.getTestScores(),
       'institutions' : self.institutions(),

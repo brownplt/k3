@@ -703,8 +703,8 @@ class SubmitReviewHandler(bcap.CapHandler):
         applicant=pair.applicant, reviewer=pair.reviewer, comments=comments,\
         advocate=str(advdet), draft=draft)
     review.destroy_scores()
-    self.process_scoreval_ids(review, scores)
     review.save()
+    self.process_scoreval_ids(review, scores)
   def post(self, granted, args):
     pair = granted.apprevpair
     draft = args['draft']
@@ -717,7 +717,6 @@ class SubmitReviewHandler(bcap.CapHandler):
     scores = self.convert_scores_argument(scores)
     self.fillReview(scores, advdet, comments, pair, draft)
     return bcap.bcapResponse(pair.applicant.to_json())
-    #return logWith404(logger, 'SubmitReviewHandler NYI')
 
 class HighlightApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
