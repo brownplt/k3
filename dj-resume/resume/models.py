@@ -66,11 +66,15 @@ class Department(bcap.Grantable):
     }
   # TODO(matt): bad to look up things by ID, but again, the frontend is written
   # this way
-  def get_area_by_id(self, aid):
-    areas = Area.objects.filter(id=aid)
-    if len(areas) > 0:
-      return areas[0]
+  def get_by_id(self, cls, id):
+    objs = cls.objects.filter(id=id)
+    if len(objs) > 0:
+      return objs[0]
     return None
+  def get_area_by_id(self, aid):
+    return self.get_by_id(Area, aid)
+  def get_position_by_id(self, pid):
+    return self.get_by_id(ApplicantPosition, pid)
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()

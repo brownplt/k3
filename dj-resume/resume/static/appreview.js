@@ -126,7 +126,7 @@ $(function() {
       }),'gender','beginning');
 
       insertDomB(applicantB.transform_b(function(ai) {
-        var widget = new SelectWidget(ai.position.name,
+        var widget = new SelectWidget(ai.position.id,
           map(makePositionOption,basicInfo.positions))
           .belayServerSaving(function(gen) {
             return genRequest({

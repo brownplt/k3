@@ -612,11 +612,20 @@ class ChangeApplicantHandler(bcap.CapHandler):
     return logWith404(logger, 'ChangeApplicantHandler NYI')
 
 class SetPositionHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['id']
   def name_str(self):
     return 'SetPositionHandler'
   def post(self, granted, args):
     applicant = granted.applicant
-    return logWith404(logger, 'SetPositionHandler NYI')
+    id = args['id']
+    position = applicant.department.get_position_by_id(args['id'])
+    if position:
+      applicant.position = position
+      applicant.save()
+      return bcap.bcapResponse(applicant.to_json())
+    return logWith404(logger, 'SetPositionHandler: no position with id %s' % id,\
+      level='error')
 
 class GetStatementHandler(bcap.CapHandler):
   def get(self, granted):
