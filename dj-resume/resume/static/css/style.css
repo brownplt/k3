@@ -25,15 +25,15 @@ div.bottom a {color: #ddd;}
 div.bottom a:hover {color: #fff;}
 
 h1 {
-	margin: 0;
-	text-align: left;
-	width: 100%;
-	height: 82px;
-	background-image:url(/static/images/header-bg.png);
-	background-repeat: repeat-x;
-	background-color: #fff;
-	color: #ffffff;
-	padding: 20px 0 0 0;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  height: 82px;
+  background-image:url(/static/images/header-bg.png);
+  background-repeat: repeat-x;
+  background-color: #fff;
+  color: #ffffff;
+  padding: 20px 0 0 0;
 }
 h1 img#header {
     position: absolute;

@@ -69,6 +69,9 @@ persists, contact the system maintainer.'
 # TODO: exceptions
 def sendLogEmail(subject, msg, address):
   logger.info('Trying to send e-mail')
+  if settings.DEBUG:
+    logger.error('send log email:\n %s \n%s' % (address, msg))
+    return False
   try:
     send_mail(subject, msg, 'resume@spindle.cs.brown.edu', [address], fail_silently=False)
   except smtplib.SMTPRecipientsRefused as e:
