@@ -144,7 +144,7 @@ $(function() {
         for(var k in basicInfo.ethnicities)
           if (basicInfo.ethnicities.hasOwnProperty(k))
             ethopts.push(OPTION({value:k},basicInfo.ethnicities[k]));
-        var widget = new SelectWidget(ai.ethnicity,ethopts).belayServerSaving(function(eth) {
+        var widget = new SelectWidget(ai.ethname,ethopts).belayServerSaving(function(eth) {
           return genRequest({fields:{ethnicity:eth}});}, false, launchInfo.changeApplicant).dom;
 
         widget.disabled = true;

@@ -609,7 +609,12 @@ class ChangeApplicantHandler(bcap.CapHandler):
     return 'ChangeApplicantHandler'
   def post(self, granted, args):
     applicant = granted.applicant
-    return logWith404(logger, 'ChangeApplicantHandler NYI')
+    if args.has_key('gender'):
+      applicant.gender = args['gender']
+    if args.has_key('ethnicity'):
+      applicant.ethnicity = args['ethnicity']
+    applicant.save()
+    return bcap.bcapResponse(applicant.to_json())
 
 class SetPositionHandler(bcap.CapHandler):
   def post_arg_names(self):
