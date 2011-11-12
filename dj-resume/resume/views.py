@@ -171,6 +171,7 @@ class ResumeInit():
         'unhighligh-applicant' : UnhighlightApplicantHandler,\
         'reject-applicant' : RejectApplicantHandler,\
         'hide-applicant' : HideApplicantHandler,\
+        'set-areas' : SetAreasHandler,\
         'get-csv' : GetCSVHandler })
     return None
 
@@ -578,9 +579,30 @@ class GetReviewHandler(bcap.CapHandler):
     return bcap.bcapResponse(draft.to_json())
 
 class SetAreasHandler(bcap.CapHandler):
-  def get(self, granted):
+  # TODO(matt): duplication of functionality in SubmitReviewHandler,
+  # should be refactored
+  def convert_areas_argument(self, areas):
+    if areas == '':
+      areas = []
+    if not isinstance(areas, list):
+      areas = [areas]
+    return [int(a) for a in areas]
+  def post(self, granted, args):
     applicant = granted.applicant
-    return logWith404(logger, 'SetAreasHandler NYI')
+    if not args.has_key('areas'):
+      area_ids = []
+    else:
+      area_ids = args['areas']
+    area_ids = self.convert_areas_argument(area_ids)
+    applicant.remove_areas()
+    # TODO(matt): bad to look up things by ID, but again, the frontend is written
+    # this way
+    for aid in area_ids:
+      ar = applicant.department.get_area_by_id(aid)
+      if ar:
+        ar.applicants.add(applicant)
+        ar.save()
+    return bcap.bcapResponse(applicant.to_json())
 
 class ChangeApplicantHandler(bcap.CapHandler):
   def name_str(self):
@@ -1058,6 +1080,7 @@ class GetBasicHandler(bcap.CapHandler):
     basic_info = granted.department.getBasic()
     response_areas = [\
       {'name' : a.name,\
+       'id' : a.id,\
        'abbr' : a.abbr,\
        'del' : bcap.grant('area-delete', a)\
       } for a in basic_info['areas']]

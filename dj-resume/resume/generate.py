@@ -91,4 +91,9 @@ def generate(request):
     logger.info('used existing review')
     review = review_objs[0]
 
+  area_objs = rmod.Area.objects.filter(department=cs)
+  if len(area_objs) < 2:
+    a = rmod.Area(name='area one', abbr='a1', department=cs)
+    a.save()
+
   return HttpResponse('OK')

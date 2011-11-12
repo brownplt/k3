@@ -28,6 +28,7 @@ class Department(bcap.Grantable):
     reviewers = self.my(Reviewer)
     return [{'email' : r.auth.email,\
       'name' : r.auth.name,\
+      'uname' : '%s (%s)' % (r.auth.name, r.auth.email),\
       'role' : r.auth.role} for r in reviewers]
   def findRefs(self, email):
     refs = self.my(Reference).filter(email=email)
@@ -63,6 +64,13 @@ class Department(bcap.Grantable):
       'contactEmail' : self.contactEmail,\
       'techEmail' : self.techEmail\
     }
+  # TODO(matt): bad to look up things by ID, but again, the frontend is written
+  # this way
+  def get_area_by_id(self, aid):
+    areas = Area.objects.filter(id=aid)
+    if len(areas) > 0:
+      return areas[0]
+    return None
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()
@@ -113,7 +121,8 @@ class Applicant(bcap.Grantable):
     return Review.objects.filter(applicant=self, draft=False)\
       .exclude(advocate='comment')
   def getAreas(self):
-    return [a.to_json() for a in self.department.my(Area)]
+    dept_areas = self.department.my(Area)
+    return [a.to_json() for a in dept_areas if self in a.applicants.all()]
   def getReviews(self):
     reviews = self.myReviews()
     rtn = []
@@ -177,6 +186,10 @@ class Applicant(bcap.Grantable):
     return [h.reviewer.auth.name for h in hiddens]
   def getPairsOfReviewer(self, reviewer):
     return AppRevPair.objects.filter(applicant=self, reviewer=reviewer)
+  def remove_areas(self):
+    for a in Area.objects.filter(department=self.department, applicants=self):
+      a.applicants.remove(self)
+      a.save()
   def to_json(self):
     return {
       'id' : self.id,
@@ -354,10 +367,11 @@ class Area(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
   def to_json(self):
-    return {'name' : self.name, 'abbr' : self.abbr}
+    return {'id' : self.id, 'name' : self.name, 'abbr' : self.abbr}
   name = models.CharField(max_length=100)
   abbr = models.TextField()
   department = models.ForeignKey(Department)
+  applicants = models.ManyToManyField(Applicant)
 
 class Highlight(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)
