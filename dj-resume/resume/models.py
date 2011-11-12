@@ -75,6 +75,8 @@ class Department(bcap.Grantable):
     return self.get_by_id(Area, aid)
   def get_position_by_id(self, pid):
     return self.get_by_id(ApplicantPosition, pid)
+  def all_score_values(self):
+    return ScoreValue.objects.filter(department=self)
   name = models.TextField()
   shortname = models.TextField()
   lastChange = models.IntegerField()
@@ -128,16 +130,7 @@ class Applicant(bcap.Grantable):
     dept_areas = self.department.my(Area)
     return [a.to_json() for a in dept_areas if self in a.applicants.all()]
   def getReviews(self):
-    reviews = self.myReviews()
-    rtn = []
-    for r in reviews:
-      scores = Score.objects.filter(review=r) 
-      rtn.append({\
-        'id' : r.id,\
-        'rname' : r.reviewer.auth.name,\
-        'svals' : [s.value.id for s in scores]\
-      })
-    return rtn
+    return [r.to_json() for r in self.myReviews()]
   def getComponentTypeById(self, id):
     return ComponentType.objects.filter(id=id, department=self.department)
   def getComments(self):
@@ -278,14 +271,14 @@ class ScoreCategory(bcap.Grantable):
     return ScoreValue.objects.filter(category=self)
   def to_json(self):
     values = [v.to_json() for v in self.getValues()]
-    return {'name' : self.name, 'shortform' : self.shortform, 'values' : values}
+    return {'id' : self.id, 'name' : self.name, 'shortform' : self.shortform, 'values' : values}
   name = models.CharField(max_length=100)
   shortform = models.TextField()
   department = models.ForeignKey(Department)
 
 class ScoreValue(bcap.Grantable):
   def to_json(self):
-    return {'number' : self.number, 'explanation' : self.explanation}
+    return {'id' : self.id, 'number' : self.number, 'explanation' : self.explanation}
   category = models.ForeignKey(ScoreCategory)
   number = models.IntegerField()
   explanation = models.TextField()
@@ -329,11 +322,15 @@ class Review(bcap.Grantable):
     ('comment', 'comment')\
   ]
   def to_json(self):
+    score_vals = [s.value.id for s in Score.objects.filter(review=self)]
     return {\
+      'id' : self.id,\
+      'rname' : self.reviewer.auth.name,\
+      'reviewerName' : self.reviewer.auth.name,\
       'ord' : self.ord,\
       'advocate' : self.advocate,\
       'comments' : self.comments,\
-      'scoreValues' : [s.value.id for s in Score.objects.filter(review=self)],\
+      'scoreValues' : score_vals,\
       'draft' : self.draft\
     }
   def destroy_scores(self):

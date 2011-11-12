@@ -93,7 +93,23 @@ def generate(request):
 
   area_objs = rmod.Area.objects.filter(department=cs)
   if len(area_objs) < 2:
+    a = rmod.Area(name='area two', abbr='a2', department=cs)
+    a.save()
     a = rmod.Area(name='area one', abbr='a1', department=cs)
     a.save()
+
+  score_cats = rmod.ScoreCategory.objects.filter(department=cs)
+  if len(score_cats) == 0:
+    sc = rmod.ScoreCategory(name='Awesomeness Level', shortform='AL', department=cs)
+    sc.save()
+  else:
+    sc = score_cats[0]
+
+  score_vals = rmod.ScoreValue.objects.filter(department=cs)
+  if len(score_vals) == 0:
+    for i in range(5):
+      sv = rmod.ScoreValue(category=sc, number=i, explanation='%d level of awesome' % i,\
+        department=cs)
+      sv.save()
 
   return HttpResponse('OK')

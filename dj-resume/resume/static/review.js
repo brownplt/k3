@@ -66,11 +66,11 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
 		   this.info.reviews.length == 0 ? 'None Yet' :
 		   map(function(rev) {
 		       svstr = '';
-		       if(rev.svals.length)
+		       if(rev.scoreValues.length)
 			 svstr = ' (' +
 			   map(function(sid) {
 			       return basicInfo.svcs[sid].shortform + ': '+basicInfo.svnum[sid];
-			     },rev.svals).join(' ') + ')';
+			     },rev.scoreValues).join(' ') + ')';
 		       return rev.rname+svstr;
 		     },this.info.reviews).join(', ')),
 		 P(STRONG('Comments: '),
@@ -138,6 +138,7 @@ function boolCmp(a,b) { return (a == b) ? 0 : (a ? 1 : -1); };
 
 function makeScoreCategorySelector(basicInfo) {
   var options = basicInfo.scores.map(function(score) {
+      console.log('MAPPING SCORE = ', score);
       return OPTION({value: score.id.toString()}, score.shortform);
     });
   options.unshift(OPTION({value: "-1"}, "(Sort by Score)"));
@@ -193,7 +194,7 @@ function getApplicantScore(scoreId,basicInfo,reviewer,app) {
   else {
     app.__personalcache[scoreId] = app.info.reviews.ormap(function(review) { 
 	return review.rname == reviewer.auth.username &&
-        review.svals.ormap(function(score) {
+        review.scoreValues.ormap(function(score) {
 	    return basicInfo.svcs[score].id == scoreId &&
 	    { score: basicInfo.svnum[score] };
 	  });
@@ -214,7 +215,7 @@ function getAvgApplicantScore(scoreId,basicInfo,app) {
   else {
     var numScores = 0;
     var netScore = app.info.reviews.foldl(0,function(acc,review) {
-	var score = review.svals.ormap(function(score) {
+	var score = review.scoreValues.ormap(function(score) {
 	    if (basicInfo.svcs[score].id == scoreId) { 
 	      numScores++; 
 	      return basicInfo.svnum[score];

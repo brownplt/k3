@@ -1092,6 +1092,7 @@ class FindRefsHandler(bcap.CapHandler):
 class GetBasicHandler(bcap.CapHandler):
   def get(self, granted):
     basic_info = granted.department.getBasic()
+    all_svals = granted.department.all_score_values()
     response_areas = [\
       {'name' : a.name,\
        'id' : a.id,\
@@ -1099,17 +1100,21 @@ class GetBasicHandler(bcap.CapHandler):
        'del' : bcap.grant('area-delete', a)\
       } for a in basic_info['areas']]
     basic_info['areas'] = response_areas
+    basic_info['svcs'] = dict([(sv.id, sv.category.to_json()) for sv in all_svals])
     response_scores = [\
       {'name' : s.name,\
        'shortform' : s.shortform,\
        'values' : [\
-          {'number' : v.number,\
-           'explanation' : v.explanation,\
-           'change' : bcap.grant('scorevalue-change', v)} for v in s.getValues()],\
+       {'id' : v.id,\
+         'number' : v.number,\
+         'explanation' : v.explanation,\
+         'change' : bcap.grant('scorevalue-change', v)} for v in s.getValues()],\
        'del' : bcap.grant('scorecategory-delete', s),\
+       'id' : s.id,\
        'change' : bcap.grant('scorecategory-change', s)\
       } for s in basic_info['scores']]
     basic_info['scores'] = response_scores
+    basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
     return bcap.bcapResponse(basic_info)
 
 class SetBasicHandler(bcap.CapHandler):

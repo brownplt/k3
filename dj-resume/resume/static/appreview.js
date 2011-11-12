@@ -264,8 +264,7 @@ $(function() {
       merge_e(merge_e(cChangeE,saveBtn.events.click).constant_e('save'),subBtn.events.click.constant_e('submit')),
       function(ss,info) {
         demoEventsE.sendEvent({action:'subreview'});
-        return genRequest({url:'Applicant/'+$URL('id')+'/Review/submit',
-          fields: {scores:filter(function(k) {return k != -1;},info[1]), comments:info[0], advdet:info[2],
+        return genRequest({fields: {scores:filter(function(k) {return k != -1;},info[1]), comments:info[0], advdet:info[2],
             draft:(ss == 'save' ? true : false)}});
       }, launchInfo.submitReview);
 
@@ -277,7 +276,7 @@ $(function() {
       function getScoreList(rev) {
           var slist = map(function(sid) {
         return basicInfo.svcs[sid].name + ': '+basicInfo.svnum[sid];
-        },rev.svals);
+        },rev.scoreValues);
           slist.sort();
           return ' '+slist.join(', ');
       }
