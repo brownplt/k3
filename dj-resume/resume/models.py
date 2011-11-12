@@ -187,6 +187,15 @@ class Applicant(bcap.Grantable):
     for a in Area.objects.filter(department=self.department, applicants=self):
       a.applicants.remove(self)
       a.save()
+  def hide_from(self, reviewer):
+    hiddens = Hidden.objects.filter(applicant=self, reviewer=reviewer)
+    if len(hiddens) == 0:
+      h = Hidden(applicant=self, reviewer=reviewer, department=self.department)
+      h.save()
+  def unhide_from(self, reviewer):
+    Hidden.objects.filter(applicant=self, reviewer=reviewer).delete()
+  def is_hidden_from(self, reviewer):
+    return len(Hidden.objects.filter(applicant=self, reviewer=reviewer)) > 0
   def to_json(self):
     return {
       'id' : self.id,

@@ -564,7 +564,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'highlightApplicant' : bcap.grant('highlight-applicant', pair),\
       'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
-      'hideApplicant' : bcap.grant('hide-applicant', applicant),\
+      'hideApplicant' : bcap.grant('hide-applicant', pair),\
       'requestReference' : bcap.grant('request-reference', applicant)\
     }
     return bcap.bcapResponse(resp)
@@ -742,9 +742,22 @@ class RejectApplicantHandler(bcap.CapHandler):
     return logWith404(logger, 'RejectApplicantHandler NYI')
 
 class HideApplicantHandler(bcap.CapHandler):
+  def name_str(self):
+    return 'HideApplicantHandler'
+  def post_arg_names(self):
+    return ['hide']
   def post(self, granted, args):
-    applicant = granted.applicant
-    return logWith404(logger, 'HideApplicantHandler NYI')
+    pair = granted.apprevpair
+    applicant = pair.applicant
+    reviewer = pair.reviewer
+    hide = args['hide']
+    if hide == 'no':
+      if applicant.is_hidden_from(reviewer):
+        applicant.unhide_from(reviewer)
+    elif hide == 'yes':
+      if not applicant.is_hidden_from(reviewer):
+        applicant.hide_from(reviewer)
+    return bcap.bcapResponse(applicant.to_json())
 
 class GetAppReviewHandler(bcap.CapHandler):
   def get(self, granted):
