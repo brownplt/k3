@@ -167,7 +167,8 @@ class ResumeInit():
         'upload-material' : UploadMaterialHandler,\
         'revert-review' : RevertReviewHandler,\
         'submit-review' : SubmitReviewHandler,\
-        'toggle-highlight' : ToggleHighlightHandler,\
+        'highlight-applicant' : HighlightApplicantHandler,\
+        'unhighligh-applicant' : UnhighlightApplicantHandler,\
         'reject-applicant' : RejectApplicantHandler,\
         'hide-applicant' : HideApplicantHandler,\
         'get-csv' : GetCSVHandler })
@@ -557,9 +558,10 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'getStatement' : bcap.grant('get-statement', applicant),\
       'getCombined' : bcap.grant('get-combined', applicant),\
       'uploadMaterial' : bcap.grant('upload-material', applicant),\
-      'revertReview' : bcap.grant('revert-review', applicant),\
+      'revertReview' : bcap.grant('revert-review', pair),\
       'submitReview' : bcap.grant('submit-review', pair),\
-      'toggleHighlight' : bcap.grant('toggle-highlight', applicant),\
+      'highlightApplicant' : bcap.grant('highlight-applicant', pair),\
+      'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', applicant),\
       'requestReference' : bcap.grant('request-reference', applicant)\
@@ -569,7 +571,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
 class GetReviewHandler(bcap.CapHandler):
   def get(self, granted):
     pair = granted.apprevpair
-    drafts = pair.getReviews(draft=True)
+    drafts = pair.get_reviews(draft=True)
     if len(drafts) == 0:
       return bcap.bcapResponse(False)
     draft = drafts[0]
@@ -615,8 +617,22 @@ class RevertReviewHandler(bcap.CapHandler):
   def name_str(self):
     return 'RevertReviewHandler'
   def post(self, granted, args):
-    applicant = granted.applicant
-    return logWith404(logger, 'RevertReviewHandler NYI')
+    pair = granted.apprevpair
+    drafts = pair.get_reviews(True)
+    subs = pair.get_reviews(False)
+    if len(drafts) > 0 and len(subs) > 0:
+      draft = drafts[0]
+      sub = subs[0]
+      draft.destroy_scores()
+      draft.transfer_scores_from(sub)
+      draft.comments = sub.comments
+      draft.advocate = sub.advocate
+      draft.save()
+      return bcap.bcapResponse(draft.to_json())
+    if len(drafts) > 0:
+      draft = drafts[0]
+      draft.delete()
+    return bcap.bcapResponse('false')
 
 class SubmitReviewHandler(bcap.CapHandler):
   def name_str(self):
@@ -641,7 +657,7 @@ class SubmitReviewHandler(bcap.CapHandler):
       logger.error('SubmitReviewHandler: no score value with id %s'\
         % str(val_id))
   def fillReview(self, scores, advdet, comments, pair, draft):
-    reviews = pair.getReviews(draft=draft)
+    reviews = pair.get_reviews(draft=draft)
     if len(reviews) > 0:
       review = reviews[0]
       review.comments = comments
@@ -667,10 +683,22 @@ class SubmitReviewHandler(bcap.CapHandler):
     return bcap.bcapResponse(pair.applicant.to_json())
     #return logWith404(logger, 'SubmitReviewHandler NYI')
 
-class ToggleHighlightHandler(bcap.CapHandler):
+class HighlightApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
-    applicant = granted.applicant
-    return logWith404(logger, 'ToggleHighlightHandler NYI')
+    pair = granted.apprevpair
+    highlights = pair.get_highlights()
+    if len(highlights) == 0:
+      h = Highlight(department=pair.applicant.department,\
+        applicant=pair.applicant, highlightee=pair.reviewer)
+      h.save()
+    return bcap.bcapResponse(pair.applicant.to_json())
+
+class UnhighlightApplicantHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    pair = granted.apprevpair
+    highlights = pair.get_highlights()
+    highlights.delete()
+    return bcap.bcapResponse(pair.applicant.to_json())
 
 class RejectApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):

@@ -106,7 +106,7 @@ $(function() {
           ).belayServerSaving(function(careas) {
         demoEventsE.sendEvent({action:'areaSet'});
         return genRequest({fields:{areas:careas}});
-          }, true, launchInfo.setAreas).dom;
+          }, false, launchInfo.setAreas).dom;
 
         disableInputs(widget,true);
 
@@ -118,7 +118,7 @@ $(function() {
         var widget = new SelectWidget(ai.gender,
         map(function(g) {return OPTION({value:g},g);},basicInfo.genders))
         .belayServerSaving(function(gen) {
-            return genRequest({fields:{gender:gen}});}, true, launchInfo.changeApplicant).dom;
+            return genRequest({fields:{gender:gen}});}, false, launchInfo.changeApplicant).dom;
         widget.disabled = true;
         unlockEdits.lift_e(function(v) { widget.disabled = v; });
 
@@ -131,7 +131,7 @@ $(function() {
           .belayServerSaving(function(gen) {
             return genRequest({
               fields: { id: gen } }); 
-          }, true, launchInfo.setPosition).dom;
+          }, false, launchInfo.setPosition).dom;
         widget.disabled = true;
             
         unlockEdits.lift_e(function(v) { widget.disabled = v; });  
@@ -145,7 +145,7 @@ $(function() {
           if (basicInfo.ethnicities.hasOwnProperty(k))
             ethopts.push(OPTION({value:k},basicInfo.ethnicities[k]));
         var widget = new SelectWidget(ai.ethnicity,ethopts).belayServerSaving(function(eth) {
-          return genRequest({fields:{ethnicity:eth}});}, true, launchInfo.changeApplicant).dom;
+          return genRequest({fields:{ethnicity:eth}});}, false, launchInfo.changeApplicant).dom;
 
         widget.disabled = true;
         unlockEdits.lift_e(function(v) { widget.disabled = v; });
@@ -266,7 +266,7 @@ $(function() {
         demoEventsE.sendEvent({action:'subreview'});
         return genRequest({url:'Applicant/'+$URL('id')+'/Review/submit',
           fields: {scores:filter(function(k) {return k != -1;},info[1]), comments:info[0], advdet:info[2],
-            draft:(ss == 'save' ? 'yes' : 'no')}});
+            draft:(ss == 'save' ? true : false)}});
       }, launchInfo.submitReview);
 
     insertDomB(cbw.dom,'revform');
@@ -297,7 +297,7 @@ $(function() {
         if(remSelf) {
           var rsLink = A({href:'javascript:undefined',className:'remself'},'(remove me)');
           belayGetWSO_e(extractEvent_e(rsLink,'click').constant_e(genRequest(
-            {request:'post', fields:{}})), launchInfo.toggleHighlight).transform_e(function(unhl) {
+            {request:'post', fields:{}})), launchInfo.unhighlightApplicant).transform_e(function(unhl) {
                appReloadsE.sendEvent(unhl);
             });
         }
@@ -310,8 +310,6 @@ $(function() {
 
     insertDomB(
       switch_b(lift_b(function(app,revs) {
-        console.log('defining hladd: launchInfo = ', launchInfo);
-        console.log(launchInfo.toggleHighlight);
         var hls = toObj(app.highlights,function(a) {return a.highlighteeName;});
         var hladd = new SelectWidget(null,
           map(function(revr) {return OPTION({value:revr.id,disabled:hls[revr.uname]?true:false},revr.uname);},
@@ -321,7 +319,7 @@ $(function() {
             function(sel,btn) {return P('Bring this applicant to the attention of ',sel,btn);}
         ).belayServerSaving(function(selectee) {
           return genRequest({fields:{highlightee:selectee}});
-        }, true, launchInfo.toggleHighlight);
+        }, false, launchInfo.highlightApplicant);
         hladd.events.serverResponse.transform_e(function(sr) {appReloadsE.sendEvent(sr);});
         return (hladd.dom instanceof Behaviour ? hladd.dom : constant_b(hladd.dom));
       },applicantB,revsB)),'highlight-add');
@@ -331,7 +329,7 @@ $(function() {
         if(curAuth.role == 'admin') {
           var rejectBox = new CheckboxWidget(app.rejected).belayServerSaving(function(rej) {
             return genRequest({fields:{reject:(rej?'yes':'no')}});
-          }, true, launchInfo.rejectApplicant);
+          }, false, launchInfo.rejectApplicant);
           return PB('Reject Applicant? ',rejectBox.dom);
         }
         else {
@@ -343,7 +341,7 @@ $(function() {
         var isHidden = fold(function(v, acc) {return acc || v == curAuth.username;},false,app.hiddenunames);
         var hideBox = new CheckboxWidget(isHidden).belayServerSaving(function(hide) {
           return genRequest({fields:{hide:(hide?'yes':'no')}});
-        }, true, launchInfo.hideApplicant);
+        }, false, launchInfo.hideApplicant);
         return PB('Hide Applicant? ',hideBox.dom,' (this will stop you from seeing this applicant ever again, unless you specifically check "show hidden applicants" when filtering the applicant list.)');
       })),'hide');
     insertDomE(iframeLoad_e('upletter').transform_e(resultTrans('You have successfully uploaded the reference letter.')),'ls-result');

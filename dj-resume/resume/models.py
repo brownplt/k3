@@ -329,6 +329,10 @@ class Review(bcap.Grantable):
     if len(values) != 1:
       return None
     return Score(value=values[0], review=self, department=self.department)
+  def transfer_scores_from(self, other):
+    for other_score in Score.objects.filter(review=other):
+      s = Score(value=other_score.value, review=self, department=self.department)
+      s.save()
   applicant = models.ForeignKey(Applicant)
   reviewer = models.ForeignKey(Reviewer)
   ord = models.IntegerField(default=0)
@@ -445,8 +449,11 @@ class AuthCookie(bcap.Grantable):
   expires = models.IntegerField()
 
 class AppRevPair(bcap.Grantable):
-  def getReviews(self, draft):
+  def get_reviews(self, draft):
     return Review.objects.filter(applicant=self.applicant,\
       reviewer = self.reviewer, draft=draft)
+  def get_highlights(self):
+    return Highlight.objects.filter(applicant=self.applicant,\
+      highlightee=self.reviewer, department=self.applicant.department)
   applicant = models.ForeignKey(Applicant)
   reviewer = models.ForeignKey(Reviewer)
