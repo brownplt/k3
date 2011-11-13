@@ -27,7 +27,7 @@ $(function() {
   var tempServer = new CapServer();
   var emailAndCreate = tempServer.restore(hash);
   emailAndCreate.get(function(eAndC) {
-    window.belay.belayInit(makeBelayFrame, addFrame, eAndC.email);
+    window.belay.belayInit(makeBelayFrame, addFrame, eAndC.email, true);
 
     function error(message) {
       var left = $('.left-part');

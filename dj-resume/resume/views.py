@@ -55,14 +55,14 @@ def save_file(f, filename):
 def notFoundResponse():
   return bcap.bcapResponse({
     'emailError': True,
-    'message': 'We didn\'t recognize your email.  Please check what you \
-entered and try again'
+    'message': 'We didn\'t recognize your email address.  Please check what you \
+entered and try again.'
   })
 
 def emailErrorResponse():
   return bcap.bcapResponse({
     'emailError': True,
-    'message': 'We had trouble sending you a message.  If this problem \
+    'message': 'We had trouble sending your message.  If this problem \
 persists, contact the system maintainer.'
   })
 
@@ -441,16 +441,16 @@ class AddVerifiedApplicantHandler(bcap.CapHandler):
     auth_info = AuthInfo(
       email=ua.email, \
       # TODO(matt): fix or remove name from AuthInfo?
-      name='applicant name goes here',\
+      name='',\
       role='applicant', \
       department=ua.department)
     auth_info.save()
 
     applicant = Applicant(\
       auth = auth_info,\
-      firstname='applicant firstname',\
-      lastname='applicant lastname',\
-      country='applicant country',\
+      firstname='',\
+      lastname='',\
+      country='',\
       department=ua.department,\
       position=ua.position\
     )

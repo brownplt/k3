@@ -38,6 +38,7 @@ $(function() {
     $('#plt-login-frame').hide();
     $('#account-frame').hide();
     $('#create-account').hide();
+    $('#nobody').hide();
   }
 
   $('#loginplt').click(function(e) {
@@ -93,6 +94,9 @@ $(function() {
     console.log(data);
     clientLocation = data.clientLocation;
     clientEmail = data.email;
+    if(data.showCreate) {
+      $('#createplt').show();
+    }
     console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
       console.log("Unexpected message from client: ", e);
@@ -259,6 +263,10 @@ $(function() {
         console.log('Instance infos: ', instanceInfos, instanceInfos.length);
         if(instanceInfos.length > 0) {
           instanceChoice(instanceInfos);
+        }
+        else {
+          hideAll();
+          $('#nobody').fadeIn();
         }
         console.log('Done callback');
       });

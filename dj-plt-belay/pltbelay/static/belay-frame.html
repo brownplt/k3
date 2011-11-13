@@ -20,6 +20,12 @@
 #create-account {
   display: none;
 }
+#nobody {
+  display: none;
+}
+#createplt {
+  display: none;
+}
 #glogin {
   width: 80%;
   height: 50%;
@@ -32,23 +38,28 @@
 }
 </style>
 <body>
+<div id="nobody">
+No Resume accounts are associated with this login.  Did you follow the account
+creation link from your email to create an account?
+</div>
+
 <div id="login-frame">
 <p>
 <button id="glogin">Log in with Google</button>
 </p>
 <div style="font-size:small">
 
-<p>We prefer you use Google login, but you can also make an account just for
+<p>We prefer you use Google login, but you can also use an account just for
 Resume.<br/>
 <a href="javascript:void(0);" id="createplt">(Create an account)</a>
-<a href="javascript:void(0);" id="loginplt">(Log in)</a>
+<a href="javascript:void(0);" id="loginplt">(Log in with a Resume account)</a>
 </p>
 </div>
 </div>
 </div>
 <div id="plt-login-frame">
-Username: <input type="text" id="username-login" value=""></input>
-Password: <input type="password" id="password-login" value=""></input>
+Username <input type="text" id="username-login" value=""></input> <br/>
+Password <input type="password" id="password-login" value=""></input> <br/>
 <button id="plt-submit" value="Submit">Submit</button>
 </div>
 <div id="account-frame">
