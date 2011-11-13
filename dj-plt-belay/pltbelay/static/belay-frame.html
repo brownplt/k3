@@ -1,5 +1,7 @@
 <html>
 <head>
+
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
 <script src="/static/lib/js/caps.js"></script>
 <script src="/static/lib/js/postmessage.js"></script>
@@ -12,7 +14,7 @@
   display: none;
 }
 #plt-login-frame {
-  display: none;
+//  display: none;
 }
 #account-frame {
   display: none;
@@ -39,37 +41,52 @@
 </style>
 <body>
 <div id="nobody">
-No Resume accounts are associated with this login.  Did you follow the account
-creation link from your email to create an account?
+No Resume accounts are associated with this login.  You can start a new
+application with the button on the right.
 </div>
 
 <div id="login-frame">
 <p>
-<button id="glogin">Log in with Google</button>
-</p>
-<div style="font-size:small">
-
-<p>We prefer you use Google login, but you can also use an account just for
-Resume.<br/>
-<a href="javascript:void(0);" id="createplt">(Create an account)</a>
-<a href="javascript:void(0);" id="loginplt">(Log in with a Resume account)</a>
+<button id="glogin">Sign in with Google</button>
 </p>
 </div>
 </div>
+<div id="plt-login-frame" style="padding-top: 1em">
+<p>If you prefer to not use Google to login, you can use an account just for
+  Resume.
+  <a href="javascript:void(0);" id="createplt">(Create an account)</a></p>
+<p>Log in with an existing Resume account:</p>
+<div style="max-width:20em">
+<div style="height:2em">
+  <span>Email</span>
+  <input type="text" id="username-login" value="" style="float:right"></input>
 </div>
-<div id="plt-login-frame">
-Username <input type="text" id="username-login" value=""></input> <br/>
-Password <input type="password" id="password-login" value=""></input> <br/>
-<button id="plt-submit" value="Submit">Submit</button>
+<div style="height:2em">
+  <span>Password</span>
+  <input type="password" id="password-login" value="" style="float:right"></input>
+</div>
+<button id="plt-submit" value="Submit" style="float:right">Submit</button>
+</div>
 </div>
 <div id="account-frame">
+<h4>Your Existing Accounts:</h4>
 </div>
-<div id="create-account">
-Email: <input type="text" id="username-create" value=""></input>
-<span id='username-preset' style='display:none;'></span> <br/>
-Password: <input type="password" id="password1" value=""></input> <br/>
-Password again: <input type="password" id="password2" value=""></input> <br/>
-<button id="submit" value="Submit">Submit</button>
+<div id="create-account" style="max-width: 20em">
+<div id="email" style="height:2em">
+  <span>Email</span>
+  <input type="text" id="username-create" value="" style="float:right;"></input>
+  <span id='username-preset' style='display:none;float:right;'></span>
+</div>
+<div id="pwdiv1" style="height:2em">
+  <span>Password</span>
+  <input type="password" id="password1" value="" style="float:right"></input>
+</div>
+<div id="pwdiv2" style="height:2em">
+  <span>Password again</span>
+  <input type="password" id="password2" value="" style="float:right"></input>
+</div>
+<button id="submit" value="Submit" style="float:right">Submit</button>
+</div>
 </div>
 </body>
 </html>

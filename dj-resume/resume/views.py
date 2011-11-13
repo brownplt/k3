@@ -103,6 +103,11 @@ def make_index_handler(dept_name):
 cs_index_handler = make_index_handler('cs')
 bhort_index_handler = make_index_handler('bhort')
 
+def index_handler(request):
+  if (request.method != 'GET'):
+    return HttpResponseNotAllowed(['GET'])
+  return render_to_response('coming-soon.html', { })
+
 def make_get_handler(template):
   def handler(request):
     if request.method != 'GET':
@@ -989,11 +994,12 @@ To regain access your account once it has been created, visit:
 %s
 """
     emailstr = emailstr % (activate_url, return_url)
-    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email)
-    if emailResponse: return emailResponse
+#    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email)
+#    if emailResponse: return emailResponse
     resp = {\
       'success' : True,\
       'email' : email,\
+      'create_cap' : create_cap
     }
     return bcap.bcapResponse(resp)
 

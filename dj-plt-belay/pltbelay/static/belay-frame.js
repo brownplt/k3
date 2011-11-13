@@ -14,6 +14,7 @@ $(function() {
   var stationInfo;
   var clientLocation, clientEmail;
   var clientkey = null;
+  var loginEmail;
   var sessionToken;
   var capServer = new CapServer(newUUIDv4());
 
@@ -60,6 +61,7 @@ $(function() {
       pltLogin.post(
         { username : username, password : password },
         function(loginInfo) {
+          loginInfo.email = username;
           handleLoginInfo(loginInfo);
         },
         function(err) {
@@ -72,9 +74,8 @@ $(function() {
   });
 
   $('#createplt').click(function() {
-    $('#login-frame').hide();
-    $('#account-frame').hide();
-    $('#create-account').show();
+    hideAll();
+    $('#create-account').fadeIn();
     console.log('The client\'s email is: ', clientEmail);
     if (clientEmail) {
       $('#username-create').hide();
@@ -117,8 +118,6 @@ $(function() {
       handleLoginInfo(data.loginInfo);
     }
   };
-  $.pm.bind('login', function(data) {
-  });
 
   function launchWithLauncher(launchInfo, stasher, launcher) {
     console.log('Launching: ', launchInfo);
@@ -150,6 +149,7 @@ $(function() {
   function handleLoginInfo(loginInfo) {
     console.log("Login-infoing", loginInfo);
     makeStash = loginInfo.makeStash;
+    loginEmail = loginInfo.email;
     loginInfo.station.get(function(station_info) {
       stationInfo = station_info;
       console.log('station_info: ', station_info);
@@ -217,10 +217,9 @@ $(function() {
   function instanceChoice(instanceInfos) {
     console.log('Making an instance choice');
     var accountsDiv = $('#account-frame');
-    $('#login-frame').hide();
-    $('#create-account').hide();
+    hideAll();
     console.log('choicing: ', instanceInfos);
-    accountsDiv.show();
+    accountsDiv.fadeIn();
     instanceInfos.forEach(function(instance) {
       instance.get(function(instanceInfo) {
         var div = $('<div></div>');
@@ -319,8 +318,7 @@ $(function() {
     }
 
     function launchNonInstance() {
-      tunnel.sendOutpost(capServer.dataPreProcess({
-        services: {
+      var services = {
           becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
             stationInfo.newInstance.post(launchInfo, function(launched) {
               launch(launchInfo);
@@ -329,8 +327,12 @@ $(function() {
               console.log('belay_frame: Failed to create new instance: ', err);
               fk('failed');
             });
-          })
-        }
+          }),
+          loginEmail: loginEmail
+        };
+      console.log('services: ', services);
+      tunnel.sendOutpost(capServer.dataPreProcess({
+        services: services
       }));
     }
   }

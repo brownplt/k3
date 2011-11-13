@@ -9,16 +9,16 @@ $(function() {
     frame.css({
       border: 'none',
       width: '80%',
-      height: '95%',
-      'min-height': '20em',
-      'margin-top': '5em',
+      height: '100%',
+      'min-height': '24em',
+      'margin-top': '1em',
       'margin-left': '3em'
     });
     theFrame = frame;
     return frame;
   }
   function addFrame(frame) {
-    var right = $('.right-part');
+    var right = $('.left-part');
     right.append(frame);
   }
 
@@ -50,6 +50,33 @@ $(function() {
           function(err) {
           });
     });
+  });
+
+  onBelayReady(function(readyBundle) {
+    console.log('Belay is ready');
+    $('#start-new').fadeIn();
+    $('#newapp').click(function() {
+      createApplicant = capServer.restore(createApplicantCapURL);
+      createApplicant.get(function(positionCaps) {
+        var thePos;
+        for(var i in positionCaps) {
+          if(!positionCaps.hasOwnProperty(i)) continue;
+          thePos = positionCaps[i];
+          break;
+        }
+        console.log('thePos: ', thePos);
+        console.log('thePos: ', readyBundle);
+        thePos.post({email: readyBundle.belayBrowser.loginEmail}, function(response) {
+          response.create_cap.get(function(emailAndCreate) {
+            console.log('EAndC: ', emailAndCreate);
+            emailAndCreate.create.post({}, function(launchInfo) {
+              console.log('launch: ', emailAndCreate);
+              readyBundle.belayBrowser.becomeInstance.post(launchInfo);
+            });
+          });
+        });
+      });
+    })
   });
   
 });

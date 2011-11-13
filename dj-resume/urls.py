@@ -5,6 +5,7 @@ from django.conf.urls.defaults import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+  (r'^$', 'resume.views.index_handler'),
   (r'^cs/$', 'resume.views.cs_index_handler'),
   (r'^bhort/$', 'resume.views.bhort_index_handler'),
   (r'^cap/.*', 'belaylibs.dj_belay.proxyHandler'),
@@ -17,4 +18,3 @@ urlpatterns = patterns('',
   (r'^common.js$', 'lib.py.common_js.common_js_handler'),
   (r'^generate/$', 'resume.generate.generate')
 )
-

@@ -193,7 +193,11 @@ def glogin(request):
       'openid.identity' : 'http://specs.openid.net/auth/2.0/identifier_select',
       'openid.return_to' : '%s/glogin_landing/%s' % (settings.SITE_NAME, pending),
       'openid.realm' : settings.SITE_NAME,
-      'openid.mode' : 'checkid_setup'
+      'openid.mode' : 'checkid_setup',
+      'openid.ns.ax' : 'http://openid.net/srv/ax/1.0',
+      'openid.ax.mode' : 'fetch_request',
+      'openid.ax.type.email' : 'http://axschema.org/contact/email',
+      'openid.ax.required' : 'email'
   }
   params = encode_for_get(param_obj)
 
@@ -228,6 +232,7 @@ def glogin_landing(request):
     return logWith404(logger, "Bad pending: %s" % request.path_info, level='error')
 
   identity = d['openid.identity']
+  email = d['openid.ext1.value.email']
 
   q = GoogleCredentials.objects.filter(identity=identity)
   if len(q) == 0:
@@ -248,7 +253,8 @@ def glogin_landing(request):
     'clientkey': maybe_client_key,
     'station': account.station_url,
     'make_stash': bcap.regrant('make-stash', account).serialize(),
-    'site_name': settings.SITE_NAME
+    'site_name': settings.SITE_NAME,
+    'email': email
   })
   return response
 

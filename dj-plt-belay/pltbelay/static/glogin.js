@@ -3,6 +3,7 @@
 
     STATION : Serialized cap to get the account's station
     MAKESTASH : Serialized cap to create stashes for this account
+    EMAIL : The email from the openID provider
     CLIENTKEY : The secret shared with the opening iframe to prevent spoofing
 */
 
@@ -13,7 +14,8 @@ $(function() {
   window.opener.login(JSON.stringify({
       loginInfo: {
 	station: STATION,
-	makeStash: MAKESTASH
+	makeStash: MAKESTASH,
+        email: EMAIL
       },
       clientkey: CLIENTKEY
   }));
