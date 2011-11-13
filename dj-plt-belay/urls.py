@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('',
+  (r'^belay-frame/$', 'pltbelay.views.belay_frame'),
   (r'^create_plt_account/$', 'pltbelay.views.create_plt_account'),
   (r'^glogin/$', 'pltbelay.views.glogin'),
   (r'^glogin_landing/.*$', 'pltbelay.views.glogin_landing'),

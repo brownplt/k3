@@ -247,7 +247,8 @@ def glogin_landing(request):
   response = render_to_response('glogin.html', {
     'clientkey': maybe_client_key,
     'station': account.station_url,
-    'make_stash': bcap.regrant('make-stash', account).serialize()
+    'make_stash': bcap.regrant('make-stash', account).serialize(),
+    'site_name': settings.SITE_NAME
   })
   return response
 
@@ -286,3 +287,10 @@ def check_login(request):
   response['loggedIn'] = (len(sessions) > 0)
   return bcap.bcapResponse(response)
 
+def belay_frame(request):
+  if (request.method != 'GET'):
+    return HttpResponseNotAllowed(['GET'])
+
+  return render_to_response('belay-frame.html', {
+    'site_name' : settings.SITE_NAME
+  })

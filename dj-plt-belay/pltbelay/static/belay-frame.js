@@ -108,10 +108,6 @@ $(function() {
     console.log('maybe setting token: ', data);
     console.log('client key: ', clientkey);
     if(clientkey === data.clientkey) {
-      sessionToken = data.gid;
-      setCookie("session", 1, sessionToken);
-      console.log('setting token: ', sessionToken);
-      console.log('setting cookie: ', document.cookie);
       data.loginInfo.station = capServer.restore(data.loginInfo.station);
       data.loginInfo.makeStash = capServer.restore(data.loginInfo.makeStash);
       handleLoginInfo(data.loginInfo);
