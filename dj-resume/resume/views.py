@@ -378,7 +378,11 @@ class SubmitContactInfoHandler(bcap.CapHandler):
   def post(self, granted, args):
     applicant = granted.applicant
     for (key, val) in args.iteritems():
-      if key.find('comp-') == 0:
+      if key == 'comp-firstname':
+        applicant.firstname = val
+      elif key == 'comp-lastname':
+        applicant.lastname = val
+      elif key.find('comp-') == 0:
         id = key[5:]
         applicant.componentUpdate(id, val)
     return bcap.bcapResponse({'success' : True})
@@ -462,7 +466,7 @@ class AddVerifiedApplicantHandler(bcap.CapHandler):
       'public_data': 'Application for %s' % ua.email,
       'private_data': launch,
       'domain': bcap.this_server_url_prefix(),
-      'url': '/static/application.html'
+      'url': '/applicant/'
     })
 
 # Adds a new relationship with an admin

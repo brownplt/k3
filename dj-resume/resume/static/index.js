@@ -9,7 +9,8 @@ $(function() {
     frame.css({
       border: 'none',
       width: '80%',
-      height: '50%',
+      height: '95%',
+      'min-height': '20em',
       'margin-top': '5em',
       'margin-left': '3em'
     });

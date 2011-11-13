@@ -1,19 +1,3 @@
-function makeNameUpdateBoxes(info, updateCap) {
-  var nameBoxesB = DIVB([
-    TR(['First Name: ', TD(new TextInputWidget(info.firstname, 20)
-      .belayServerSaving(function(v) {
-        console.log('saving first name: ', v);
-        return {'fields' : {'firstname' : v}};
-      }, true, updateCap).dom)]),
-    TR(['Last Name: ', TD(new TextInputWidget(info.lastname, 20)
-      .belayServerSaving(function(v) {
-        console.log('saving last name: ', v);
-        return {'fields' : {'lastname' : v}};
-      }, true, updateCap).dom)])
-  ]);
-  insertDomB(nameBoxesB, 'nameboxes');
-}
-
 function ContactInfoRowWidget(ct,comp) {
 	if(ct.type == 'contactlong')
 	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,20]);
@@ -77,6 +61,10 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
+        ciWidgets.push(new ContactInfoRowWidget({ id: 'firstname', name: 'First Name', type: 'contactshort' },
+                                                { value: appInfo.firstname }))
+        ciWidgets.push(new ContactInfoRowWidget({ id: 'lastname', name: 'Last Name', type: 'contactshort' },
+                                                { value: appInfo.lastname }));
 	map(function(c) {
 		if(c.type == 'statement') {
 			var subWidg = INPUT({type:'submit',value:'OK'});
@@ -110,9 +98,7 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 							function(cifs) {
 								var fields = {};
 								map(function(c) {fields['comp-'+c.id] = c.value;},cifs);
-								return genRequest({
-									url:'Submitter/submitContactInfo',
-									fields:fields});
+								return genRequest({fields:fields});
 						}, true, submitContactInfo).dom;
 	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
 }
@@ -170,18 +156,10 @@ $(function () {
     var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
 
-    launchE.transform_e(function(li) {
-      appInfoB.lift_b(function(info) {
-        if (info !== null) {
-          console.log('calling makeNameUpdateBoxes: ', li.updateName);
-          makeNameUpdateBoxes(info, li.updateName);
-        }
-      });
-    });
-
     insertDomB(appInfoB.lift_b(function(info) {
       if (info && info.position && info.position.name) {
-        return "You are applying for the position of " + info.position.name + ".";
+        return "";
+//        return "You are applying for the position of " + info.position.name + ".";
       }
       else {
         return "";
