@@ -6,7 +6,7 @@ import time
 logger = logging.getLogger('default')
 
 def convert_time(secs):
-  return time.strftime("%A, %B %d, %I:%M %p",time.localtime(secs))
+  return time.strftime("%A, %B %d, %I:%M %p %Z",time.localtime(secs))
 
 class Department(bcap.Grantable):
   @classmethod
