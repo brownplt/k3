@@ -25,7 +25,7 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 			new TextInputWidget('',30),
 			new TextInputWidget('',40),
 			new TextInputWidget('',20)],
-			function(name,inst,email) {return [TD(name),TD(inst),TD(email)];})
+			function(name,inst,email) {return [TD(name),TD(inst),TD(email), SPAN()];})
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
 		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
 
