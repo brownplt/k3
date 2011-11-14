@@ -198,6 +198,7 @@ $(function() {
       'name': 'belay'
     });
     frame.css({
+      display: 'none',
       width: '30em',
       height: '30em'
     });

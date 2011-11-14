@@ -22,7 +22,7 @@ $(function() {
     right.append(frame);
   }
 
-  window.belay.belayInit(makeBelayFrame, addFrame);
+  window.belay.belayInit(makeBelayFrame, addFrame, {useName: false});
 
   var capServer = new CapServer();
   $('#create-relationship').click(function() {
