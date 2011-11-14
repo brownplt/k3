@@ -70,7 +70,7 @@ HASH_ITERATIONS = 20
 def get_hashed(rawpassword, salt):
   salted = rawpassword + salt
   for i in range(HASH_ITERATIONS):
-    m1 = hashlib.md5()
+    m1 = hashlib.sha1()
     m1.update(salted)
     salted = m1.hexdigest()
 

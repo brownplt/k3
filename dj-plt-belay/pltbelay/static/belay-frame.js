@@ -42,6 +42,12 @@ $(function() {
     $('#nobody').hide();
   }
 
+  $('#backtomain').click(function(e) {
+    hideAll();
+    $('#plt-login-frame').fadeIn();
+    $('#login-frame').fadeIn();
+  });
+
   $('#loginplt').click(function(e) {
     hideAll();
     $('#plt-login-frame').show();
@@ -198,6 +204,7 @@ $(function() {
           password : password1
         }, 
         function(loginInfo) {
+          loginInfo.email = username;
           handleLoginInfo(loginInfo);
         },
         failure);

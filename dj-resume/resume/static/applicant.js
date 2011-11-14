@@ -197,6 +197,10 @@ $(function () {
     var basicInfoB = basicInfoE.startsWith(null);
     var remindersB = launchE.transform_e(function(li) { return li.reminders; }).startsWith({});
 
+    basicInfoE.transform_e(function(bi) {
+      COMMON.setContact(bi.contact.serialize());
+    });
+
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
     var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
