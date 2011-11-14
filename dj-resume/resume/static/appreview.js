@@ -299,29 +299,53 @@ $(function() {
             {request:'post', fields:{}})), launchInfo.unhighlightApplicant).transform_e(function(unhl) {
                appReloadsE.sendEvent(unhl);
             });
-        }
-        else
+        } else {
           var rsLink = '';
+        }
         return P('This applicant has been brought to the attention of: ',applist,' ',rsLink);
+      } else {
+        return SPAN();
       }
-      else return SPAN();
     }),'highlight-list');
 
+    var selectorInitialized = false;
     insertDomB(
-      switch_b(lift_b(function(app,revs) {
+      lift_b(function(app,revs) {
         var hls = toObj(app.highlights,function(a) {return a.highlighteeName;});
-        var hladd = new SelectWidget(null,
-          map(function(revr) {return OPTION({value:revr.id,disabled:hls[revr.uname]?true:false},revr.uname);},
-            revs.sort(function(x,y) { return stringCmp(x.uname,y.uname); }))
-        ).withButton(
+        var revToHighlight = {};
+        map(function(revr) {
+          revToHighlight[revr.highlight.serialize()] = revr.highlight;
+        }, revs);
+
+        var sortedRevs = revs.sort(function(x,y) { return stringCmp(x.uname,y.uname); });
+
+        var selector = new SelectWidget(null,
+          map(function(revr) {return OPTION({value:revr.highlight.serialize(),disabled:hls[revr.uname]?true:false},revr.uname);},
+            sortedRevs));
+
+        var chooseE = selector.behaviors.value.changes().transform_e(function(v) {
+          console.log('selector changed!!!! v = ', v, revToHighlight);
+          return revToHighlight[v];
+        });
+
+        var wb = selector.withButton(
             new ButtonWidget('OK'),
             function(sel,btn) {return P('Bring this applicant to the attention of ',sel,btn);}
-        ).belayServerSaving(function(selectee) {
-          return genRequest({fields:{highlightee:selectee}});
-        }, false, launchInfo.highlightApplicant);
+        );
+
+        var hladd = wb.capStreamServerSaving(function(_) {
+          return genRequest({request:'post', fields:{}});
+        }, false, chooseE);
         hladd.events.serverResponse.transform_e(function(sr) {appReloadsE.sendEvent(sr);});
-        return (hladd.dom instanceof Behaviour ? hladd.dom : constant_b(hladd.dom));
-      },applicantB,revsB)),'highlight-add');
+
+        if (!selectorInitialized && revs.length > 0) {
+          console.log('initializing dropdown value to: ', sortedRevs[0].highlight.serialize());
+          selectorInitialized = true;
+          chooseE.sendEvent(sortedRevs[0].highlight.serialize());
+        }
+
+        return hladd.dom;
+      },applicantB,revsB),'highlight-add');
 
     insertDomB(
       switch_b(applicantB.transform_b(function(app) {

@@ -147,6 +147,7 @@ class ResumeInit():
         'unverifieduser-delete' : UnverifiedUserDeleteHandler,
         'unverifieduser-getpending' : UnverifiedUserGetPendingHandler,
         'get-reviewers' : GetReviewersHandler,
+        'appreview-get-reviewers' : AppReviewGetReviewersHandler,\
         'change-contacts' : ChangeContactsHandler,\
         'find-refs' : FindRefsHandler,\
         'get-basic' : GetBasicHandler,\
@@ -561,7 +562,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
     resp = {\
       'getBasic' : bcap.grant('get-basic', applicant.department),\
       'getApplicant' : bcap.grant('get-applicant', applicant),\
-      'getReviewers' : bcap.grant('get-reviewers', applicant.department),\
+      'getReviewers' : bcap.grant('appreview-get-reviewers', applicant),\
       'getReview' : bcap.grant('get-review', pair),\
       'setAreas' : bcap.grant('set-areas', applicant),\
       # setGender/Ethnicity mapped to changeApplicant
@@ -572,7 +573,6 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'uploadMaterial' : bcap.grant('upload-material', applicant),\
       'revertReview' : bcap.grant('revert-review', pair),\
       'submitReview' : bcap.grant('submit-review', pair),\
-      'highlightApplicant' : bcap.grant('highlight-applicant', pair),\
       'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', pair),\
@@ -1078,6 +1078,29 @@ class GetReviewersHandler(bcap.CapHandler):
   def get(self, grantable):
     reviewers = grantable.department.getReviewers()
     return bcap.bcapResponse(reviewers)
+
+class AppReviewGetReviewersHandler(bcap.CapHandler):
+  """
+  This handler differs from GetReviewersHandler in that it returns caps
+  for highlighting the applicant.
+  """
+  def pair_of(self, applicant, reviewer):
+    existing_pairs = applicant.getPairsOfReviewer(reviewer)
+    if len(existing_pairs) > 0:
+      return existing_pairs[0]
+    new_pair = AppRevPair(applicant=applicant, reviewer=reviewer)
+    new_pair.save()
+    return new_pair
+  def get(self, grantable):
+    applicant = grantable.applicant
+    reviewers = applicant.department.my(Reviewer)
+    return bcap.bcapResponse([\
+        { 'email' : r.auth.email,\
+          'name' : r.auth.name,\
+          'uname' : '%s (%s)' % (r.auth.name, r.auth.email),\
+          'role' : r.auth.role,\
+          'highlight' : bcap.grant('highlight-applicant', self.pair_of(applicant, r))\
+        } for r in reviewers])
 
 class ChangeContactsHandler(bcap.CapHandler):
   def post_arg_names(self):
