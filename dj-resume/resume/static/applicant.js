@@ -56,10 +56,12 @@ function makeLetterTable(basicInfo,appInfo,refReq,reminders) {
   }; 
   
 	var refsB = collect_b(appInfo.references,allNewLettersE,function(newref,existing) {return existing.concat([newref]);});
-  var errorB = allErrorsE.startsWith(SPAN());
+  insertDomE(allErrorsE.transform_e(function(dom) {
+    setTimeout(function() { $(dom).fadeOut(3000) }, 1000);
+    return dom;
+  }),'letter-result');
 
 	return DIVB(
-			errorB,
 			TABLEB({className:'input-table'},
 				appInfo.position.autoemail
           ? THEAD(TR(TH('Name'),TH('Institution(s)'),TH('Email'),
@@ -118,7 +120,11 @@ function makeAppTable(basicInfo, appInfo, submitContactInfo, submitStatement) {
 			statementDoms.push(
 				TRB(
 					TH(c.name),
-					TD(comps[c.id] ? SPAN('Last submitted '+comps[c.id].lastSubmittedStr+'; file size '+comps[c.id].value+' bytes') : SPAN('Not Yet Submitted ')),
+					TD(comps[c.id] ? 
+             DIV(SPAN('Submitted '+comps[c.id].lastSubmittedStr), 
+                 BR(),
+                 SPAN('File size '+comps[c.id].value+' bytes')) :
+             SPAN('Not yet submitted ')),
 					TDB(expandA.dom)));
 			statementDoms.push(TRB(TDB({colSpan:3},stmtDivB)));
 		}
@@ -223,10 +229,12 @@ $(function () {
     insertDomB(switch_b(lift_b(function(bi,ai,refReq,rms) {return (ai && bi && refReq && rms) ? makeLetterTable(bi,ai,refReq,rms) : DIVB();},
       basicInfoB,updatedAppInfoB, refReqB, remindersB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {
-          var rstr = 'Thank you for your submission!';
+          var rstr = '';
           if(!ssc.error)
             var rstr = 'We have received your '+ssc.component+'. '+rstr;
-          return toResultDom(ssc,rstr);
+          var result = toResultDom(ssc,rstr);
+          setTimeout(function() { $(result).fadeOut(3000) }, 1000);
+          return result;
     },stmtSubE,basicInfoB),'result');
     onLoadTimeE.sendEvent('Loaded!');
     ContactInfoRowWidget.prototype = new InputWidget();
