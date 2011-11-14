@@ -9,9 +9,13 @@ function ContactInfoRowWidget(ct,comp) {
 	this.behaviors.value = this.behaviors.value.transform_b(function(v) {return {id:ct.id,value:v};});
 }
 
-function makeLetterTable(basicInfo,appInfo,refReq) {
+function makeLetterTable(basicInfo,appInfo,refReq,reminders) {
+  var minLetters = basicInfo.minLetters || 3;
   var verifier = function(args) {
     return args.email !== '' && args.name !== '' && args.institution !== '';
+  };
+  var nameVerifier = function() {
+    return appInfo.firstname != '' && appInfo.lastname != '';
   };
   var toReqFn = function(val) {
 			return genRequest(
@@ -22,22 +26,37 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 			new TextInputWidget('',30),
 			new TextInputWidget('',40),
 			new TextInputWidget('',20)],
-			function(name,inst,email) {return [TD(name),TD(inst),TD(email)];})
+			function(name,inst,email) {return [TD(name),TD(inst),TD(email), SPAN()];})
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
-		.belayServerSaving(toReqFn, true, refReq, verifier);
+		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
 
-  // Clear the input table
-	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
-  .lift_e(function(elts) { map(function(elt) { elt.value = ''; },elts); });
-
-	var newLettersE = reqnew.events.serverResponse.filter_e(noErrors);
-	var refsB = collect_b(appInfo.references,newLettersE,function(newref,existing) {return existing.concat([newref]);});
-
-  var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
-  var clientErrorE = reqnew.events.value.transform_e(toReqFn)
-    .filter_e(function(v) {return !verifier(v.fields);})
-    .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
-  var errorB = serverErrorE.merge_e(clientErrorE).startsWith(SPAN());
+  var allNewLettersE = receiver_e();
+  var allErrorsE = receiver_e();
+  var mkNewReq = function() {
+    var reqnew = new CombinedInputWidget([
+			new TextInputWidget('',30),
+			new TextInputWidget('',40),
+			new TextInputWidget('',20)],
+			function(name,inst,email) {return [TD(name),TD(inst),TD(email), SPAN()];})
+	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
+		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
+    var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
+    var inputErrorE = reqnew.events.value.transform_e(toReqFn)
+      .filter_e(function(v) {return !verifier(v.fields);})
+      .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
+    var nameErrorE = reqnew.events.value.transform_e(toReqFn)
+      .filter_e(function(v) {return !nameVerifier(); })
+      .transform_e(function(v) {return toResultDom({error : 'Please enter your first and last name so we can tell your reference who you are.'}, ''); })
+    var errorsE = merge_e(serverErrorE, inputErrorE, nameErrorE).transform_e(function(v) { allErrorsE.sendEvent(v); });
+	  var newLettersE = reqnew.events.serverResponse.filter_e(noErrors).transform_e(function(v) { allNewLettersE.sendEvent(v) });
+    // Clear the input table
+  	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
+    .lift_e(function(elts) { map(function(elt) { elt.value = ''; },elts); });
+    return reqnew.dom;
+  }; 
+  
+	var refsB = collect_b(appInfo.references,allNewLettersE,function(newref,existing) {return existing.concat([newref]);});
+  var errorB = allErrorsE.startsWith(SPAN());
 
 	return DIVB(
 			errorB,
@@ -47,17 +66,33 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
                   TH('Received?')))
           : THEAD(TR(TH('Name'),TH('Institution(s)'),TH('Email'))),
 				TBODYB(
-					refsB.transform_b(function(refs) { return map(function(ref) {
-            return appInfo.position.autoemail
-              ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
-                   TD(ref.submitted?'Yes':'No'))
-              : TR(TD(ref.name),TD(ref.institution),TD(ref.email));
-          },refs);}),
-					reqnew.dom
+					refsB.transform_b(function(refs) {
+            var existing = map(function(ref) {
+              var remindCap = reminders[ref.email];
+              if (!remindCap) { remindCap = ref.reminder; }
+              var reminder = INPUT({disabled:ref.submitted,type:'button',value:'Send a Reminder'});
+              var remindE = clicks_e(reminder).transform_e(function(_) { return [remindCap, {}]; });
+              postE(remindE).transform_e(resultTrans('Your letter writer has been contacted.')).transform_e(function(v) { allErrorsE.sendEvent(v); });
+              return appInfo.position.autoemail
+                ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
+                     TD(ref.submitted?'Yes':'No'),
+                     ref.submitted ? SPAN() : reminder)
+                : TR(TD(ref.name),TD(ref.institution),TD(ref.email), SPAN(), 
+                     ref.submitted ? SPAN() : reminder);
+            },refs);
+            var existingLen = existing.length;
+            for(var i = existingLen; i < minLetters; i++) {
+              existing = existing.concat(mkNewReq());
+            }
+            if(existingLen >= minLetters) {
+              existing = existing.concat(mkNewReq());
+            }
+            return existing;
+          })
 				)));
 }
 
-function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
+function makeAppTable(basicInfo, appInfo, submitContactInfo, submitStatement) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
@@ -97,10 +132,15 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 						.belayServerSaving(
 							function(cifs) {
 								var fields = {};
-								map(function(c) {fields['comp-'+c.id] = c.value;},cifs);
+								map(function(c) {
+                  fields['comp-'+c.id] = c.value;
+                  if(c.id === 'firstname') { appInfo.firstname = c.value; }
+                  else if(c.id === 'lastname') { appInfo.lastname = c.value; }
+                  else { comps[c.id] = c.value; }
+                },cifs);
 								return genRequest({fields:fields});
 						}, true, submitContactInfo).dom;
-	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
+	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms)),appInfo];
 }
 
 $(function () {
@@ -149,6 +189,7 @@ $(function () {
     var launchE = getE(onLoadTimeE.constant_e(launchInfo)); 
     var basicInfoE = getE(launchE.transform_e(function(pd) { return pd.getBasic; }));
     var basicInfoB = basicInfoE.startsWith(null);
+    var remindersB = launchE.transform_e(function(li) { return li.reminders; }).startsWith({});
 
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
@@ -175,11 +216,12 @@ $(function () {
             basicInfoB,appInfoB,submitContactB, submitStatementB);
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
+    var updatedAppInfoB = contcompB.transform_b(function(_) {return _[2];});
 
     var refReqE = launchE.transform_e(function(pd) { return pd.requestReference; });
     var refReqB = refReqE.startsWith(null);
-    insertDomB(switch_b(lift_b(function(bi,ai,refReq) {return (ai && bi && refReq) ? makeLetterTable(bi,ai,refReq) : DIVB();},
-      basicInfoB,appInfoB, refReqB)),'letters');
+    insertDomB(switch_b(lift_b(function(bi,ai,refReq,rms) {return (ai && bi && refReq && rms) ? makeLetterTable(bi,ai,refReq,rms) : DIVB();},
+      basicInfoB,updatedAppInfoB, refReqB, remindersB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {
           var rstr = 'Thank you for your submission!';
           if(!ssc.error)

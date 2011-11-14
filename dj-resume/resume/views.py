@@ -160,6 +160,7 @@ class ResumeInit():
         'get-reviewer-email-and-create' : ReviewerEmailAndCreateHandler,\
         'get-admin-email-and-create' : AdminEmailAndCreateHandler,\
         'request-reference' : RequestReferenceHandler,\
+        'remind-reference' : RemindReferenceHandler,\
         'launch-reference' : LaunchReferenceHandler,\
         'reference-letter' : ReferenceLetterHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
@@ -245,8 +246,14 @@ class ApplicantLaunchHandler(bcap.CapHandler):
   def get(self, granted):
     applicant = granted.applicant
     department = applicant.department
+    references = applicant.getReferencesModel()
+    reminders = { }
+    for r in references:
+      reminders[r.email] = bcap.regrant('remind-reference', r)
+
     resp = {\
       'getBasic' : bcap.grant('get-basic', department),\
+      'reminders' : reminders,
       'requestReference' : bcap.grant('request-reference', applicant),\
       'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
       'submitStatement' : bcap.grant('submit-statement', applicant),\
@@ -254,6 +261,14 @@ class ApplicantLaunchHandler(bcap.CapHandler):
       'get' : bcap.grant('get-applicant', applicant)\
     }
     return bcap.bcapResponse(resp)
+
+class RemindReferenceHandler(bcap.CapHandler):
+  def post_arg_names(self): return []
+
+  def post(self, grantable, args):
+    reference = grantable.reference
+    sendReferenceRequest(reference.applicant, reference)
+    return bcap.bcapResponse({ 'success' : True })
 
 class ApplicantUpdateNameHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -378,7 +393,9 @@ class RequestReferenceHandler(bcap.CapHandler):
     if applicant.position.autoemail:
       # TODO: implement sendReferenceRequest
       sendReferenceRequest(applicant, ref)
-    return bcap.bcapResponse(ref.to_json())
+    resp = ref.to_json()
+    resp['reminder'] = bcap.regrant('remind-reference', ref)
+    return bcap.bcapResponse(resp)
 
 class SubmitContactInfoHandler(bcap.CapHandler):
   def post(self, granted, args):

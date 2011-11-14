@@ -159,6 +159,8 @@ class Applicant(bcap.Grantable):
       type=component_type)
   def getReferences(self):
     return [r.to_json() for r in Reference.objects.filter(applicant=self)]
+  def getReferencesModel(self):
+    return [r for r in Reference.objects.filter(applicant=self)]
   def getReferencesOfEmail(self, email):
     return [r.to_json() for r in Reference.objects.filter(applicant=self, email=email)]
   def componentUpdate(self, id, val):
@@ -427,7 +429,7 @@ class Reference(bcap.Grantable):
   filesize = models.IntegerField()
   name = models.TextField()
   institution = models.TextField()
-  email = models.EmailField()
+  email = models.EmailField(unique=True)
   department = models.ForeignKey(Department)
   lastRequested = models.IntegerField(default=0)
   filename = models.TextField()
