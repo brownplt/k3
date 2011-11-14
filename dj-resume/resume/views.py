@@ -165,6 +165,7 @@ class ResumeInit():
         'reference-letter' : ReferenceLetterHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
         'get-applicant' : GetApplicantHandler,\
+        'apprev-get-applicant' : AppReviewGetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
         'get-review' : GetReviewHandler,\
         'change-applicant' : ChangeApplicantHandler,\
@@ -175,7 +176,7 @@ class ResumeInit():
         'revert-review' : RevertReviewHandler,\
         'submit-review' : SubmitReviewHandler,\
         'highlight-applicant' : HighlightApplicantHandler,\
-        'unhighligh-applicant' : UnhighlightApplicantHandler,\
+        'unhighlight-applicant' : UnhighlightApplicantHandler,\
         'reject-applicant' : RejectApplicantHandler,\
         'hide-applicant' : HideApplicantHandler,\
         'set-areas' : SetAreasHandler,\
@@ -417,6 +418,17 @@ class GetApplicantHandler(bcap.CapHandler):
     applicant = granted.applicant
     return bcap.bcapResponse(applicant.to_json())
 
+class AppReviewGetApplicantHandler(bcap.CapHandler):
+  """
+  Compared to GetApplicantHandler, this also returns a boolean reflecting
+  whether the applicant-reviewer pair is currently highlighted.
+  """
+  def get(self, granted):
+    pair = granted.apprevpair
+    applicant_info = pair.applicant.to_json()
+    applicant_info['isPairHighlighted'] = len(pair.get_highlights()) > 0
+    return bcap.bcapResponse(applicant_info)
+
 class SubmitStatementHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['comp']
@@ -578,7 +590,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
     applicant = pair.applicant
     resp = {\
       'getBasic' : bcap.grant('get-basic', applicant.department),\
-      'getApplicant' : bcap.grant('get-applicant', applicant),\
+      'getApplicant' : bcap.grant('apprev-get-applicant', pair),\
       'getReviewers' : bcap.grant('appreview-get-reviewers', applicant),\
       'getReview' : bcap.grant('get-review', pair),\
       'setAreas' : bcap.grant('set-areas', applicant),\

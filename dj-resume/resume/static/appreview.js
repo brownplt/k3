@@ -292,8 +292,7 @@ $(function() {
     insertDomB(applicantB.transform_b(function(app) {
       if(app.highlights.length > 0) {
         var applist = fold(function(v, acc) {return (acc == '' ? v.highlighteeName : acc+', '+v.highlighteeName);},'',app.highlights);
-        var remSelf = fold(function(v, acc) {return (v.highlighteeName == curAuth.username ? true : acc);},false,app.highlights);
-        if(remSelf) {
+        if (app.isPairHighlighted) {
           var rsLink = A({href:'javascript:undefined',className:'remself'},'(remove me)');
           belayGetWSO_e(extractEvent_e(rsLink,'click').constant_e(genRequest(
             {request:'post', fields:{}})), launchInfo.unhighlightApplicant).transform_e(function(unhl) {
