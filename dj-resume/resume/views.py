@@ -385,8 +385,10 @@ class SubmitContactInfoHandler(bcap.CapHandler):
     for (key, val) in args.iteritems():
       if key == 'comp-firstname':
         applicant.firstname = val
+        applicant.save()
       elif key == 'comp-lastname':
         applicant.lastname = val
+        applicant.save()
       elif key.find('comp-') == 0:
         id = key[5:]
         applicant.componentUpdate(id, val)
