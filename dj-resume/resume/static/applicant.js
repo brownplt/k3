@@ -10,6 +10,7 @@ function ContactInfoRowWidget(ct,comp) {
 }
 
 function makeLetterTable(basicInfo,appInfo,refReq) {
+  var minLetters = basicInfo.minLetters || 3;
   var verifier = function(args) {
     return args.email !== '' && args.name !== '' && args.institution !== '';
   };
@@ -29,21 +30,33 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
 		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
 
-  // Clear the input table
-	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
-  .lift_e(function(elts) { map(function(elt) { elt.value = ''; },elts); });
-
-	var newLettersE = reqnew.events.serverResponse.filter_e(noErrors);
-	var refsB = collect_b(appInfo.references,newLettersE,function(newref,existing) {return existing.concat([newref]);});
-
-  var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
-  var inputErrorE = reqnew.events.value.transform_e(toReqFn)
-    .filter_e(function(v) {return !verifier(v.fields);})
-    .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
-  var nameErrorE = reqnew.events.value.transform_e(toReqFn)
-    .filter_e(function(v) {return !nameVerifier(); })
-    .transform_e(function(v) {return toResultDom({error : 'Please enter your first and last name so we can tell your reference who you are.'}, ''); })
-  var errorB = serverErrorE.merge_e(inputErrorE, nameErrorE).startsWith(SPAN());
+  var allNewLettersE = receiver_e();
+  var allErrorsE = receiver_e();
+  var mkNewReq = function() {
+    var reqnew = new CombinedInputWidget([
+			new TextInputWidget('',30),
+			new TextInputWidget('',40),
+			new TextInputWidget('',20)],
+			function(name,inst,email) {return [TD(name),TD(inst),TD(email), SPAN()];})
+	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
+		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
+    var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
+    var inputErrorE = reqnew.events.value.transform_e(toReqFn)
+      .filter_e(function(v) {return !verifier(v.fields);})
+      .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
+    var nameErrorE = reqnew.events.value.transform_e(toReqFn)
+      .filter_e(function(v) {return !nameVerifier(); })
+      .transform_e(function(v) {return toResultDom({error : 'Please enter your first and last name so we can tell your reference who you are.'}, ''); })
+    var errorsE = merge_e(serverErrorE, inputErrorE, nameErrorE).transform_e(function(v) { allErrorsE.sendEvent(v); });
+	  var newLettersE = reqnew.events.serverResponse.filter_e(noErrors).transform_e(function(v) { allNewLettersE.sendEvent(v) });
+    // Clear the input table
+  	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
+    .lift_e(function(elts) { map(function(elt) { elt.value = ''; },elts); });
+    return reqnew.dom;
+  }; 
+  
+	var refsB = collect_b(appInfo.references,allNewLettersE,function(newref,existing) {return existing.concat([newref]);});
+  var errorB = allErrorsE.startsWith(SPAN());
 
 	return DIVB(
 			errorB,
@@ -53,13 +66,22 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
                   TH('Received?')))
           : THEAD(TR(TH('Name'),TH('Institution(s)'),TH('Email'))),
 				TBODYB(
-					refsB.transform_b(function(refs) { return map(function(ref) {
-            return appInfo.position.autoemail
-              ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
-                   TD(ref.submitted?'Yes':'No'))
-              : TR(TD(ref.name),TD(ref.institution),TD(ref.email));
-          },refs);}),
-					reqnew.dom
+					refsB.transform_b(function(refs) {
+            var existing = map(function(ref) {
+              return appInfo.position.autoemail
+                ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
+                     TD(ref.submitted?'Yes':'No'))
+                : TR(TD(ref.name),TD(ref.institution),TD(ref.email));
+            },refs);
+            var existingLen = existing.length;
+            for(var i = existingLen; i < minLetters; i++) {
+              existing = existing.concat(mkNewReq());
+            }
+            if(existingLen >= minLetters) {
+              existing = existing.concat(mkNewReq());
+            }
+            return existing;
+          })
 				)));
 }
 
