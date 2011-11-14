@@ -13,6 +13,9 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
   var verifier = function(args) {
     return args.email !== '' && args.name !== '' && args.institution !== '';
   };
+  var nameVerifier = function() {
+    return appInfo.firstname != '' && appInfo.lastname != '';
+  };
   var toReqFn = function(val) {
 			return genRequest(
 				{fields:{name:val[0],institution:val[1],email:val[2]}});
@@ -24,7 +27,7 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 			new TextInputWidget('',20)],
 			function(name,inst,email) {return [TD(name),TD(inst),TD(email)];})
 	    .withButton(new ButtonWidget(appInfo.position.autoemail ? 'Add Reference' : 'Enter Reference'),function(ci,btn) {return [TR(ci,TD(btn))];})
-		.belayServerSaving(toReqFn, true, refReq, verifier);
+		.belayServerSaving(toReqFn, true, refReq, function(args) { return verifier(args) && nameVerifier(); });
 
   // Clear the input table
 	reqnew.events.serverResponse.snapshot(reqnew.behaviors.inputElems)
@@ -34,10 +37,13 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 	var refsB = collect_b(appInfo.references,newLettersE,function(newref,existing) {return existing.concat([newref]);});
 
   var serverErrorE = reqnew.events.serverResponse.transform_e(resultTrans(appInfo.position.autoemail ? 'Your letter writer has been contacted.' : ''));
-  var clientErrorE = reqnew.events.value.transform_e(toReqFn)
+  var inputErrorE = reqnew.events.value.transform_e(toReqFn)
     .filter_e(function(v) {return !verifier(v.fields);})
     .transform_e(function(v) {return toResultDom({error : 'Please provide values for name, institution, and email'}, ''); })
-  var errorB = serverErrorE.merge_e(clientErrorE).startsWith(SPAN());
+  var nameErrorE = reqnew.events.value.transform_e(toReqFn)
+    .filter_e(function(v) {return !nameVerifier(); })
+    .transform_e(function(v) {return toResultDom({error : 'Please enter your first and last name so we can tell your reference who you are.'}, ''); })
+  var errorB = serverErrorE.merge_e(inputErrorE, nameErrorE).startsWith(SPAN());
 
 	return DIVB(
 			errorB,
@@ -57,7 +63,7 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 				)));
 }
 
-function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
+function makeAppTable(basicInfo, appInfo, submitContactInfo, submitStatement) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
@@ -97,10 +103,15 @@ function makeAppTable(basicInfo,appInfo, submitContactInfo, submitStatement) {
 						.belayServerSaving(
 							function(cifs) {
 								var fields = {};
-								map(function(c) {fields['comp-'+c.id] = c.value;},cifs);
+								map(function(c) {
+                  fields['comp-'+c.id] = c.value;
+                  if(c.id === 'firstname') { appInfo.firstname = c.value; }
+                  else if(c.id === 'lastname') { appInfo.lastname = c.value; }
+                  else { comps[c.id] = c.value; }
+                },cifs);
 								return genRequest({fields:fields});
 						}, true, submitContactInfo).dom;
-	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms))];
+	return [ciTblB,TABLEB({className:'app-components'},TBODYB(statementDoms)),appInfo];
 }
 
 $(function () {
@@ -175,11 +186,12 @@ $(function () {
             basicInfoB,appInfoB,submitContactB, submitStatementB);
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[0];})),'contact');
     insertDomB(switch_b(contcompB.transform_b(function(_) {return _[1];})),'materials');
+    var updatedAppInfoB = contcompB.transform_b(function(_) {return _[2];});
 
     var refReqE = launchE.transform_e(function(pd) { return pd.requestReference; });
     var refReqB = refReqE.startsWith(null);
     insertDomB(switch_b(lift_b(function(bi,ai,refReq) {return (ai && bi && refReq) ? makeLetterTable(bi,ai,refReq) : DIVB();},
-      basicInfoB,appInfoB, refReqB)),'letters');
+      basicInfoB,updatedAppInfoB, refReqB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {
           var rstr = 'Thank you for your submission!';
           if(!ssc.error)
