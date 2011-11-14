@@ -9,7 +9,7 @@ function ContactInfoRowWidget(ct,comp) {
 	this.behaviors.value = this.behaviors.value.transform_b(function(v) {return {id:ct.id,value:v};});
 }
 
-function makeLetterTable(basicInfo,appInfo,refReq) {
+function makeLetterTable(basicInfo,appInfo,refReq,reminders) {
   var minLetters = basicInfo.minLetters || 3;
   var verifier = function(args) {
     return args.email !== '' && args.name !== '' && args.institution !== '';
@@ -68,10 +68,17 @@ function makeLetterTable(basicInfo,appInfo,refReq) {
 				TBODYB(
 					refsB.transform_b(function(refs) {
             var existing = map(function(ref) {
+              var remindCap = reminders[ref.email];
+              if (!remindCap) { remindCap = ref.reminder; }
+              var reminder = INPUT({disabled:ref.submitted,type:'button',value:'Send a Reminder'});
+              var remindE = clicks_e(reminder).transform_e(function(_) { return [remindCap, {}]; });
+              postE(remindE).transform_e(resultTrans('Your letter writer has been contacted.')).transform_e(function(v) { allErrorsE.sendEvent(v); });
               return appInfo.position.autoemail
                 ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
-                     TD(ref.submitted?'Yes':'No'))
-                : TR(TD(ref.name),TD(ref.institution),TD(ref.email));
+                     TD(ref.submitted?'Yes':'No'),
+                     ref.submitted ? SPAN() : reminder)
+                : TR(TD(ref.name),TD(ref.institution),TD(ref.email), SPAN(), 
+                     ref.submitted ? SPAN() : reminder);
             },refs);
             var existingLen = existing.length;
             for(var i = existingLen; i < minLetters; i++) {
@@ -182,6 +189,7 @@ $(function () {
     var launchE = getE(onLoadTimeE.constant_e(launchInfo)); 
     var basicInfoE = getE(launchE.transform_e(function(pd) { return pd.getBasic; }));
     var basicInfoB = basicInfoE.startsWith(null);
+    var remindersB = launchE.transform_e(function(li) { return li.reminders; }).startsWith({});
 
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
@@ -212,8 +220,8 @@ $(function () {
 
     var refReqE = launchE.transform_e(function(pd) { return pd.requestReference; });
     var refReqB = refReqE.startsWith(null);
-    insertDomB(switch_b(lift_b(function(bi,ai,refReq) {return (ai && bi && refReq) ? makeLetterTable(bi,ai,refReq) : DIVB();},
-      basicInfoB,updatedAppInfoB, refReqB)),'letters');
+    insertDomB(switch_b(lift_b(function(bi,ai,refReq,rms) {return (ai && bi && refReq && rms) ? makeLetterTable(bi,ai,refReq,rms) : DIVB();},
+      basicInfoB,updatedAppInfoB, refReqB, remindersB)),'letters');
     insertDomE(combine_eb(function(ssc,bi) {
           var rstr = 'Thank you for your submission!';
           if(!ssc.error)
