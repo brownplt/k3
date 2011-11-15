@@ -5,6 +5,7 @@ from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Sta
 from xml.dom import minidom
 import logging
 import uuid
+import urllib
 import urllib2
 from urlparse import urlparse
 import hashlib
@@ -231,6 +232,28 @@ def glogin_landing(request):
   if not maybe_client_key:
     return logWith404(logger, "Bad pending: %s" % request.path_info, level='error')
 
+  # 11.4.2 Verifying directly with the OpenID Provider
+  # 11.4.2.1.  Request Parameters
+  #   . openid.mode
+  #         Value: "check_authentication"
+  #   . Exact copies of all fields from the authentication response, except
+  #     for "openid.mode".
+  # http://openid.net/specs/openid-authentication-2_0.html#check_auth
+  verify = {}
+  for e in d:
+    verify[e] = d[e]
+  verify['openid.mode'] = 'check_authentication'
+
+  try:
+    f = urllib2.urlopen("https://www.google.com/accounts/o8/ud", urllib.urlencode(verify))
+    beginning = str(f.read()[0:13]) 
+    
+    if(beginning != 'is_valid:true'):
+      return bcap.bcapResponse('fail')
+  except urllib2.HTTPError as e:
+    logger.error("ErrorResponse: %s" % e.read())
+    return bcap.bcapNullResponse()
+    
   identity = d['openid.identity']
   email = d['openid.ext1.value.email']
 
