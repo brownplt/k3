@@ -1,4 +1,7 @@
 $(function() {
+
+  COMMON.setContact(contactURL);
+
   var theFrame;
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');

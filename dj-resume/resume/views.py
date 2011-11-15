@@ -95,7 +95,8 @@ def make_index_handler(dept_name):
     except Exception as e:
       return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
     return render_to_response('index.html', {
-      'create_applicant': cap.serialize()
+      'create_applicant': cap.serialize(),
+      'contact': bcap.grant('contact-info', dept).serialize()
     })
 
   return index_handler
@@ -122,6 +123,7 @@ review_handler = make_get_handler('review.html')
 admin_handler = make_get_handler('admin.html')
 new_account_handler = make_get_handler('new_account.html')
 applicant_handler = make_get_handler('application.html')
+contact_handler = make_get_handler('contact.html')
 
 # Django middleware class to set handlers on every request
 class ResumeInit():
@@ -164,6 +166,7 @@ class ResumeInit():
         'launch-reference' : LaunchReferenceHandler,\
         'reference-letter' : ReferenceLetterHandler,\
         'submit-contact-info' : SubmitContactInfoHandler,\
+        'contact-info' : ContactHandler,
         'get-applicant' : GetApplicantHandler,\
         'apprev-get-applicant' : AppReviewGetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
@@ -1165,6 +1168,11 @@ class FindRefsHandler(bcap.CapHandler):
     refs = grantable.department.findRefs(args['email'])
     return bcap.bcapResponse(refs)
 
+class ContactHandler(bcap.CapHandler):
+  def get(self, granted):
+    dept = granted.department
+    return bcap.bcapResponse(dept.contact_json())
+
 class GetBasicHandler(bcap.CapHandler):
   def get(self, granted):
     basic_info = granted.department.getBasic()
@@ -1191,6 +1199,7 @@ class GetBasicHandler(bcap.CapHandler):
       } for s in basic_info['scores']]
     basic_info['scores'] = response_scores
     basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
+    basic_info['contact'] = bcap.regrant('contact-info', granted.department)
     return bcap.bcapResponse(basic_info)
 
 class SetBasicHandler(bcap.CapHandler):

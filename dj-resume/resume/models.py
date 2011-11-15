@@ -64,6 +64,14 @@ class Department(bcap.Grantable):
       'contactEmail' : self.contactEmail,\
       'techEmail' : self.techEmail\
     }
+  def contact_json(self):
+    return {\
+      'name' : self.name,\
+      'shortname' : self.shortname,\
+      'contactName' : self.contactName,\
+      'contactEmail' : self.contactEmail,\
+      'techEmail' : self.techEmail\
+    }
   # TODO(matt): bad to look up things by ID, but again, the frontend is written
   # this way
   def get_by_id(self, cls, id):
