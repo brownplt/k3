@@ -204,7 +204,7 @@ $(function() {
           password : password1
         }, 
         function(loginInfo) {
-          loginInfo.email = username;
+          loginInfo.email = uname;
           handleLoginInfo(loginInfo);
         },
         failure);
