@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-    <title>Review Applicants</title>
+		<title>Job Application</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
     <!--[if IE]>
@@ -31,152 +31,107 @@
   <img id="resume" src="/static/images/resume.png"></img>
 </h1>
 
+
 <div id="atbl" style="display: none;">
 
 <div class="applicant-list">
-  <fieldset class="list-filter">
 
-  <legend>
-  Filter Applicants <a id="toggleFilters" href="javascript:undefined"></a>
-  </legend>
+<fieldset class="list-filter">
+<legend>
+<a id="toggleFilters" href="javascript:undefined">Filter Applicants</a>
+</legend>
 
 <div id="allFilters" style="display: none">
 
+<div><span id="nameFilterLabel">Name: </span>
+<input id="nameFilter" type="text" size="20"/></div>
 
-  <fieldset class="filter-list" style="margin-left:0px">
-  <legend>Applicant Data <a id="toggleAppData" href="javascript:undefined"></a></legend>
-<div id="appDataFilters">
+<div id="filterArea">
+<div id="filterAreaCheckboxes"> <!-- Areas filled in here --></div>
+<div>
+<input type="radio" name="areaFilterType" checked="true" id="af_any"
+       value="any">
+Match Any Selected Area
+</input>
+<input type="radio" name="areaFilterType" id="af_all" value="all">
+Match All Selected Areas
+</input>
+<input type="radio" name="areaFilterType" id="af_none" value="none">
+No Areas Assigned
+</input>
+</div>
+</div> <!-- filterArea -->
+
+<div id="filterReviewSection">Application has 
+<select id="filterReviewType">
+<option selected value="none">(select one)</option>
+<option value="comment">comments</option>
+<option value="review">reviews</option>
+<option value="noreview">no reviews</option>
+</select> 
+by <input type="text" id ="filterReviewer" size="20" value="me"></input>.
+</div> <!-- filterReviewSection -->
+
+<div id="letterFilterSection">
+Application has letters by 
+<input id="letterFilter" type="text" size="20"></input>.
+</div>
+
+<div id="filterNumReviewsSection">
+Application has fewer than <input type="text" size="5" id="filterReviewLimit">
+reviews.
+</div>
+
+<div id="filterNumLettersSection">
+Application has at least <input type="text" size="5" id="filterLetterLimit"> 
+letters of reference.
+</div>
+
+<fieldset class="list-filter">
+<legend>
+Additional Filters
+</legend>
+
+<div id="filterScore"></div>
+
+</fieldset>
 
 
-  <fieldset style="margin-left:0px">
-  <legend>Areas</legend>
-  <div id="filterArea">
-  <div id="filterAreaCheckboxes"> <!-- Areas filled in here --></div>
+<div>
+<input type="checkbox" id="filterTS">
+With Teaching Statement
+</input>
+<input type="checkbox" id="filterCL">
+With Cover Letter
+</input>
+<input type="checkbox" id="filterCV">
+With Curriculum Vitae
+</input>
+<input type="checkbox" id="filterRS">
+With Research Statement
+</input>
+</div>
 
-  <div>
-    <input type="radio" name="areaFilterType" checked="true" id="af_any"
-    value="any">
-    Match Any Selected Area
-    </input>
-    <input type="radio" name="areaFilterType" id="af_all" value="all">
-    Match All Selected Areas
-    </input>
-  </div>
+<div>
+<input type="checkbox" id="filterHidden">
+Show Hidden Applicants
+</input>
+<input type="checkbox" id="filterRejected">
+Show Rejected Applicants
+</input>
+</div>
 
-  <div id="noAreasFilterArea">
-    <input type="checkbox" id="noAreasFilter">
-    Applicant has no labeled areas.
-    </input>
-  </div>
+</div> <!-- allFilters -->
 
-  </div> <!-- filterArea -->
-  </fieldset>
-<div><span id="nameFilterLabel">Applicant's name contains: </span>
-  <input id="nameFilter" type="text" size="20"/></div>
-  <div id="letterFilterSection">
-    Application has reference letters written by 
-    <input id="letterFilter" type="text" size="20"></input>.
-  </div>
+</fieldset>
+</div>
 
-  <div id="filterNumLettersSection">
-    Application has at least <input type="text" size="5" id="filterLetterLimit"> 
-    letters of reference.
-  </div>
+</div> <!-- atbl -->
 
-  <div id="filterLessNumLettersSection">
-    Application has less than <input type="text" size="5" id="filterLessLetterLimit"> 
-    letters of reference.
-  </div>
+<div id="loading" style="display: block; background: #fff; padding: 2em;">
+<em>Loading. Please wait...</em>
+</div>
 
-  <div id="institutionFilterSection">
-    Applicant attended the institution 
-    <input id="institutionFilter" type="text" size="20"</input>
-  </div>
-  </div>
-  </fieldset>
-
-  <fieldset class="list-filter" style="margin-left:0px">
-  <legend>Reviews <a id="toggleReview" href="javascript:undefined"></a></legend>
-  <div id="reviewFilters">
-  <div id="filterReviewSection">Application has 
-    <select id="filterReviewType">
-      <option selected value="none">(select one)</option>
-      <option value="comment">comments by</option>
-      <option value="review">reviews by</option>
-      <option value="noreview">no reviews by</option>
-      <option value="referral">been referred to</option>
-    </select> 
-    <input type="text" id ="filterReviewer" size="20" value="me"></input>.
-    <br/>
-  </div> <!-- filterReviewSection -->
-
-  <div id="filterNumReviewsSection">
-    Application has fewer than <input type="text" size="5" id="filterReviewLimit">
-    reviews.
-  </div>
-
-  <div id="filterGreaterNumReviewsSection">
-    Application has more than <input type="text" size="5" id="filterGreaterReviewLimit">
-    reviews.
-  </div>
-
-  <div id="filterDraftSection">
-    <input type="checkbox" id="filterDraft">I have written draft comments for this application.</input>
-  </div>
-
-  </div>
-  </fieldset>
-  
-
-  <fieldset class="list-filter" style="margin-left:0px">
-  <legend>
-  Composable filters 
-  <a id="toggleComposable" href="javascript:undefined" ></a>
-  </legend>
-  <div id="filterComposable">
-  <div id="filterScore"></div>
-  </div>
-  </fieldset>
-
-  <div>
-    <input type="checkbox" id="filterTR">
-    With Transcripts
-    </input>
-    <input type="checkbox" id="filterNoTR">
-    Without Transcripts
-    </input>
-    <input type="checkbox" id="filterFA">
-    With Full Application
-    </input>
-
-  </div>
-
-  <div>
-    <input type="checkbox" id="filterHidden">
-    Show Hidden Applicants
-    </input>
-    <input type="checkbox" id="filterRejected">
-    Show Rejected Applicants
-    </input>
-    <input type="checkbox" id="filterAccepted">
-    Show Accepted Applicants
-    </input>
-  </div>
-
-  </div> <!-- allFilters -->
-
-  </fieldset>
-
-  <div id="downloadCSV"></div>
-
-  </div>
-
-  </div> <!-- atbl -->
-
-  <div id="loading" style="display: block; background: #fff; padding: 2em;">
-    <em>Loading. Please wait...</em>
-  </div>
-
-		<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>. Questions? Comments? <a href="contact.html">Contact Us.</a></div>
+<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>. Questions? Comments? <a href="contact.html">Contact Us.</a></div>
   </body>
   </html>

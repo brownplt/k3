@@ -524,14 +524,10 @@ $(function() {
   });
 });
 
-function toggleDisplay(elt,titleElt,hideShowE) { 
-  titleElt.innerHTML += (elt.style.display == 'none' ? 
-			 '[show]'
-			 : '[hide]');
+function toggleDisplay(elt,hideShowE) { 
   hideShowE.lift_e(function(isVisible) {
-      elt.style.display = isVisible ? 'block': 'none';
-      titleElt.innerHTML = isVisible ? '[hide]' : '[show]';
-    });
+    elt.style.display = isVisible ? 'block': 'none';
+  });
 };
 
 function grayOut(isInUse) { return isInUse ? 'black' : 'gray'; };
@@ -567,50 +563,27 @@ function nameFilter() {
   getObj('nameFilter').value = getCookie("nameFilter") || "";
 
   insertValueB($B('nameFilter').lift_b(function(name) { 
-	return name ? 'black' : 'gray';
-      }), getObj('nameFilterLabel'),'style','color');
+    return name ? 'black' : 'gray';
+  }), getObj('nameFilterLabel'),'style','color');
 
  
   return $B('nameFilter').lift_b(function(name) {
-      setCookie("nameFilter",30,name);
-      return name == "" 
-	? filterNone 
-	: function(applicant) {
-	return applicant.info.name.toLowerCase()
-	.indexOf(name.toLowerCase()) != -1;
-      };
-    });
+    setCookie("nameFilter",30,name);
+    return name == "" 
+      ? filterNone 
+      : function(applicant) {
+          return applicant.info.name.toLowerCase()
+                 .indexOf(name.toLowerCase()) != -1;
+        };
+  });
 };
-
-
-function noAreaFilter(basicInfo) {
-  var initCookie = getCookie('noAreaFilter');
-  var checked_b = extractValue_b('noAreasFilter');
-  var isInUse = function(checkbox) { return checkbox; }
-
-  insertValueB(checked_b.lift_b(isInUse).lift_b(grayOut),
-	       getObj('noAreasFilterArea'), 'style', 'color');
-
-  var filterFunction = function(checked) {
-    setCookie('noAreaFilter',checked);
-    if(checked) {
-      return function(applicant) {
-	return applicant.info.areas.length == 0;
-      }
-    }
-    return filterNone;
-  };
-
-  return lift_b(filterFunction,checked_b);
-
-}
 
 function areaFilter(basicInfo) {
   var initCookie = getCookie('areaFilter');
   var init = (initCookie && eval(initCookie)) || { };
   var ctrl = checkboxList(map(function(area) { 
-	return { label: area.name, value: area.id };
-      }, basicInfo.areas.sort(function(a,b) { return a.name > b.name ? 1 : -1;})),init);
+                                return { label: area.name, value: area.id };
+                              }, basicInfo.areas),init);
   // TODO: This need not be an assignment.  It should be possible to effect
   // the control itself by turning it into a behavior.
   getObj('filterAreaCheckboxes').appendChild(ctrl.element);
@@ -627,16 +600,18 @@ function areaFilter(basicInfo) {
   var isInUse = function(areas) { return areas.length != 0; };
 
   insertValueB(areasB.lift_b(isInUse).lift_b(grayOut),
-	       getObj('filterArea'), 'style', 'color');
+    getObj('filterArea'), 'style', 'color');
 
 
   var filterFunction = function(areas,type) {
-    setCookie('areaFilter',30,toJSONString(areas));
-    // TODO(arjun.guha@gmail.com): What is pluck?
-   /* setCookie('areaFilterType',30,
-	      getElementsByClass('input:checked[type="radio"][name="areaFilterType"]').pluck('value')); */
 
-    if (areas.length == 0) {
+    if (type == 'none') {
+      document.notifyDemo({ action: "areachange" });
+      return function(applicant) {
+        return applicant.info.areas.length == 0;
+      };
+    }
+    else if (areas.length == 0) {
       return filterNone;
     }
     else if (type == 'any') {
@@ -673,50 +648,25 @@ function letterFilter() {
 
   var rawWritersB = $B('letterFilter').calm_b(1000);
   var writersB = rawWritersB
-    .lift_b(function(str) { return str.split(/\s+/,5); })
-    .lift_b(function(pats) {
-	if (pats.length == 1 && pats[0] == "") { return []; }
-	else { return pats; }
-      });
+                 .lift_b(function(str) { return str.split(/\s+/,5); })
+                 .lift_b(function(pats) {
+                    if (pats.length == 1 && pats[0] == "") { return [] }
+                    else { return pats; }
+                  });
 
   insertValueB(writersB.lift_b(function(v) { return v.length > 0; })
-	       .lift_b(grayOut), 'letterFilterSection', 'style', 'color');
+                .lift_b(grayOut), 'letterFilterSection', 'style', 'color');
 
   return lift_b(function(writerPatterns,rawWriters) {
-      setCookie("letterFilter",30,rawWriters);
-      if (writerPatterns && writerPatterns.length > 0) {
-	return hasLettersBy(writerPatterns);
-      }
-      else {
-	return filterNone;
-      }
-    }, writersB, rawWritersB);
-};
-
-function institutionFilter() {
-  getObj('institutionFilter').value = getCookie("institutionFilter") || "";
-
-  var rawNameB = $B('institutionFilter').calm_b(1000);
-  var nameB = rawNameB.lift_b(function(str) { return str.split(/\s+/,5); })
-    .lift_b(function(pats) { 
-      if(pats.length == 1 && pats[0] == "") { return []; }
-      else { return pats; }
-    });
-
-  insertValueB(nameB.lift_b(function(v) { return v.length > 0; })
-	       .lift_b(grayOut), 'institutionFilterSection', 'style', 'color');
-
-  return lift_b(function(patterns,rawName) {
-    setCookie('institutionFilter',30,rawName);
-    if (patterns && patterns.length > 0) {
-      return hasInstitutionWithName(patterns)
+    setCookie("letterFilter",30,rawWriters);
+    if (writerPatterns && writerPatterns.length > 0) {
+      return hasLettersBy(writerPatterns);
     }
     else {
-      return filterNone;
+     return filterNone;
     }
-  }, nameB, rawNameB);
-
-}
+  }, writersB, rawWritersB);
+};
 
 function reviewCountFilter() {
   getObj('filterReviewLimit').value = getCookie("reviewCountFilter") || "";
@@ -724,46 +674,22 @@ function reviewCountFilter() {
   var numReviewsB = $B('filterReviewLimit').lift_b(parseInt);
 	
   insertValueB(numReviewsB.lift_b(function(x) { 
-	return typeof(x) == "number" && x >= 0;
-      }).lift_b(grayOut),'filterNumReviewsSection','style','color');
+		return typeof(x) == "number" && x >= 0;
+	}).lift_b(grayOut),'filterNumReviewsSection','style','color');
 
   
   return numReviewsB.lift_b(function(x) {
-      if (typeof(x) == 'number' && x >= 0) {
-	setCookie('reviewCountFilter',30,x.toString());
-	return function(app) {
-	  return app.info.reviews.length < x;
-	};
-      }
-      else {
-	setCookie('reviewCountFilter',30,"");
-	return filterNone;
-      }
-    });
-} 
-
-function reviewGreaterCountFilter() {
-  getObj('filterGreaterReviewLimit').value = getCookie("reviewGreaterCountFilter") || "";
-  
-  var numReviewsB = $B('filterGreaterReviewLimit').lift_b(parseInt);
-	
-  insertValueB(numReviewsB.lift_b(function(x) { 
-	return typeof(x) == "number" && x >= 0;
-      }).lift_b(grayOut),'filterGreaterNumReviewsSection','style','color');
-
-  
-  return numReviewsB.lift_b(function(x) {
-      if (typeof(x) == 'number' && x >= 0) {
-	setCookie('reviewGreaterCountFilter',30,x.toString());
-	return function(app) {
-	  return app.info.reviews.length > x;
-	};
-      }
-      else {
-	setCookie('reviewGreaterCountFilter',30,"");
-	return filterNone;
-      }
-    });
+    if (typeof(x) == 'number' && x >= 0) {
+      setCookie('reviewCountFilter',30,x.toString());
+      return function(app) {
+        return app.info.reviews.length < x;
+      };
+    }
+    else {
+      setCookie('reviewCountFilter',30,"");
+      return filterNone;
+    }
+  });
 } 
 
 function letterCountFilter() {
@@ -773,24 +699,24 @@ function letterCountFilter() {
     $B('filterLetterLimit').lift_b(parseInt);
 
   insertValueB(numLettersB.lift_b(function(x) { 
-	return typeof(x) == "number" && x >= 0;
-      }).lift_b(grayOut),'filterNumLettersSection','style','color');
+    return typeof(x) == "number" && x >= 0;
+  }).lift_b(grayOut),'filterNumLettersSection','style','color');
 
   return numLettersB.lift_b(function(x) {
-      if (typeof(x) == 'number' && x >= 0) {
-	setCookie('letterCountFilter',30,x.toString());
-	return function(app) {
-	  var numLetters = app.info.refletters.foldl(0,function(acc,letter) {
-	      return letter.submitted > 0 ? acc + 1 : acc;
-	    });
-	  return numLetters >= x;
-	};
-      }
-      else {
-	setCookie('letterCountFilter',30,"");
-	return filterNone;
-      }
-    });
+    if (typeof(x) == 'number' && x >= 0) {
+      setCookie('letterCountFilter',30,x.toString());
+      return function(app) {
+        var numLetters = app.info.refletters.foldl(0,function(acc,letter) {
+          return letter.submitted > 0 ? acc + 1 : acc;
+        });
+        return numLetters >= x;
+      };
+    }
+    else {
+      setCookie('letterCountFilter',30,"");
+      return filterNone;
+    }
+  });
 }
 
 function letterLessCountFilter() {
@@ -1250,6 +1176,7 @@ function reviewFilter(basicInfo) {
 
     return function(applicant) {
       return reviewers.ormap(function(reviewer) {
+          var pat = new RegExp(reviewer);
 	  if (reviewer == 'me') {
 	    return (applicant.rstatus == "comment" && type == "comment") ||
 	    (applicant.rstatus == "review" && type == "review") ||
@@ -1262,7 +1189,7 @@ function reviewFilter(basicInfo) {
 	  }
 	  else if (type == "review") {
 	    return applicant.info.reviews.ormap(function(review) {
-		return review.rname == reviewer;
+                return pat.test(review.rname);
 	      });
 	  }
 	  else if (type == "noreview") {
@@ -1372,48 +1299,26 @@ function draftFilter(reviewer) {
 
 
 function initializeFilters(basicInfo, hiddensB, reviewer) {
-  toggleDisplay(getObj('allFilters'),getObj('toggleFilters'),
-		clicks_e(getObj('toggleFilters')) // TODO: + / - text
-		.collect_e(false,function(_,prev) { 
-		    document.notifyDemo({ action: 'filtertoggle' });
-		    return !prev; }));
-
-  toggleDisplay(getObj('appDataFilters'),getObj('toggleAppData'),
-		clicks_e(getObj('toggleAppData')) // TODO: + / - text
-		.collect_e(true,function(_,prev) { 
-		    return !prev; }));
-
-
-  toggleDisplay(getObj('reviewFilters'),getObj('toggleReview'),
-		clicks_e(getObj('toggleReview')) // TODO: + / - text
-		.collect_e(true,function(_,prev) { 
-		    return !prev; }));
-
-  toggleDisplay(getObj('filterComposable'),getObj('toggleComposable'),
-		clicks_e(getObj('toggleComposable')) // TODO: + / - text
-		.collect_e(true,function(_,prev) { 
-		    return !prev; }));
-
+  var af = getObj('allFilters');
+  var clicks = clicks_e(getObj('toggleFilters')).collect_e(false, function(_,prev) {
+       document.notifyDemo({ action: 'filtertoggle' });
+       return !prev; });
+  toggleDisplay(af, clicks);
 
   var f = lift_b.apply(this,
-		       [ joinFilters, nameFilter(), 
-			 areaFilter(basicInfo),
-			 noAreaFilter(basicInfo),
-			 reviewFilter(basicInfo),
-			 draftFilter(reviewer),
-			 letterFilter(),
-			 institutionFilter(),
-			 makeScoreFilters(basicInfo, reviewer),
-			 makeWithFilter(basicInfo, "filterTR", "Transcripts"),
-			 makeWithFilter(basicInfo, "filterFA", "Full Application"),
-			 makeWithOutFilter(basicInfo, "filterNoTR", "Transcripts"),
-			 rejectedFilter(),
-			 acceptedFilter(),
-			 letterCountFilter(),
-			 letterLessCountFilter(),
-			 reviewCountFilter(),
-			 reviewGreaterCountFilter(),
-			 hiddenFilter(basicInfo, hiddensB)]);
+    [ joinFilters, nameFilter(), 
+      areaFilter(basicInfo),
+      reviewFilter(basicInfo),
+      letterFilter(),
+      makeScoreFilters(basicInfo, reviewer),
+      makeWithFilter(basicInfo, "filterTS", "Teaching Statement"),
+      makeWithFilter(basicInfo, "filterCL", "Cover Letter"),
+      makeWithFilter(basicInfo, "filterCV", "Curriculum Vitae"),
+      makeWithFilter(basicInfo, "filterRS", "Research Statement"),
+      rejectedFilter(),
+      letterCountFilter(),
+      reviewCountFilter(),
+      hiddenFilter(basicInfo, hiddensB)]);
 
 
   return f.calm_b(2000); // 2-second delay between filter updates
