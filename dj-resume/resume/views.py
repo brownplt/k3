@@ -53,17 +53,23 @@ def save_file(f, filename):
   target.close()
 
 def notFoundResponse():
+  message = 'We didn\'t recognize that email address.  Please check what you \
+ entered and try again.'
+
   return bcap.bcapResponse({
     'emailError': True,
-    'message': 'We didn\'t recognize your email address.  Please check what you \
-entered and try again.'
+    'error': message,
+    'message': message
   })
 
 def emailErrorResponse():
+  message = 'We had trouble sending your message.  If this problem \
+persists, contact the system maintainer.'
+
   return bcap.bcapResponse({
     'emailError': True,
-    'message': 'We had trouble sending your message.  If this problem \
-persists, contact the system maintainer.'
+    'error': message,
+    'message': message
   })
 
 # TODO: exceptions
@@ -361,8 +367,8 @@ def sendReferenceRequest(applicant, ref):
   orgname = applicant.department.name
   message = makeReferenceRequest(applicant, ref, launch_cap, orgname)
   emailResponse = sendLogEmail('Reference request', message, ref.email)
-  if emailResponse: return emailResponse
-  return launch_cap
+  if emailResponse: return {'error': emailResponse}
+  return {'success': launch_cap}
 
 class RequestReferenceHandler(bcap.CapHandler):
   def post_arg_names(self):
@@ -396,8 +402,9 @@ class RequestReferenceHandler(bcap.CapHandler):
       department=applicant.department)
     ref.save()
     if applicant.position.autoemail:
-      # TODO: implement sendReferenceRequest
-      sendReferenceRequest(applicant, ref)
+      sendResponse = sendReferenceRequest(applicant, ref)
+      if 'error' in sendResponse:
+        return sendResponse['error']
     resp = ref.to_json()
     resp['reminder'] = bcap.regrant('remind-reference', ref)
     return bcap.bcapResponse(resp)
