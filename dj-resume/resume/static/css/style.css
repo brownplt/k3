@@ -15,12 +15,12 @@ div#main {
 }
 
 div.bottom {
-    width: 98%;
-    margin: 0;
-    padding: 1em 2% 0.25em 0;
-    color: #aaa;
-    text-align: right;
-    border-top: 2px solid #aaa;
+  width: 98%;
+  margin: 0;
+  padding: 1em 2% 0.25em 0;
+  color: #aaa;
+  text-align: right;
+  border-top: 2px solid #aaa;
   background-color: #3a1e1a;
 }
 
@@ -311,7 +311,7 @@ li.current {
 
 .protrudingYellow {
   margin: 5px;
-  backgroud: #ffff00;
+  background: #ffff00;
 }
 
 .yellowfg {
