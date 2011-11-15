@@ -2,6 +2,7 @@
 <head>
 
 <link rel="stylesheet" type="text/css" media="all" href="{{ site_name }}/static/css/style.css" />
+<link rel="stylesheet" type="text/css" media="all" href="{{ site_name }}/static/css/belay-frame.css" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
 <script src="/static/lib/js/caps.js"></script>
 <script src="/static/lib/js/postmessage.js"></script>
@@ -9,48 +10,6 @@
 <script src="{{ site_name }}/common.js"></script>
 <script src="{{ site_name }}/static/belay-frame.js"></script>
 <script src="lib/js/flapjax/cookies.js"></script>
-<style>
-#login-frame {
-  display: none;
-}
-#plt-login-frame {
-//  display: none;
-}
-#account-frame {
-  display: none;
-}
-#create-account {
-  display: none;
-}
-#nobody {
-  display: none;
-}
-#createplt {
-  display: none;
-}
-#createplt {
-  width: 40%;
-  height: 30%;
-  max-width: 15em;
-  max-height: 5em;
-  font-size: large;
-  float: right;
-}
-
-#glogin {
-  width: 40%;
-  height: 30%;
-  max-width: 15em;
-  max-height: 5em;
-  font-size: large;
-}
-.launchButton {
-  font-size: large;
-}
-#google {
- width: 5em
-}
-</style>
 <body>
 <div id="nobody">
 No Resume accounts are associated with this login.  You can start a new
@@ -59,12 +18,11 @@ application with the button on the right.
 
 <div id="login-frame">
 <p> You can use your Google Account to sign in, or create a Resume account just for this application.</p>
-<p>
+<div>
   <button href="javascript:void(0)" id="glogin">
-    <p>Sign in with Google</img>
+    Sign in with Google
   </button>
   <button id="createplt">Create an Account</button>
-</p>
 </div>
 </div>
 <div id="plt-login-frame" style="padding-top: 1em">

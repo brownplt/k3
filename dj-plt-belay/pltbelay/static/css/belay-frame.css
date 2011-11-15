@@ -1,0 +1,34 @@
+#login-frame {
+  display: none;
+}
+#account-frame {
+  display: none;
+}
+#create-account {
+  display: none;
+}
+#nobody {
+  display: none;
+}
+#createplt {
+  display: none;
+}
+#createplt {
+  width: 40%;
+  height: 4em;
+  max-width: 15em;
+  max-height: 5em;
+  margin-left: 2em;
+  font-weight: bold;
+}
+
+#glogin {
+  width: 40%;
+  height: 4em;
+  max-width: 15em;
+  max-height: 5em;
+  font-weight: bold;
+}
+.launchButton {
+  font-size: large;
+}
