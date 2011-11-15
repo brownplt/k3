@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Resume Faculty Applications</title>
+  <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+  <script src="/common.js"></script>
+  <script src="/static/lib/js/caps.js"></script>
+  <script>
+    $(function() {
+      var capServer = new CapServer();
+      var hash = window.location.hash;
+      var getContact = capServer.restore(hash.substr(1));
+      getContact.get(function(contact) {
+        console.log(contact);
+        $('#tech-contact').text(contact.techEmail);
+        $('#admin-name').text(contact.contactName);
+        $('#admin-email').text(contact.contactEmail);
+      });
+    });  
+  </script>
+</head>
+<body>
+
+<h1 id="ptitle">
+  <img id="header" src="/static/images/header.png"></img>
+  <img id="logo" src="/static/images/logo.png"></img>
+  <img id="resume" src="/static/images/resume.png"></img>
+</h1>
+<div id="main">
+  <div class="left-part">
+    <h2>support</h2>
+    <p>
+      For technical assistance if you received a 404 or 500 error, a
+page won't load, or Resume is giving you other trouble, send mail to
+<span id="tech-contact"></span>.
+    </p>
+    <p>
+      For application questions about the format of a part of the application, or about our process, send mail to <span id="admin-name"></span> at <span id="admin-email"></span>.
+    </p>
+  </div>
+</div>
+		<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>.</div>
+</div>
+</body>
+</html>
