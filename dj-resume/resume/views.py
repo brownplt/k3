@@ -177,6 +177,7 @@ class ResumeInit():
         'submit-review' : SubmitReviewHandler,\
         'highlight-applicant' : HighlightApplicantHandler,\
         'unhighlight-applicant' : UnhighlightApplicantHandler,\
+        'get-highlight-status' : GetHighlightStatusHandler,\
         'reject-applicant' : RejectApplicantHandler,\
         'hide-applicant' : HideApplicantHandler,\
         'set-areas' : SetAreasHandler,\
@@ -419,15 +420,13 @@ class GetApplicantHandler(bcap.CapHandler):
     return bcap.bcapResponse(applicant.to_json())
 
 class AppReviewGetApplicantHandler(bcap.CapHandler):
-  """
-  Compared to GetApplicantHandler, this also returns a boolean reflecting
-  whether the applicant-reviewer pair is currently highlighted.
-  """
   def get(self, granted):
     pair = granted.apprevpair
-    applicant_info = pair.applicant.to_json()
-    applicant_info['isPairHighlighted'] = len(pair.get_highlights()) > 0
-    return bcap.bcapResponse(applicant_info)
+    return bcap.bcapResponse(pair.applicant.to_json())
+
+class GetHighlightStatusHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(len(granted.apprevpair.get_highlights()) > 0)
 
 class SubmitStatementHandler(bcap.CapHandler):
   def post_arg_names(self):
@@ -602,6 +601,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'uploadMaterial' : bcap.grant('upload-material', applicant),\
       'revertReview' : bcap.grant('revert-review', pair),\
       'submitReview' : bcap.grant('submit-review', pair),\
+      'getHighlightStatus' : bcap.grant('get-highlight-status', pair),\
       'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', pair),\

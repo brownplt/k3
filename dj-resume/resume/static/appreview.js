@@ -289,10 +289,13 @@ $(function() {
                 paraString(rev.comments,'pre',0));
         },revs));}),'otherrevs');
 
-    insertDomB(applicantB.transform_b(function(app) {
+    var highlightStatusE = getE(applicantB.changes().constant_e(launchInfo.getHighlightStatus));
+    var highlightStatusB = highlightStatusE.startsWith(false);
+
+    insertDomB(lift_b(function(app, isPairHighlighted) {
       if(app.highlights.length > 0) {
         var applist = fold(function(v, acc) {return (acc == '' ? v.highlighteeName : acc+', '+v.highlighteeName);},'',app.highlights);
-        if (app.isPairHighlighted) {
+        if (isPairHighlighted) {
           var rsLink = A({href:'javascript:undefined',className:'remself'},'(remove me)');
           belayGetWSO_e(extractEvent_e(rsLink,'click').constant_e(genRequest(
             {request:'post', fields:{}})), launchInfo.unhighlightApplicant).transform_e(function(unhl) {
@@ -305,7 +308,7 @@ $(function() {
       } else {
         return SPAN();
       }
-    }),'highlight-list');
+    }, applicantB, highlightStatusB), 'highlight-list');
 
     var selectorInitialized = false;
     insertDomB(
