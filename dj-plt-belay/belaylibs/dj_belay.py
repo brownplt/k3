@@ -14,6 +14,7 @@
 
 """Abstractions for writing Belay servers for Django."""
 
+import datetime
 import logging
 import os
 import uuid
@@ -262,26 +263,34 @@ def handle(cap_id, method, args, files):
 
   item = grant.db_entity
 
+  logger.error('Handler: %s' % str(grant.internal_path))
+  logger.error('  Time: %s' % datetime.datetime.now())
+  logger.error('  Files_needed: %s' % str(handler.files_needed()))
+  logger.error('  Args: %s' % str(args))
+
   maybe_error_response = handler.checkPostArgs(args)
   if maybe_error_response != 'OK':
     return maybe_error_response
 
-  if method == 'GET':
-    return handler.get(item)
-  elif method == 'PUT':
-    return handler.put(item, args)
-  elif method == 'POST':
-    if using_files:
-      return handler.post_files(item, args, files_granted)
-    return handler.post(item, args)
-  elif method == 'DELETE':
-    return handler.delete(item)
-  else:
-    response = HttpResponse()
-    content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
-    xhr_content(response, content, "text/plain;charset=UTF-8")
-    response.status_code = 404
-    return response
+  try:
+    if method == 'GET':
+      return handler.get(item)
+    elif method == 'PUT':
+      return handler.put(item, args)
+    elif method == 'POST':
+      if using_files:
+        return handler.post_files(item, args, files_granted)
+      return handler.post(item, args)
+    elif method == 'DELETE':
+      return handler.delete(item)
+    else:
+      response = HttpResponse()
+      content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
+      xhr_content(response, content, "text/plain;charset=UTF-8")
+      response.status_code = 404
+      return response
+  except Exception as e:
+      logger.error('BELAY: Uncaught handler exception: %s' % e)
 
 def proxyHandler(request):
 
