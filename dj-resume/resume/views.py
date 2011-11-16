@@ -536,7 +536,7 @@ class AddVerifiedApplicantHandler(bcap.CapHandler):
     ua.delete()
     launch = bcap.grant('launch-applicant', applicant)
     return bcap.bcapResponse({
-      'public_data': 'Application for %s' % ua.email,
+      'public_data': 'Edit application for %s' % ua.email,
       'private_data': launch,
       'domain': bcap.this_server_url_prefix(),
       'url': '/applicant/'
