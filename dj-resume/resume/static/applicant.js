@@ -201,11 +201,15 @@ $(function () {
       COMMON.setContact(bi.contact);
     });
 
+   
+
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
     var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
     var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
+
+    insertDomB(DIVB({className: 'sub'}, appInfoB.lift_b(function(ai) { return ai ? ai.email : ""; })), 'title-email');
 
     insertDomB(appInfoB.lift_b(function(info) {
       if (info && info.position && info.position.name) {
