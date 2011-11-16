@@ -89,7 +89,7 @@ def sendLogEmail(subject, msg, address):
   except Exception as e:
     logger.error('Couldn\'t send email (unknown): %s' % e)
     return emailErrorResponse()
-  logger.error('send log email:\n %s \n%s' % (address, msg))
+  logger.error('Sent real email:\n %s \n%s' % (address, msg))
   return False
 
 def make_index_handler(dept_name):
@@ -346,18 +346,20 @@ class LaunchReferenceHandler(bcap.CapHandler):
 
 def makeReferenceRequest(applicant, ref, launch_cap, orgname):
   return u"""Dear %(name)s,
-%(appname)s has requested that you provide a letter of reference to
-%(orgname)s.
 
-To submit your letter, please visit the URL:
+%(appname)s has requested that you provide a letter of reference to %(orgname)s.
+
+To submit your letter, please visit this URL:
 
 %(servername)s/submit-reference/#%(launch_cap)s
 	
-If you have trouble with this procedure, visit
-%(servername)s/contact.html
-for information on contacting the server administrator.
+If you run into any trouble, you can find information on contacting the server administrator here:
 
-%(orgname)s""" % {
+%(servername)s/contact.html
+
+Thanks!
+%(orgname)s
+""" % {
           'appname'    : applicant.fullname(),
           'name'       : ref.name,
           'launch_cap' : launch_cap.serialize(),
