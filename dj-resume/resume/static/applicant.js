@@ -1,6 +1,6 @@
 function ContactInfoRowWidget(ct,comp) {
 	if(ct.type == 'contactlong')
-	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,20]);
+	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,40]);
 	else if(ct.type == 'contactshort')
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),20]);
 	else

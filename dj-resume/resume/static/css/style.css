@@ -94,7 +94,7 @@ table.input-table th {
 table.input-table input[type=text], table.input-table input[type=password] {
     background: #fff;
     padding: 5px 3px;
-    border: 1px solid #a0a0a0
+    border: 2px solid #a0a0a0
 }
 
 div.left-part {
