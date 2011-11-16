@@ -49,18 +49,23 @@
         var writerReqE = launchE;
         var winfoE = writerReqE.filter_e(noErrors);
 
+        launchE.transform_e(function(li) {
+          COMMON.setContact(li.contact);
+        });
+
         insertValueE(winfoE.transform_e(function(winfo) {
           return winfo.currentLetter.serialize();
         }), 'lform', 'action');
 
         insertDomE(winfoE.transform_e(function(winfo) {
-          return SPAN(
-            P('Welcome, '+winfo.name+'! You have been asked to write a letter of reference for '+winfo.appname+'.',
-                ' Please do so below.'),
-            winfo.submitted ? P(
-                STRONG('You have already submitted a letter on '),
-                winfo.submittedStr + ', with a file size of ',STRONG(winfo.filesize),' bytes.',
-                ' If you wish, you may submit a new letter, overwriting your old submission.') : '');
+          return DIV(
+            P('Welcome, '+winfo.name+'!'),
+            P('Letter submission for: ', STRONG(winfo.appname), '.'),
+            winfo.submitted ? DIV(
+                SPAN('Last submission: ', STRONG(winfo.submittedStr)),
+                BR(),
+                SPAN('Filesize was: ', STRONG(winfo.filesize + ' bytes.')))
+                : SPAN())
               }),'welcome');
 
         insertDomE(merge_e(writerReqE.filter_e(onlyErrors),iframeRetE).transform_e(
@@ -68,13 +73,11 @@
                 response = capServer.dataPostProcess(JSON.stringify(response));
                 if(response.error) {
                   return P({ className: 'error' },
-                      'We could\'t verify that your upload was a PDF or Word Document.' + 
-                      '  You can try uploading again, or resaving or re-exporting the file.');
+                      'We could\'t verify that your upload was a PDF or Word document.')
                 }
                 else {
                   return P({ className: 'feedback-success' },
-                      'Thanks!  Your upload was successful.  Feel free to come back anytime ' +
-                      'via the link in your email to upload another document.');
+                      'Your upload was successful, thanks!');
                 }
               }),
               'result');
@@ -124,12 +127,10 @@
     </h1>
     <div id="main">
       <div class='left-part'>
-      <h2>letter writers<div class="sub">upload letter</div></h2>
+      <h2>upload letter</h2>
         <div id="subinfo">
             <p id="welcome"></p>
-	    <p>Please submit your letter in PDF format, or Microsoft Word .doc
-or .docx format.  You may return at any time and submit a new letter via the
-link you received in your email.</p>
+	    <p>Accepted formats: .pdf, .doc(x)</p>
             <form id="lform" target="starget" method="post" enctype="multipart/form-data">
           <input type="file" id="letter" name="letter"/><input disabled='true' id="lsub" type="submit" value="Submit Letter"/>
             </form>
@@ -139,7 +140,7 @@ link you received in your email.</p>
       <div class='right-part'></div>
     <div style='clear:both'></div>
     </div>
-		<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>. Questions? Comments? <a href="contact.html">Contact Us.</a></div>
+		<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>. Questions? Comments? <span id='contact'></span></div>
     <iframe name="starget" id="starget" style="display: none;"/>
   </body>
 </html>
