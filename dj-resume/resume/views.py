@@ -105,13 +105,34 @@ def make_index_handler(dept_name):
       return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
     return render_to_response('index.html', {
       'create_applicant': cap.serialize(),
-      'contact': bcap.grant('contact-info', dept).serialize()
+      'contact': dept.shortname
     })
 
   return index_handler
 
 cs_index_handler = make_index_handler('cs')
 bhort_index_handler = make_index_handler('bhort')
+
+def make_contact_handler(dept_name):
+  def contact_handler(request):
+    if request.method != 'GET':
+      return HttpResponseNotAllowed(['GET'])
+
+    try:
+      logger.info('Contact: %s' % dept_name)
+      dept = Department.departmentByName(dept_name)
+    except Exception as e:
+      return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
+    return render_to_response('contact.html', {
+      'tech_contact': dept.techEmail,
+      'admin_name': dept.contactName,
+      'admin_email': dept.contactEmail
+    })
+  
+  return contact_handler
+
+cs_contact_handler = make_contact_handler('cs')
+bhort_contact_handler = make_contact_handler('bhort')
 
 def index_handler(request):
   if (request.method != 'GET'):
@@ -344,7 +365,7 @@ class LaunchReferenceHandler(bcap.CapHandler):
     return bcap.bcapResponse(launch_info)
 
 
-def makeReferenceRequest(applicant, ref, launch_cap, orgname):
+def makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname):
   return u"""Dear %(name)s,
 
 %(appname)s has requested that you provide a letter of reference to %(orgname)s.
@@ -355,7 +376,7 @@ To submit your letter, please visit this URL:
 	
 If you run into any trouble, you can find information on contacting the server administrator here:
 
-%(servername)s/contact.html
+%(servername)s/contact/%(shortname)s
 
 Thanks!
 %(orgname)s
@@ -364,13 +385,15 @@ Thanks!
           'name'       : ref.name,
           'launch_cap' : launch_cap.serialize(),
           'servername' : bcap.this_server_url_prefix(),
-          'orgname'    : orgname
+          'orgname'    : orgname,
+          'shortname'  : shortname
         }
 
 def sendReferenceRequest(applicant, ref):
   launch_cap = bcap.grant('launch-reference', ref)
   orgname = applicant.department.name
-  message = makeReferenceRequest(applicant, ref, launch_cap, orgname)
+  shortname = applicant.department.shortname
+  message = makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname)
   emailResponse = sendLogEmail('Reference request', message, ref.email)
   if emailResponse: return {'error': emailResponse}
   return {'success': launch_cap}
@@ -625,7 +648,6 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
       'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
       'hideApplicant' : bcap.grant('hide-applicant', pair),\
-      'requestReference' : bcap.grant('request-reference', applicant)\
     }
     return bcap.bcapResponse(resp)
 
@@ -1242,7 +1264,7 @@ class GetBasicHandler(bcap.CapHandler):
       } for s in basic_info['scores']]
     basic_info['scores'] = response_scores
     basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
-    basic_info['contact'] = bcap.regrant('contact-info', granted.department)
+    basic_info['contact'] = granted.department.shortname
     return bcap.bcapResponse(basic_info)
 
 class SetBasicHandler(bcap.CapHandler):

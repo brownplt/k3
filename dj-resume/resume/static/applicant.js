@@ -198,7 +198,7 @@ $(function () {
     var remindersB = launchE.transform_e(function(li) { return li.reminders; }).startsWith({});
 
     basicInfoE.transform_e(function(bi) {
-      COMMON.setContact(bi.contact.serialize());
+      COMMON.setContact(bi.contact);
     });
 
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});

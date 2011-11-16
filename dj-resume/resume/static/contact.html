@@ -4,21 +4,6 @@
   <title>Resume Faculty Applications</title>
   <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
-  <script src="/common.js"></script>
-  <script src="/static/lib/js/caps.js"></script>
-  <script>
-    $(function() {
-      var capServer = new CapServer();
-      var hash = window.location.hash;
-      var getContact = capServer.restore(hash.substr(1));
-      getContact.get(function(contact) {
-        console.log(contact);
-        $('#tech-contact').text(contact.techEmail);
-        $('#admin-name').text(contact.contactName);
-        $('#admin-email').text(contact.contactEmail);
-      });
-    });  
-  </script>
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -46,10 +31,10 @@
     <p>
       For technical assistance if you received a 404 or 500 error, a
 page won't load, or Resume is giving you other trouble, send mail to
-<span id="tech-contact"></span>.
+<span id="tech-contact">{{ tech_contact }}</span>.
     </p>
     <p>
-      For application questions about the format of a part of the application, or about our process, send mail to <span id="admin-name"></span> at <span id="admin-email"></span>.
+      For application questions about the format of a part of the application, or about our process, send mail to <span id="admin-name">{{ admin_name }}</span> at <span id="admin-email">{{ admin_email }}</span>.
     </p>
   </div>
 </div>
