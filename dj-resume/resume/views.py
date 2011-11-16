@@ -76,13 +76,13 @@ persists, contact the system maintainer.'
   })
 
 # TODO: exceptions
-def sendLogEmail(subject, msg, address):
+def sendLogEmail(subject, msg, address, fromaddr='joe@cs.brown.edu'):
   logger.info('Trying to send e-mail')
   if settings.DEBUG:
     logger.error('send log email:\n %s \n%s' % (address, msg))
     return False
   try:
-    send_mail(subject, msg, 'resume@spindle.cs.brown.edu', [address], fail_silently=False)
+    send_mail(subject, msg, fromaddr, [address], fail_silently=False)
   except smtplib.SMTPRecipientsRefused as e:
     logger.error('Couldn\'t send email (refused): %s' % e)
     return notFoundResponse()
@@ -393,8 +393,9 @@ def sendReferenceRequest(applicant, ref):
   launch_cap = bcap.grant('launch-reference', ref)
   orgname = applicant.department.name
   shortname = applicant.department.shortname
+  fromaddr = applicant.department.contactEmail
   message = makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname)
-  emailResponse = sendLogEmail('Reference request', message, ref.email)
+  emailResponse = sendLogEmail('Reference request', message, ref.email, fromaddr)
   if emailResponse: return {'error': emailResponse}
   return {'success': launch_cap}
 
@@ -1141,7 +1142,7 @@ To regain access your account once it has been created, visit:
 %s
 """
     emailstr = emailstr % (name, activate_url, return_url)
-    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email)
+    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email, dept.contactEmail)
     if emailResponse: return emailResponse
     resp = {\
       'success' : True,\
