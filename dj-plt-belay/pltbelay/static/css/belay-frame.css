@@ -30,5 +30,11 @@
   font-weight: bold;
 }
 .launchButton {
-  font-size: large;
+  width: 60%;
+  height: 6em;
+  max-width: 15em;
+  max-height: 5em;
+  font-weight: bold;
+  margin-left: 20%;
+  margin-top: 2em;
 }

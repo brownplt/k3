@@ -232,7 +232,7 @@ $(function() {
         var div = $('<div></div>');
         var elt = $('<button class="launchButton"></button>');
         if(typeof instanceInfo.public_data === 'string') {
-          elt.text('Launch ' + instanceInfo.public_data);
+          elt.text(instanceInfo.public_data);
         }
         else { return; } // Don't show the relationship
         div.append(elt);
@@ -273,6 +273,7 @@ $(function() {
         else {
           hideAll();
           $('#nobody').fadeIn();
+          launchNonInstance();
         }
         console.log('Done callback');
       });
@@ -294,7 +295,11 @@ $(function() {
     }
     else {
       console.log('Launching non-instance');
-      launchNonInstance();
+//      NOTE(joe): I've commented this out and moved it into the else
+//        clause of the instances check to avoid showing page behavior
+//        when an account already exists.  Leaking a bit of information
+//        from Belay to the application by doing this.
+//      launchNonInstance();
     }
 
     function launchWithoutSaving(launchCap, sk, fk) {
