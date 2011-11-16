@@ -57,6 +57,7 @@ $(function() {
 
   onBelayReady(function(readyBundle) {
     console.log('Belay is ready');
+    if(readyBundle.belayBrowser.hasInstances) { return; }
     $('#start-new').fadeIn();
     $('#newapp').click(function() {
       createApplicant = capServer.restore(createApplicantCapURL);

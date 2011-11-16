@@ -269,11 +269,12 @@ $(function() {
         console.log('Instance infos: ', instanceInfos, instanceInfos.length);
         if(instanceInfos.length > 0) {
           instanceChoice(instanceInfos);
+          launchNonInstance(true);
         }
         else {
           hideAll();
           $('#nobody').fadeIn();
-          launchNonInstance();
+          launchNonInstance(false);
         }
         console.log('Done callback');
       });
@@ -329,7 +330,7 @@ $(function() {
         });
     }
 
-    function launchNonInstance() {
+    function launchNonInstance(hasInstances) {
       var services = {
           becomeInstance: capServer.grant(function(launchInfo, sk, fk) {
             stationInfo.newInstance.post(launchInfo, function(launched) {
@@ -340,7 +341,8 @@ $(function() {
               fk('failed');
             });
           }),
-          loginEmail: loginEmail
+          loginEmail: loginEmail,
+          hasInstances: hasInstances
         };
       console.log('services: ', services);
       tunnel.sendOutpost(capServer.dataPreProcess({
