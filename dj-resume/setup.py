@@ -50,10 +50,11 @@ def startDeptDefault(adminName, adminEmail, techEmail, deptname, shortname):
   c.save()
   c = ComponentType(department=dept,type='contactweb',name='Application Web Page',short='app')
   c.save()
+  c = ComponentType(department=dept,type='contactlong',name='Additional Information',short='addtl')
+  c.save()
 
   return "To get started, go here: %s/new-account/#%s" % \
     (bcap.this_server_url_prefix(), create_account.serialize())
-
 
 def newAdmin(deptshortname, adminName, adminEmail):
   depts = Department.objects.filter(shortname=deptshortname)
