@@ -271,6 +271,7 @@ def handle(cap_id, method, args, files):
 
   maybe_error_response = handler.checkPostArgs(args)
   if maybe_error_response != 'OK':
+    logger.error("Post args check failed")
     logger.error(handler_log)
     return maybe_error_response
 
@@ -282,7 +283,8 @@ def handle(cap_id, method, args, files):
     elif method == 'POST':
       if using_files:
         response = handler.post_files(item, args, files_granted)
-      response = handler.post(item, args)
+      else:
+        response = handler.post(item, args)
     elif method == 'DELETE':
       response = handler.delete(item)
     else:
