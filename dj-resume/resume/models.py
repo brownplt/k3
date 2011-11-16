@@ -160,6 +160,8 @@ class Applicant(bcap.Grantable):
     return []
   def getRefletters(self):
     return []
+  def get_component_objects(self):
+    return Component.objects.filter(applicant=self)
   def getComponents(self):
     return [c.to_json() for c in Component.objects.filter(applicant=self)]
   def getComponentByType(self, component_type):

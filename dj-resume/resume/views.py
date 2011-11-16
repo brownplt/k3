@@ -31,6 +31,9 @@ def get_file_type(contents):
   else:
     return 'unknown'
 
+def get_statement_filename(applicant, component_type):
+  return '%d-%d' % (applicant.id,component_type.id)
+
 def save_file(f, filename):
   contents = f.read()
   file_type = get_file_type(contents)
@@ -42,7 +45,7 @@ def save_file(f, filename):
       'directory specified by settings.SAVEDFILES_DIR does not exist: %s'\
       % settings.SAVEDFILES_DIR)
 
-  path = os.path.join(settings.SAVEDFILES_DIR, '%s.%s' % (filename, file_type))
+  path = os.path.join(settings.SAVEDFILES_DIR, filename)
   try:
     os.remove(path)
   except OSError,e:
@@ -449,7 +452,6 @@ class SubmitStatementHandler(bcap.CapHandler):
     return ['statement']
 
   def post_files(self, granted, args, files):
-
     applicant = granted.applicant
     statement = files['statement']
     cid = int(args['comp'])
@@ -459,7 +461,7 @@ class SubmitStatementHandler(bcap.CapHandler):
     ct = cts[0]
 
     try:
-      save_file(statement, '%d-%d' % (applicant.id,ct.id))
+      save_file(statement, get_statement_filename(applicant, ct))
     except FileUploadException as e:
       msg = str(e)
       logger.info('submit-statement FileUploadException: %s' % msg)
@@ -597,6 +599,12 @@ class LaunchAppReviewHandler(bcap.CapHandler):
   def get(self, granted):
     pair = granted.apprevpair
     applicant = pair.applicant
+    
+    components = applicant.get_component_objects()
+    component_caps = dict(\
+      [(c.type.id, bcap.grant('get-statement', c))\
+      for c in components if c.type.type == 'statement'])
+
     resp = {\
       'getBasic' : bcap.grant('get-basic', applicant.department),\
       'getApplicant' : bcap.grant('apprev-get-applicant', pair),\
@@ -606,7 +614,7 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       # setGender/Ethnicity mapped to changeApplicant
       'changeApplicant' : bcap.grant('change-applicant', applicant),\
       'setPosition' : bcap.grant('set-position', applicant),\
-      'getStatement' : bcap.grant('get-statement', applicant),\
+      'componentCaps' : component_caps,\
       'getCombined' : bcap.grant('get-combined', applicant),\
       'uploadMaterial' : bcap.grant('upload-material', applicant),\
       'revertReview' : bcap.grant('revert-review', pair),\
@@ -684,8 +692,34 @@ class SetPositionHandler(bcap.CapHandler):
 
 class GetStatementHandler(bcap.CapHandler):
   def get(self, granted):
-    applicant = granted.applicant
-    return logWith404(logger, 'GetStatementHandler NYI')
+    component = granted.component
+    filename = get_statement_filename(component.applicant, component.type)
+    statement_path = os.path.join(settings.SAVEDFILES_DIR, filename)
+
+    try:
+      statement_file = open(statement_path, 'r')
+      statement_data = statement_file.read()
+    except Exception as e:
+      return logWith404(logger,\
+        'GetStatementHandler: exception reading file: %s' % e,\
+        level='error')
+
+    file_type = get_file_type(statement_data)
+    if file_type == 'unknown':
+      return logWith404(logger,\
+        'GetStatementHandler: unknown statement file type',\
+        level='error')
+    elif file_type == 'pdf':
+      mimetype = 'application/pdf'
+    else:
+      mimetype = 'application/msword'
+
+    response = HttpResponse(statement_data, mimetype=mimetype)
+    resp_filename = 'applicant_%s.%s' % (\
+      component.type.name.replace(' ', '_'),\
+      file_type)
+    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+    return response
 
 class GetCombinedHandler(bcap.CapHandler):
   def get(self, granted):

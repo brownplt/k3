@@ -175,7 +175,7 @@ $(function() {
         UL({className:'material-list'},
           map(function(stmt) {
             return stmt.submitted ?
-              LI({className:'submitted'},A({href:'Applicant/'+comps.id+'/getStatement.pdf?cookie=none&comp='+stmt.id},stmt.name)) :
+              LI({className:'submitted'},A({href:launchInfo.componentCaps[stmt.id].serialize()},stmt.name)) :
               LI({className:'unsubmitted'},stmt.name);
             },comps.statements),
           LI({style:{textAlign:'center'}},A({href:'Applicant/'+comps.id+'/getCombined.pdf?cookie='},IMG({src:'images/buddha.png',alt:'Get Combined PDF',border:0})))
