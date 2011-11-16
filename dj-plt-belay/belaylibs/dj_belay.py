@@ -190,7 +190,7 @@ class HandlerData(object):
     self.is_set = False
 
 def xhr_response(response):
-  response['Access-Control-Allow-Origin'] = '*'
+  response['Access-Control-Allow-Origin'] = settings.ORIGINS
 
 def xhr_content(response, content, content_type):
   xhr_response(response)
@@ -263,34 +263,39 @@ def handle(cap_id, method, args, files):
 
   item = grant.db_entity
 
-  logger.error('Handler: %s' % str(grant.internal_path))
-  logger.error('  Time: %s' % datetime.datetime.now())
-  logger.error('  Files_needed: %s' % str(handler.files_needed()))
-  logger.error('  Args: %s' % str(args))
+  handler_log = ""
+  handler_log += 'Handler: %s\n' % str(grant.internal_path)
+  handler_log += '  Time: %s\n' % datetime.datetime.now() 
+  if files_needed > 1: handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
+  if args: handler_log += ('  Args: %s\n' % str(args))
 
   maybe_error_response = handler.checkPostArgs(args)
   if maybe_error_response != 'OK':
+    logger.error(handler_log)
     return maybe_error_response
 
   try:
     if method == 'GET':
-      return handler.get(item)
+      response = handler.get(item)
     elif method == 'PUT':
-      return handler.put(item, args)
+      response = handler.put(item, args)
     elif method == 'POST':
       if using_files:
-        return handler.post_files(item, args, files_granted)
-      return handler.post(item, args)
+        response = handler.post_files(item, args, files_granted)
+      response = handler.post(item, args)
     elif method == 'DELETE':
-      return handler.delete(item)
+      response = handler.delete(item)
     else:
       response = HttpResponse()
       content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
       xhr_content(response, content, "text/plain;charset=UTF-8")
       response.status_code = 404
-      return response
+    handler_log += '  Response: %s\n' % str(response)
+    logger.error(handler_log)
+    return response
   except Exception as e:
-      logger.error('BELAY: Uncaught handler exception: %s' % e)
+    logger.error(handler_log)
+    logger.error('BELAY: Uncaught handler exception: %s' % e)
 
 def proxyHandler(request):
 
@@ -301,7 +306,7 @@ def proxyHandler(request):
     m = request.META['HTTP_ACCESS_CONTROL_REQUEST_METHOD']
     h = request.META['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']
 
-    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Origin"] = settings.ORIGINS
     response["Access-Control-Max-Age"] = 2592000
     response["Access-Control-Allow-Methods"] = 'POST' 
     if h:
