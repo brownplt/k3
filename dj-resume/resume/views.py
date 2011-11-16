@@ -361,6 +361,7 @@ class LaunchReferenceHandler(bcap.CapHandler):
     letter = bcap.grant('reference-letter', ref)
     launch_info['currentLetter'] = letter
     launch_info['appname'] = ref.applicant.fullname()
+    launch_info['contact'] = ref.department.shortname
 
     return bcap.bcapResponse(launch_info)
 
@@ -373,8 +374,10 @@ def makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname):
 To submit your letter, please visit this URL:
 
 %(servername)s/submit-reference/#%(launch_cap)s
+
+You can revisit this URL any number of times to resubmit your letter for %(appname)s.
 	
-If you run into any trouble, you can find information on contacting the server administrator here:
+If you run into any trouble, get help here:
 
 %(servername)s/contact/%(shortname)s
 
@@ -395,7 +398,8 @@ def sendReferenceRequest(applicant, ref):
   shortname = applicant.department.shortname
   fromaddr = applicant.department.contactEmail
   message = makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname)
-  emailResponse = sendLogEmail('Reference request', message, ref.email, fromaddr)
+  subject = "%s Reference Request (%s)" % (orgname, applicant.fullname())
+  emailResponse = sendLogEmail(subject, message, ref.email, fromaddr)
   if emailResponse: return {'error': emailResponse}
   return {'success': launch_cap}
 
