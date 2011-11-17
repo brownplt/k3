@@ -50,7 +50,7 @@ def startDeptDefault(adminName, adminEmail, techEmail, deptname, shortname):
   c.save()
   c = ComponentType(department=dept,type='contactweb',name='Application Web Page',short='app')
   c.save()
-  c = ComponentType(department=dept,type='contactlong',name='Additional Information',short='addtl')
+  c = ComponentType(department=dept,type='contactlong',name='Optional Notes',short='addtl')
   c.save()
 
   return "To get started, go here: %s/new-account/#%s" % \
