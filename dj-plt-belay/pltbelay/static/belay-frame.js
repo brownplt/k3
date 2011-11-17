@@ -57,9 +57,17 @@ $(function() {
     var username = $("#username-login").val();
     var password = $("#password-login").val();
 
+    function invalid() {
+      var p = $('<p>');
+      p.text('Invalid email or password');
+      $('#login-error').empty();
+      $('#login-error').append(p);
+      p.fadeOut(4000);
+      return;
+    }
     function login() {
       if (!COMMON.validateLoginInfo(username, password)) {
-        alert('Invalid username/password');
+        invalid();
         return;
       }
 
@@ -67,11 +75,14 @@ $(function() {
       pltLogin.post(
         { username : username, password : password },
         function(loginInfo) {
+          if (loginInfo.loggedIn === false) {
+            invalid();
+            return;
+          }
           loginInfo.email = username;
           handleLoginInfo(loginInfo);
         },
         function(err) {
-          console.log('PLT login failed: ', err);
         }
       );
     }
