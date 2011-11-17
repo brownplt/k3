@@ -14,6 +14,7 @@ import smtplib
 
 import belaylibs.dj_belay as bcap
 
+from django.core.validators import validate_email
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
 from django.template.loader import render_to_string
@@ -109,6 +110,11 @@ persists, contact the system maintainer.'
 
 # TODO: exceptions
 def sendLogEmail(subject, msg, address, fromaddr):
+  try:
+    validate_email(address)
+  except Exception as e:
+    logger.error('Couldn\'t send email (bad address): %s' % e)
+    return notFoundResponse()
   logger.info('Trying to send e-mail')
   if settings.DEBUG:
     logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
@@ -138,7 +144,7 @@ def request_plt_account(request):
   create_cap = bcap.grant('create-account', pa)
 
   message = """
-Hi!  You've requested an account with Resume at Brown University Computer Science.
+Hi!  You've requested an account with Resume at the Brown University Department of Computer Science.
 
 Visit this link to get started:
 

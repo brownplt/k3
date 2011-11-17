@@ -11,6 +11,7 @@ import belaylibs.dj_belay as bcap
 from lib.py.common import logWith404
 from belaylibs.models import Grant
 
+from django.core.validators import validate_email
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest, HttpResponseNotFound, HttpResponseServerError
 from django.core.mail import send_mail
@@ -77,6 +78,11 @@ persists, contact the system maintainer.'
 
 # TODO: exceptions
 def sendLogEmail(subject, msg, address, fromaddr):
+  try:
+    validate_email(address)
+  except Exception as e:
+    logger.error('Couldn\'t send email (bad address): %s' % e)
+    return notFoundResponse()
   logger.info('Trying to send e-mail')
   if settings.DEBUG:
     logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
@@ -328,7 +334,7 @@ class ApplicantUpdateNameHandler(bcap.CapHandler):
 def sendReferenceConfirmation(ref):
   message = """Dear %(refname)s,
 
-This message confirms that %(orgname)s received your letter of reference for %(appname)s.
+This message confirms that the %(orgname)s received your letter of reference for %(appname)s.
 
 Thanks!
 %(orgname)s
@@ -397,7 +403,7 @@ class LaunchReferenceHandler(bcap.CapHandler):
 def makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname):
   return u"""Dear %(name)s,
 
-%(appname)s has requested that you provide a letter of reference to %(orgname)s.
+%(appname)s has requested that you provide a letter of reference to the %(orgname)s.
 
 To submit your letter, please visit this URL:
 
