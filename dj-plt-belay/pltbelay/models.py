@@ -28,3 +28,6 @@ class BelaySession(bcap.Grantable):
 
 class Stash(bcap.Grantable):
   stashed_content = models.TextField(max_length=1000)
+
+class PendingAccount(bcap.Grantable):
+  email = models.TextField(max_length=100)

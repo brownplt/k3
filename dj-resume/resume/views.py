@@ -76,7 +76,7 @@ persists, contact the system maintainer.'
   })
 
 # TODO: exceptions
-def sendLogEmail(subject, msg, address, fromaddr='resume@cs.brown.edu'):
+def sendLogEmail(subject, msg, address, fromaddr):
   logger.info('Trying to send e-mail')
   if settings.DEBUG:
     logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
@@ -92,7 +92,8 @@ def sendLogEmail(subject, msg, address, fromaddr='resume@cs.brown.edu'):
   logger.error('Sent real email:\n %s \n%s' % (address, msg))
   return False
 
-def make_index_handler(dept_name):
+
+def make_index_handler(index_file, dept_name):
   def index_handler(request):
     if request.method != 'GET':
       return HttpResponseNotAllowed(['GET'])
@@ -103,15 +104,16 @@ def make_index_handler(dept_name):
       cap = bcap.grant('add-applicant', dept)
     except Exception as e:
       return logWith404(logger, "Looked up bad department: %s, %s" % (dept_name, e), level='error')
-    return render_to_response('index.html', {
+    return render_to_response(index_file, {
       'create_applicant': cap.serialize(),
       'contact': dept.shortname
     })
 
   return index_handler
 
-cs_index_handler = make_index_handler('cs')
-bhort_index_handler = make_index_handler('bhort')
+cs_index_handler = make_index_handler('index.html','cs')
+bhort_index_handler = make_index_handler('index.html','bhort')
+new_applicant_handler = make_index_handler('new-applicant.html','bhort')
 
 def make_contact_handler(dept_name):
   def contact_handler(request):

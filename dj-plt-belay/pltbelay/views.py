@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render_to_response
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpRequest
 from django.template.loader import render_to_string
-from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash, PendingLogin
+from pltbelay.models import BelaySession, PltCredentials, GoogleCredentials, Stash, PendingLogin, PendingAccount
 from xml.dom import minidom
 import logging
 import uuid
@@ -25,7 +25,8 @@ class BelayInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
       'make-stash' : MakeStashHandler,
-      'stash' : StashHandler
+      'stash' : StashHandler,
+      'create-account' : CreatePLTAccountHandler
     })
     return None
 
@@ -82,6 +83,112 @@ def get_hashed(rawpassword, salt):
 def newStationCap():
   generated = urllib2.urlopen(settings.STATION_DOMAIN + '/generate/')
   return bcap.dataPostProcess(generated.read())
+
+def notFoundResponse():
+  message = 'We didn\'t recognize that email address.  Please check what you \
+ entered and try again.'
+
+  return bcap.bcapResponse({
+    'emailError': True,
+    'error': message,
+    'message': message
+  })
+
+def emailErrorResponse():
+  message = 'We had trouble sending your message.  If this problem \
+persists, contact the system maintainer.'
+
+  return bcap.bcapResponse({
+    'emailError': True,
+    'error': message,
+    'message': message
+  })
+
+# TODO: exceptions
+def sendLogEmail(subject, msg, address, fromaddr):
+  logger.info('Trying to send e-mail')
+  if settings.DEBUG:
+    logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
+    return False
+  try:
+    send_mail(subject, msg, fromaddr, [address], fail_silently=False)
+  except smtplib.SMTPRecipientsRefused as e:
+    logger.error('Couldn\'t send email (refused): %s' % e)
+    return notFoundResponse()
+  except Exception as e:
+    logger.error('Couldn\'t send email (unknown): %s' % e)
+    return emailErrorResponse()
+  logger.error('Sent real email:\n %s \n%s' % (address, msg))
+  return False
+
+def request_plt_account(request):
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+  args = bcap.dataPostProcess(request.read())
+  logger.info('request: %s' % args)
+  if not args.has_key('email'):
+    return logWith404(logger, 'request_account: post data missing email')
+
+  pa = PendingAccount(email = args['email'])
+  pa.save()
+  create_cap = bcap.grant('create-account', pa)
+
+  message = """
+Hi!  You've requested an account with Resume at Brown University Computer Science.
+
+Visit this link to get started:
+
+%s/new-applicant/#%s
+""" % (settings.APPURL, create_cap.serialize())
+
+  emailResponse = sendLogEmail('Resume Account Request', message, 'Lauren Clarke <lkc@cs.brown.edu', [args['email']])
+  if emailResponse: return emailResponse
+
+  return bcap.bcapResponse({'success': True})
+
+class CreatePLTAccountHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['username', 'password']
+
+  def get(self, grantable):
+    return bcap.bcapResponse(grantable.pendingaccount.email)
+
+  def post(self, grantable, args):
+    username = grantable.pendingaccount.email
+    rawpassword = args['password']
+
+    if len(username) > 20:
+      return logWith404(logger, 'create_plt_account: bad username')
+
+    if len(rawpassword) < 8:
+      return logWith404(logger, 'create_plt_account: bad password')
+
+    salt = str(uuid.uuid4())
+    hashed_password = get_hashed(rawpassword, salt)
+
+    station_cap = newStationCap()
+    account = BelayAccount(station_url=station_cap.serialize())
+    account.save()
+    credentials = PltCredentials(username=username, \
+      salt=salt, \
+      hashed_password=hashed_password, \
+      account=account)
+    credentials.save()
+
+    session_id = str(uuid.uuid4())
+
+    session = BelaySession(session_id=session_id, account=account)
+    session.save()
+
+    grantable.pendingaccount.delete()
+
+    response = {
+      'station': station_cap,
+      'makeStash': bcap.regrant('make-stash', account)
+    }
+    return bcap.bcapResponse(response)
+    
+   
 
 def create_plt_account(request):
   if request.method != 'POST':

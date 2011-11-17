@@ -14,6 +14,7 @@ $(function() {
   var stationInfo;
   var clientLocation, clientEmail;
   var clientkey = null;
+  var createAccount;
   var loginEmail;
   var sessionToken;
   var capServer = new CapServer(newUUIDv4());
@@ -40,6 +41,7 @@ $(function() {
     $('#account-frame').hide();
     $('#create-account').hide();
     $('#nobody').hide();
+    $('#request-account').hide();
   }
 
   $('#backtomain').click(function(e) {
@@ -52,6 +54,7 @@ $(function() {
     hideAll();
     $('#plt-login-frame').show();
   });
+
 
   $("#plt-submit").click(function(e) {
     var username = $("#username-login").val();
@@ -92,13 +95,40 @@ $(function() {
 
   $('#createplt').click(function() {
     hideAll();
-    $('#create-account').fadeIn();
+    $('#request-account').fadeIn();
     console.log('The client\'s email is: ', clientEmail);
-    if (clientEmail) {
-      $('#username-create').hide();
-      $('#username-preset').text(clientEmail);
-      $('#username-preset').show(clientEmail);
+  });
+
+  $('#request-submit').click(function() {
+    function invalid(str) {
+      var p = $('<p>');
+      p.text(str);
+      $('#email-error').empty();
+      $('#email-error').append(p);
+      p.fadeOut(4000);
+      return;
     }
+    function success(str) {
+      var p = $('<p>');
+      p.text(str);
+      $('#email-success').empty();
+      $('#email-success').append(p);
+      p.fadeOut(4000);
+      return;
+    }
+    $('#request-account').attr('disabled', true);
+    var requestCap = capServer.restore(COMMON.urlPrefix + '/request_account/');
+    var email = $('#email-request').val();
+    if(email === "") {
+      invalid('Please provide an email');
+    }
+    requestCap.post({email: email}, function(response) {
+      if(response.success) {
+        success('Success!  Check your email');
+        return;
+      }
+      invalid('We had trouble sending you a message.');
+    });
   });
 
   $('#glogin').click(function() {
@@ -107,6 +137,19 @@ $(function() {
   });
 
   notLoggedIn();
+
+  function showCreateAccount(data) {
+    hideAll();
+    createAccount = data.createCap;
+    console.log("Creating account: ", data, createAccount);
+    console.log("Creating ce: ", clientEmail);
+    if (clientEmail) {
+      $('#username-create').hide();
+      $('#username-preset').text(clientEmail);
+      $('#username-preset').show(clientEmail);
+    }
+    $('#create-account').show();
+  }
 
   $.pm.bind('init', function(data) {
     console.log(data);
@@ -122,7 +165,9 @@ $(function() {
     }
     console.log("CL: ", clientLocation);
     console.log("CLH: ", clientLocation.hash);
-    if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
+    console.log('Starting with: ', data);
+    if(data.createCap) { showCreateAccount(data); }
+    else if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
   });
 
   window.login = function(data) {
@@ -208,8 +253,10 @@ $(function() {
     }
 
     function create() {
-      console.log("Creating account");
-      var createAccount = capServer.restore(COMMON.urlPrefix + '/create_plt_account/');
+      console.log("Creating account: ", createAccount);
+      if (!createAccount) return;
+      console.log("Creating account: ", createAccount);
+      createAccount = capServer.restore(createAccount);
       createAccount.post({
           username : uname,
           password : password1
@@ -226,7 +273,7 @@ $(function() {
       { username : uname },
       function(response) {
         if (response.available) { create(); }
-        else { alert("That username is taken, please try another."); }
+        else { alert("That email is taken, please try another."); }
       },
       failure
     );

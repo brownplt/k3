@@ -269,18 +269,17 @@ def handle(cap_id, method, args, files):
   if files_needed > 1: handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
   if args: handler_log += ('  Args: %s\n' % str(args))
 
-  maybe_error_response = handler.checkPostArgs(args)
-  if maybe_error_response != 'OK':
-    logger.error("Post args check failed")
-    logger.error(handler_log)
-    return maybe_error_response
-
   try:
     if method == 'GET':
       response = handler.get(item)
     elif method == 'PUT':
       response = handler.put(item, args)
     elif method == 'POST':
+      maybe_error_response = handler.checkPostArgs(args)
+      if maybe_error_response != 'OK':
+        logger.error("Post args check failed")
+        logger.error(handler_log)
+        return maybe_error_response
       if using_files:
         response = handler.post_files(item, args, files_granted)
       else:
