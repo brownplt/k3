@@ -1,16 +1,11 @@
 function ContactInfoRowWidget(ct,comp) {
-	if(ct.type == 'contactlong') {
+	if(ct.type == 'contactlong')
 	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,40]);
-	    this.dom = TR(TH(ct.name),TD(this.dom, BR(), SPAN({className: 'description'}, 'You can enter information that doesn\'t fit other categories here.')));
-  }
-	else if(ct.type == 'contactshort') {
+	else if(ct.type == 'contactshort')
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),20]);
-	    this.dom = TR(TH(ct.name),TD(this.dom));
-  }
-	else {
+	else
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),40]);
-	    this.dom = TR(TH(ct.name),TD(this.dom));
-  }
+	this.dom = TR(TH(ct.name),TD(this.dom));
 	this.behaviors.value = this.behaviors.value.transform_b(function(v) {return {id:ct.id,value:v};});
 }
 
@@ -77,15 +72,18 @@ function makeLetterTable(basicInfo,appInfo,refReq,reminders) {
             var existing = map(function(ref) {
               var remindCap = reminders[ref.email];
               if (!remindCap) { remindCap = ref.reminder; }
-              var reminder = INPUT({disabled:ref.submitted,type:'button',value:'Send a Reminder'});
+              var reminder = INPUT({type:'button',value:'Send a Reminder'});
               var remindE = clicks_e(reminder).transform_e(function(_) { return [remindCap, {}]; });
+              var resender = INPUT({type:'button',value:'Resend Request'});
+              var resendE = clicks_e(reminder).transform_e(function(_) { return [remindCap, {}]; });
               postE(remindE).transform_e(resultTrans('Your letter writer has been contacted.')).transform_e(function(v) { allErrorsE.sendEvent(v); });
+              postE(resendE).transform_e(resultTrans('Your letter writer has been contacted.')).transform_e(function(v) { allErrorsE.sendEvent(v); });
               return appInfo.position.autoemail
                 ? TR(TD(ref.name),TD(ref.institution),TD(ref.email),
                      TD(ref.submitted?'Yes':'No'),
-                     ref.submitted ? SPAN() : reminder)
+                     ref.submitted ? resender : reminder)
                 : TR(TD(ref.name),TD(ref.institution),TD(ref.email), SPAN(), 
-                     ref.submitted ? SPAN() : reminder);
+                     ref.submitted ? resender : reminder);
             },refs);
             var existingLen = existing.length;
             for(var i = existingLen; i < minLetters; i++) {
@@ -214,7 +212,7 @@ $(function () {
     var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
 
-    insertDomB(DIVB({className: 'sub'}, appInfoB.lift_b(function(ai) { return ai ? ai.email : ""; })), 'title-email');
+    insertDomB(DIVB(appInfoB.lift_b(function(ai) { return ai ? ai.email : ""; })), 'title-email');
 
     insertDomB(appInfoB.lift_b(function(info) {
       if (info && info.position && info.position.name) {
