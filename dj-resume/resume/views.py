@@ -76,10 +76,10 @@ persists, contact the system maintainer.'
   })
 
 # TODO: exceptions
-def sendLogEmail(subject, msg, address, fromaddr='joe@cs.brown.edu'):
+def sendLogEmail(subject, msg, address, fromaddr='resume@cs.brown.edu'):
   logger.info('Trying to send e-mail')
   if settings.DEBUG:
-    logger.error('send log email:\n %s \n%s' % (address, msg))
+    logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
     return False
   try:
     send_mail(subject, msg, fromaddr, [address], fail_silently=False)
@@ -322,6 +322,32 @@ class ApplicantUpdateNameHandler(bcap.CapHandler):
       'lastname' : applicant.lastname,\
     })
 
+def sendReferenceConfirmation(ref):
+  message = """Dear %(refname)s,
+
+This message confirms that %(orgname)s received your letter of reference for %(appname)s.  Thanks!
+
+If you received this message in error, please contact us at
+
+%(serverurl)s/contact/%(shortname)s
+
+Thanks,
+%(orgname)s
+""" % { 'orgname' : ref.department.name,
+        'appname' : ref.applicant.fullname(),
+        'shortname' : ref.department.shortname,
+        'refname' : ref.name,
+        'serverurl' : bcap.this_server_url_prefix() }
+
+  subject = "%s Reference Confirmation (%s)" % (ref.department.name, ref.applicant.fullname())
+
+  fromaddr = fromAddr(ref.department)
+  emailResponse = sendLogEmail(subject, message, ref.email, fromaddr)
+
+  if emailResponse: return emailResponse
+  return {'success' : True}
+  
+
 class ReferenceLetterHandler(bcap.CapHandler):
   def files_needed(self):
     return ['letter']
@@ -350,8 +376,11 @@ class ReferenceLetterHandler(bcap.CapHandler):
     reference.filesize = len(letter)
     reference.save()
 
+    sendReferenceConfirmation(reference)
+
     resp = reference.to_json()
     resp['appname'] = reference.applicant.to_json()
+
     return bcap.bcapResponse(resp)
 
 class LaunchReferenceHandler(bcap.CapHandler):
@@ -392,11 +421,14 @@ Thanks!
           'shortname'  : shortname
         }
 
+def fromAddr(dept):
+  return '%s <%s>' % (dept.contactName, dept.contactEmail)
+
 def sendReferenceRequest(applicant, ref):
   launch_cap = bcap.grant('launch-reference', ref)
   orgname = applicant.department.name
   shortname = applicant.department.shortname
-  fromaddr = applicant.department.contactEmail
+  fromaddr = fromAddr(applicant.department)
   message = makeReferenceRequest(applicant, ref, launch_cap, orgname, shortname)
   subject = "%s Reference Request (%s)" % (orgname, applicant.fullname())
   emailResponse = sendLogEmail(subject, message, ref.email, fromaddr)
@@ -1146,7 +1178,9 @@ To regain access your account once it has been created, visit:
 %s
 """
     emailstr = emailstr % (name, activate_url, return_url)
-    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email, dept.contactEmail)
+    
+    fromaddr = fromAddr(dept)
+    emailResponse = sendLogEmail('[Resume] New Account', emailstr, email, fromaddr)
     if emailResponse: return emailResponse
     resp = {\
       'success' : True,\
