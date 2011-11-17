@@ -325,14 +325,14 @@ class ApplicantUpdateNameHandler(bcap.CapHandler):
 def sendReferenceConfirmation(ref):
   message = """Dear %(refname)s,
 
-This message confirms that %(orgname)s received your letter of reference for %(appname)s.  Thanks!
+This message confirms that %(orgname)s received your letter of reference for %(appname)s.
+
+Thanks!
+%(orgname)s
 
 If you received this message in error, please contact us at
 
 %(serverurl)s/contact/%(shortname)s
-
-Thanks,
-%(orgname)s
 """ % { 'orgname' : ref.department.name,
         'appname' : ref.applicant.fullname(),
         'shortname' : ref.department.shortname,
