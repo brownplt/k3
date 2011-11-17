@@ -37,7 +37,6 @@ class Department(bcap.Grantable):
   def getBasic(self):
     return {\
       'info' : self.to_json(),\
-      'areas' : self.my(Area),\
       'positions' : [j.to_json() for j in self.my(ApplicantPosition)],\
       'components' : [c.to_json() for c in self.my(ComponentType)],\
       'genders' : ['Unknown', 'Male', 'Female'],\
@@ -51,7 +50,6 @@ class Department(bcap.Grantable):
         'zu':'Unknown'
       },\
       'countries' : list(set([a.country for a in self.my(Applicant)])),\
-      'scores' : self.my(ScoreCategory),\
       'degrees' : [d.to_json() for d in self.my(Degree)],\
     }
   def to_json(self):

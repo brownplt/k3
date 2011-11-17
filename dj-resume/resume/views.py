@@ -185,6 +185,7 @@ class ResumeInit():
         'change-contacts' : ChangeContactsHandler,\
         'find-refs' : FindRefsHandler,\
         'get-basic' : GetBasicHandler,\
+        'get-applicant-basic' : GetApplicantBasicHandler,\
         'set-basic' : SetBasicHandler,\
         'get-reviewer' : GetReviewerHandler,\
         'get-applicants' : GetApplicantsHandler,\
@@ -289,7 +290,7 @@ class ApplicantLaunchHandler(bcap.CapHandler):
       reminders[r.email] = bcap.regrant('remind-reference', r)
 
     resp = {\
-      'getBasic' : bcap.grant('get-basic', department),\
+      'getBasic' : bcap.grant('get-applicant-basic', department),\
       'reminders' : reminders,
       'requestReference' : bcap.grant('request-reference', applicant),\
       'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
@@ -1274,6 +1275,12 @@ class ContactHandler(bcap.CapHandler):
   def get(self, granted):
     dept = granted.department
     return bcap.bcapResponse(dept.contact_json())
+
+class GetApplicantBasicHandler(bcap.CapHandler):
+  def get(self, granted):
+    basic_info = granted.department.getBasic()
+    basic_info['contact'] = granted.department.shortname
+    return bcap.bcapResponse(basic_info)
 
 class GetBasicHandler(bcap.CapHandler):
   def get(self, granted):
