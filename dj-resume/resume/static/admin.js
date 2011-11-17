@@ -236,9 +236,6 @@ $(function() {
   function doRestAdmin(basicInfoE, allrevsE, pendingE, launchInfo) {
     lift_e(function(basicInfo,allRevs) {
       console.log('ALLREVS: ', allRevs);
-      setHeadAndTitle(basicInfo,'Site Administration',
-        [A({href:'login.html?logout='+authCookie},'Log Out'),
-        A({href:'reviewer.html'},'Back to List')]);
 
       insertDomB(reviewerTable(allRevs),'revlist');
 

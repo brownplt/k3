@@ -104,16 +104,16 @@ $(function() {
       var p = $('<p>');
       p.text(str);
       $('#email-error').empty();
+      $('#email-success').empty();
       $('#email-error').append(p);
-      p.fadeOut(4000);
       return;
     }
     function success(str) {
       var p = $('<p>');
       p.text(str);
       $('#email-success').empty();
+      $('#email-error').empty()
       $('#email-success').append(p);
-      p.fadeOut(4000);
       return;
     }
     $('#request-account').attr('disabled', true);
@@ -124,7 +124,7 @@ $(function() {
     }
     requestCap.post({email: email}, function(response) {
       if(response.success) {
-        success('Success!  Check your email');
+        success('Check your email.');
         return;
       }
       invalid('We had trouble sending you a message.');

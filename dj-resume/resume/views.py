@@ -119,7 +119,7 @@ def make_index_handler(index_file, dept_name):
 
 cs_index_handler = make_index_handler('index.html','cs')
 bhort_index_handler = make_index_handler('index.html','bhort')
-new_applicant_handler = make_index_handler('new-applicant.html','bhort')
+new_applicant_handler = make_index_handler('new-applicant.html','cs')
 
 def make_contact_handler(dept_name):
   def contact_handler(request):
@@ -1297,7 +1297,7 @@ class GetBasicHandler(bcap.CapHandler):
        'id' : a.id,\
        'abbr' : a.abbr,\
        'del' : bcap.grant('area-delete', a)\
-      } for a in basic_info['areas']]
+      } for a in granted.department.my(Area)]
     basic_info['areas'] = response_areas
     basic_info['svcs'] = dict([(sv.id, sv.category.to_json()) for sv in all_svals])
     response_scores = [\
@@ -1311,7 +1311,7 @@ class GetBasicHandler(bcap.CapHandler):
        'del' : bcap.grant('scorecategory-delete', s),\
        'id' : s.id,\
        'change' : bcap.grant('scorecategory-change', s)\
-      } for s in basic_info['scores']]
+      } for s in granted.department.my(Score)]
     basic_info['scores'] = response_scores
     basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
     basic_info['contact'] = granted.department.shortname
