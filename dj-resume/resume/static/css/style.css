@@ -6,6 +6,11 @@ body {
 
 }
 
+.description {
+  font-size: small;
+  color: gray;
+}
+
 a {color: #b21b09;}
 a:hover {color: #fa5d00;}
 
@@ -26,6 +31,10 @@ div.bottom {
 
 div.bottom a {color: #ddd;}
 div.bottom a:hover {color: #fff;}
+
+form span img {
+  padding-left: .5em;
+}
 
 h1 {
   margin: 0;
