@@ -96,10 +96,18 @@
         })();
 
         var disE = merge_e(extractEvent_e('lform','submit').constant_e(true),iframeRetE.constant_e(false));
-        var lsvE = merge_e(extractEvent_e('lsub','click').constant_e('Sending Letter...'),iframeRetE.constant_e('Submit Letter'));
+        var lsvE = merge_e(extractEvent_e('lsub','click').constant_e('Sending'),iframeRetE.constant_e('Submit'));
+        var lsvB = lift_b(function(winfo, lsvE) {
+          if (!winfo) return "Submit Letter";
+          if (lsvE === 'Sending') return 'Sending Letter...';
+          if (lsvE === 'Submit') {
+            if (winfo.submitted) return 'Overwrite Letter';
+            else return 'Submit Letter';
+          }
+        }, winfoE.startsWith(null), lsvE.startsWith('Submit'));
         insertValueE(fileChosenE, 'lsub', 'disabled');
         insertValueE(disE,'lsub','disabled');
-        insertValueE(lsvE,'lsub','value');
+        insertValueB(lsvB,'lsub','value');
 //        insertValueE(iframeRetE.filter_e(noErrors).constant_e('none'),'subinfo','style','display');
 
         onLoadTimeE.sendEvent('loaded!');
