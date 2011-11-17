@@ -60,11 +60,11 @@
         insertDomE(winfoE.transform_e(function(winfo) {
           return DIV(
             P('Welcome, '+winfo.name+'!'),
-            P('Letter submission for: ', STRONG(winfo.appname), '.'),
+            P('Letter submission for: ', STRONG(winfo.appname)),
             winfo.submitted ? DIV(
                 SPAN('Last submission: ', STRONG(winfo.submittedStr)),
                 BR(),
-                SPAN('Filesize was: ', STRONG(winfo.filesize + ' bytes.')))
+                SPAN('File size was: ', STRONG(winfo.filesize + ' bytes')))
                 : SPAN())
               }),'welcome');
 
@@ -138,7 +138,10 @@
       <h2>upload letter</h2>
         <div id="subinfo">
             <p id="welcome"></p>
-	    <p>Accepted formats: .pdf, .doc(x)</p>
+	    <p>Accepted formats:
+<img src='/static/images/pdficon_small.gif', alt='[PDF files accepted]'></img>
+<img src='/static/images/word_icon_small.gif', alt='[MS Word files accepted]'></img>
+      </p>
             <form id="lform" target="starget" method="post" enctype="multipart/form-data">
           <input type="file" id="letter" name="letter"/><input disabled='true' id="lsub" type="submit" value="Submit Letter"/>
             </form>
