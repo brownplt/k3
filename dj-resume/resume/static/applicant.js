@@ -1,11 +1,16 @@
 function ContactInfoRowWidget(ct,comp) {
-	if(ct.type == 'contactlong')
+	if(ct.type == 'contactlong') {
 	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,40]);
-	else if(ct.type == 'contactshort')
+	    this.dom = TR(TH(ct.name),TD(this.dom, BR(), SPAN({className: 'description'}, 'You can enter information that doesn\'t fit other categories here.')));
+  }
+	else if(ct.type == 'contactshort') {
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),20]);
-	else
+	    this.dom = TR(TH(ct.name),TD(this.dom));
+  }
+	else {
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),40]);
-	this.dom = TR(TH(ct.name),TD(this.dom));
+	    this.dom = TR(TH(ct.name),TD(this.dom));
+  }
 	this.behaviors.value = this.behaviors.value.transform_b(function(v) {return {id:ct.id,value:v};});
 }
 
