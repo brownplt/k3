@@ -1,0 +1,54 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Resume Faculty Applications</title>
+  <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+  <script src="/common.js"></script>
+  <script src="/static/lib/js/caps.js"></script>
+  <script src="/static/lib/js/postmessage.js"></script>
+  <script src="/static/lib/js/postmessage-port.js"></script>
+  <script src="/static/lib/js/makeBelayFrame.js"></script>
+  <script src="/static/lib/js/belay-client.js"></script>
+  <script src="/static/new-applicant.js"></script>
+  <script>
+    var createApplicantCapURL = "{{ create_applicant }}";
+    var contactURL = "{{ contact }}";
+  </script>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-27047741-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</head>
+<body>
+
+<h1 id="ptitle">
+  <img id="header" src="/static/images/header.png"></img>
+  <img id="logo" src="/static/images/logo.png"></img>
+  <img id="resume" src="/static/images/resume.png"></img>
+</h1>
+<div id="main">
+  <div class="left-part">
+    <h2>welcome</h2>
+  </div>
+  <div class="right-part">
+    <div id="start-new" style="display:none">
+      <h2>new applicants</h2>
+      <button id="newapp" style="font-size:large;padding:2em;margin-left:25%;margin-top:5em">Start an application!</button>
+    </div>
+  </div>
+<div style="clear:both"></div>
+		<div class="bottom">Resume is built with <a href="http://www.flapjax-lang.org">Flapjax</a> and <a href="https://sites.google.com/site/belayresearchproject/">Belay</a>. Questions? Comments? <span id="contact"></span></div>
+</div>
+</body>
+</html>
