@@ -10,8 +10,11 @@ import urllib2
 from urlparse import urlparse
 import hashlib
 
+import smtplib
+
 import belaylibs.dj_belay as bcap
 
+from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
 from django.template.loader import render_to_string
 
@@ -111,14 +114,15 @@ def sendLogEmail(subject, msg, address, fromaddr):
     logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
     return False
   try:
+    logger.error('Sending real email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
     send_mail(subject, msg, fromaddr, [address], fail_silently=False)
   except smtplib.SMTPRecipientsRefused as e:
-    logger.error('Couldn\'t send email (refused): %s' % e)
+    logger.info('Couldn\'t send email (refused): %s' % e)
     return notFoundResponse()
   except Exception as e:
-    logger.error('Couldn\'t send email (unknown): %s' % e)
+    logger.info('Couldn\'t send email (unknown): %s' % e)
     return emailErrorResponse()
-  logger.error('Sent real email:\n %s \n%s' % (address, msg))
+  logger.info('Sent real email:\n %s \n%s' % (address, msg))
   return False
 
 def request_plt_account(request):
@@ -141,7 +145,7 @@ Visit this link to get started:
 %s/new-applicant/#%s
 """ % (settings.APPURL, create_cap.serialize())
 
-  emailResponse = sendLogEmail('Resume Account Request', message, 'Lauren Clarke <lkc@cs.brown.edu', [args['email']])
+  emailResponse = sendLogEmail('Resume Account Request', message, args['email'], 'Lauren Clarke <lkc@cs.brown.edu>')
   if emailResponse: return emailResponse
 
   return bcap.bcapResponse({'success': True})

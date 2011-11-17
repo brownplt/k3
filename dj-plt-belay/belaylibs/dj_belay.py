@@ -267,7 +267,8 @@ def handle(cap_id, method, args, files):
   handler_log += 'Handler: %s\n' % str(grant.internal_path)
   handler_log += '  Time: %s\n' % datetime.datetime.now() 
   if files_needed > 1: handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
-  if args: handler_log += ('  Args: %s\n' % str(args))
+  if args and (grant.internal_path != 'create-account'):
+    handler_log += ('  Args: %s\n' % str(args))
 
   try:
     if method == 'GET':
