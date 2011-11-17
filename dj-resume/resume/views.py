@@ -330,14 +330,10 @@ This message confirms that %(orgname)s received your letter of reference for %(a
 Thanks!
 %(orgname)s
 
-If you received this message in error, please contact us at
-
-%(serverurl)s/contact/%(shortname)s
+If you received this message in error, please reply to this email to let us know.
 """ % { 'orgname' : ref.department.name,
         'appname' : ref.applicant.fullname(),
-        'shortname' : ref.department.shortname,
-        'refname' : ref.name,
-        'serverurl' : bcap.this_server_url_prefix() }
+        'refname' : ref.name }
 
   subject = "%s Reference Confirmation (%s)" % (ref.department.name, ref.applicant.fullname())
 
