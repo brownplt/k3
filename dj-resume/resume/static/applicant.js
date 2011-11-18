@@ -204,13 +204,33 @@ $(function () {
       COMMON.setContact(bi.contact);
     });
 
-   
-
 //    basicInfoE.transform_e(function(bi) {setHeadAndTitle(bi,'Edit Application',A({href:'login.html?logout='},'Log Out'));});
 
     var submitterGetE = getE(launchE.transform_e(function(pd) { return pd.get; }));
     var appInfoB = merge_e(submitterGetE,
       stmtSubE.filter_e(noErrors).transform_e(function(ssc) {return ssc.app;})).startsWith(null);
+
+    var readyDivB = lift_b(function(launchInfo, appInfo) {
+      if(!appInfo || !launchInfo) { return SPANB(); }
+      
+      var readyB = INPUT({type: 'checkbox', checked: appInfo.ready }, '');
+      var postInfoB = lift_b(function(ready) {
+        return [launchInfo.setReady, {ready: ready}];
+      }, extractValue_b(readyB));
+      var updateReady = postE(postInfoB.changes());
+
+      var savedB = updateReady.transform_e(function(e) {
+        var dom;
+        dom = SPAN({className: 'feedback-success-small'}, 'Saved');
+        setTimeout(function() { $(dom).fadeOut(3000); }, 1000);
+        return dom;
+      }).startsWith(SPAN());
+
+      return DIVB([readyB,
+                   SPAN('My application is ready for review.  '),
+                   savedB]);
+    }, launchE.startsWith(null), appInfoB);
+    insertDomB(readyDivB.switch_b(), 'readybox');
 
     insertDomB(DIVB(appInfoB.lift_b(function(ai) { return ai ? ai.email : ""; })), 'title-email');
 

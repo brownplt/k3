@@ -339,6 +339,11 @@ li.current {
 	color: #00aa00;
 }
 
+.feedback-success-small {
+	font-weight: bold;
+	color: #00aa00;
+}
+
 div.buttons {
 	float: right;
 	margin-right: 100px;
