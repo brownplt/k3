@@ -207,6 +207,7 @@ class ResumeInit():
         'submit-contact-info' : SubmitContactInfoHandler,\
         'contact-info' : ContactHandler,
         'get-applicant' : GetApplicantHandler,\
+        'applicant-ready' : ApplicantReadyHandler,\
         'apprev-get-applicant' : AppReviewGetApplicantHandler,\
         'submit-statement' : SubmitStatementHandler,\
         'get-review' : GetReviewHandler,\
@@ -301,6 +302,7 @@ class ApplicantLaunchHandler(bcap.CapHandler):
       'requestReference' : bcap.grant('request-reference', applicant),\
       'submitContactInfo' : bcap.grant('submit-contact-info', applicant),\
       'submitStatement' : bcap.grant('submit-statement', applicant),\
+      'setReady' : bcap.grant('applicant-ready', applicant),\
       'updateName' : bcap.grant('update-applicant-name', applicant),\
       'get' : bcap.grant('get-applicant', applicant)\
     }
@@ -313,6 +315,15 @@ class RemindReferenceHandler(bcap.CapHandler):
     reference = grantable.reference
     sendReferenceRequest(reference.applicant, reference)
     return bcap.bcapResponse({ 'success' : True })
+
+
+class ApplicantReadyHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['ready']
+
+  def post(self, grantable, args):
+    applicant = grantable.applicant
+    applicant.setReady(args['ready'])
+    return bcap.bcapResponse({ 'ready' : applicant.getReady() })
 
 class ApplicantUpdateNameHandler(bcap.CapHandler):
   def post(self, granted, args):
