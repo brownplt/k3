@@ -206,25 +206,12 @@ class Applicant(bcap.Grantable):
     Hidden.objects.filter(applicant=self, reviewer=reviewer).delete()
   def is_hidden_from(self, reviewer):
     return len(Hidden.objects.filter(applicant=self, reviewer=reviewer)) > 0
-  def getReady(self):
-    readies = ReadyApplicant.objects.filter(applicant=self)
-    if(len(readies) == 0): return False
-    else: return readies[0].ready
-  def setReady(self, readiness=False):
-    readies = ReadyApplicant.objects.filter(applicant=self)
-    if(len(readies) == 0):
-      re = ReadyApplicant(applicant=self, ready=readiness)
-      re.save()
-    else:
-      readies[0].ready = readiness
-      readies[0].save()
   def to_json(self):
     return {
       'id' : self.id,
       'gender' : self.gender,
       'ethname' : self.ethnicity,
       'rejected' : self.rejected,
-      'ready' : self.getReady(),
       'rtime' : self.rtime,
       'firstname' : self.firstname,
       'lastname' : self.lastname,
@@ -275,10 +262,6 @@ class Applicant(bcap.Grantable):
   position = models.ForeignKey(ApplicantPosition)
   def fullname(self):
     return self.firstname + ' ' + self.lastname
-
-class ReadyApplicant(bcap.Grantable):
-  applicant = models.ForeignKey(Applicant)
-  ready = models.BooleanField(default=False)
 
 class Degree(bcap.Grantable):
   def to_json(self):
