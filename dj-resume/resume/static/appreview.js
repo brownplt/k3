@@ -212,7 +212,7 @@ $(function() {
           return TR(TH(cinfo.name+':'),TD((cinfo.type == 'contactweb' && cinfo.value) ? A({href:showWebsite(cinfo.value), "target": "_blank" },cinfo.value) : cinfo.value));
           },comps.contact);});
     var emailCellB = applicantB.transform_b(function(ai) {
-            return TD(ai.email,A({href:'mailto:'+ai.email},' ',IMG({className:'icon',src:'images/envelope.png',alt:'Send Mail'})));
+            return TD(ai.email + ' ',A({href:'mailto:'+ai.email, style:{'padding-left': '0.5em'}},IMG({className:'icon',src:'/static/images/envelope.png',alt:'Send Mail'})));
               });
 
     insertDomB(TABLEB({className:'key-value'},TBODYB(
