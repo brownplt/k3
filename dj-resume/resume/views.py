@@ -946,7 +946,12 @@ class GetApplicantsHandler(bcap.CapHandler):
       a_json = applicant.to_json()
       launchCap = bcap.regrant('launch-app-review', pair)
       a_json['launchURL'] = '%s/appreview/#%s' % \
-         (bcap.this_server_url_prefix(), launchCap.serialize())
+           (bcap.this_server_url_prefix(), launchCap.serialize())
+      components = applicant.get_component_objects()
+      component_caps = dict(\
+        [(c.type.id, bcap.grant('get-statement', c))\
+        for c in components if c.type.type == 'statement'])
+      a_json['components'] = component_caps
       applicant_json.append(a_json)
     return bcap.bcapResponse({
       'changed': True,

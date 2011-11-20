@@ -1,4 +1,4 @@
-var fieldsUnlocked = false;
+var fieldsUnlocked = true;
 
 var basicInfo = { position: [ { name: 'Loading...' } ] }; // total hack
 
@@ -81,21 +81,17 @@ $(function() {
 
     var myInitRevB = getE(onLoadTimeE.constant_e(launchInfo.getReview)).startsWith(null);
 
-    var unlockEdits = extractEvent_e('unlockClassificationEdits','click')
-    .collect_e(true /* initially disabled */,function(_,disabled) {
-       demoEventsE.sendEvent({ action: 'fieldsUnlocked' });
-      $('unlockClassificationEdits').src = !disabled 
-        ? 'images/locked.png' : 'images/unlocked.png';
-      return !disabled;
-    });
+//    var unlockEdits = extractEvent_e('unlockClassificationEdits','click')
+//    .collect_e(true /* initially disabled */,function(_,disabled) {
+//       demoEventsE.sendEvent({ action: 'fieldsUnlocked' });
+//      $('unlockClassificationEdits').src = !disabled 
+//        ? 'images/locked.png' : 'images/unlocked.png';
+//      return !disabled;
+//    });
 
     lift_e(function(basicInfo,curAuth) {
       console.log('inside ginormous lift_e: basicInfo = ', basicInfo);
       console.log('inside ginormous lift_e: curAuth = ', curAuth);
-      applicantB.transform_b(function(a) {
-          setHeadAndTitle(basicInfo,a.name,
-        [A({href:'login.html?logout='},'Log Out'),
-        A({href:'reviewer.html'},'Back to List')])});
 
       insertDomB(applicantB.transform_b(function(a) {return H2(a.name,DIV({className:'sub'},'application'));}),'appname');
 
@@ -108,9 +104,9 @@ $(function() {
         return genRequest({fields:{areas:careas}});
           }, false, launchInfo.setAreas).dom;
 
-        disableInputs(widget,true);
+//        disableInputs(widget,true);
 
-        unlockEdits.lift_e(function(v) { disableInputs(widget,v); });
+//        unlockEdits.lift_e(function(v) { disableInputs(widget,v); });
         return DIV(H4('area'),widget);
       }),'area','beginning');
     
@@ -119,8 +115,8 @@ $(function() {
         map(function(g) {return OPTION({value:g},g);},basicInfo.genders))
         .belayServerSaving(function(gen) {
             return genRequest({fields:{gender:gen}});}, false, launchInfo.changeApplicant).dom;
-        widget.disabled = true;
-        unlockEdits.lift_e(function(v) { widget.disabled = v; });
+        widget.disabled = false;
+//        unlockEdits.lift_e(function(v) { widget.disabled = v; });
 
         return DIV(H4('gender'),widget);
       }),'gender','beginning');
@@ -132,9 +128,9 @@ $(function() {
             return genRequest({
               fields: { id: gen } }); 
           }, false, launchInfo.setPosition).dom;
-        widget.disabled = true;
+        widget.disabled = false;
             
-        unlockEdits.lift_e(function(v) { widget.disabled = v; });  
+//        unlockEdits.lift_e(function(v) { widget.disabled = v; });  
         return DIV(H4('position'),widget);
       }),'position','beginning');
                        
@@ -147,8 +143,8 @@ $(function() {
         var widget = new SelectWidget(ai.ethname,ethopts).belayServerSaving(function(eth) {
           return genRequest({fields:{ethnicity:eth}});}, false, launchInfo.changeApplicant).dom;
 
-        widget.disabled = true;
-        unlockEdits.lift_e(function(v) { widget.disabled = v; });
+        widget.disabled = false;
+//        unlockEdits.lift_e(function(v) { widget.disabled = v; });
         return DIV(H4('ethnicity'),widget);
       }),'ethnicity','beginning');
 
@@ -178,7 +174,7 @@ $(function() {
               LI({className:'submitted'},A({href:launchInfo.componentCaps[stmt.id].serialize()},stmt.name)) :
               LI({className:'unsubmitted'},stmt.name);
             },comps.statements),
-          LI({style:{textAlign:'center'}},A({href:'Applicant/'+comps.id+'/getCombined.pdf?cookie='},IMG({src:'images/buddha.png',alt:'Get Combined PDF',border:0})))
+          LI(A({href:'Applicant/'+comps.id+'/getCombined.pdf?cookie='},IMG({src:'/static/images/pdficon_small.gif',alt:'Get Combined PDF',border:0,style:{'padding-right': '.5em'}}),SPAN('Get Combined PDF') ))
           ));
       }),'personal','beginning');
     

@@ -136,6 +136,11 @@ div.content {
 }
 img.icon {border: 0; width: 16px; height: 16px}
 
+.right-part h4 {
+  font-size: large;
+  font-weight: bold;
+}
+
 .applicant-list {
 	padding: 2em 0;
 	background: #fff;
