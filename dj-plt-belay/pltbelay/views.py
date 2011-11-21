@@ -167,7 +167,7 @@ class CreatePLTAccountHandler(bcap.CapHandler):
     username = grantable.pendingaccount.email
     rawpassword = args['password']
 
-    if len(username) > 20:
+    if len(username) > 200:
       return logWith404(logger, 'create_plt_account: bad username')
 
     if len(rawpassword) < 8:
