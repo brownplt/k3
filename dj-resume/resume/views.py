@@ -1334,6 +1334,12 @@ class FindRefsHandler(bcap.CapHandler):
   def post(self, grantable, args):
 
     refs = grantable.department.findRefs(args['email'])
+    for r in refs:
+      ref = r['reference']
+      submitcap = bcap.regrant('launch-reference', ref)
+      submitlink = '%s/submit-reference/#%s' % (bcap.this_server_url_prefix(), submitcap.serialize())
+      r['submitlink'] = submitlink
+      del r['reference']
     return bcap.bcapResponse(refs)
 
 class ContactHandler(bcap.CapHandler):
