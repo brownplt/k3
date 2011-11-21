@@ -76,24 +76,7 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
 		     },this.info.reviews).join(', ')),
 		 P(STRONG('Comments: '),
 		   this.info.comments.length == 0 ? 'None' : 
-		   map(function(c) {return c.rname;},this.info.comments).join(', ')),
-		 P(STRONG('Tests: '),
-		   function(test_scores){
-		     return map(function(test) {
-		       var scores = filter(function(score) {
-			 return score.id == test.id;
-		       }, test_scores);
-		       return test.short + ' ['  + 
-		       (scores.length == 0 ? '' :
-			map(function(score) { 
-			  return score.verified ? 
-			  score.value : 
-			  score.value + '*'; },
-			    scores).join(', ')) +
-		       '] ';
-		     },filter(function(comp) {
-		       return comp.type == 'test_score';
-		     },basicInfo.components));}(this.info.test_scores).join('; '))));
+		   map(function(c) {return c.rname;},this.info.comments).join(', '))));
   }
 
   this.batchCb = INPUT({type:'checkbox'});
@@ -156,29 +139,6 @@ function makeScoreCategorySelector(basicInfo) {
       scoreTypeB: extractValue_b(scores),
       avgB: extractValue_b(avg)
       };
-}
-
-function getApplicantTestScore(testId,basicInfo,app,verified) {
-  if(!app.__personalcache) { app.__personalcache = { }; }
-
-  var cache_key = testId.toString() + verified.toString();
-
-  if(testId == -1 || !app.info.test_scores) {
-    return false;
-  }
-  else if (app.__personalcache[cache_key]) {
-    return app.__personalcache[cache_key];
-  }
-  else {
-    var scores = app.info.test_scores.filter(function(score) {
-      return score.id == testId && (score.verified || !verified);
-      });
-    app.__personalcache[cache_key] = scores.foldl(0,function(acc,score) {
-	return (acc > parseInt(score.value)) ? acc : parseInt(score.value);
-      });
-      
-    return app.__personalcache[cache_key];
-  }
 }
 
 // false indicates that scoreId is -1 or the applicant has not been reviewed
@@ -846,7 +806,7 @@ function mapValues(fn,filter,obj) {
 
 function makeFilterClause(basicInfo,reviewer,baseFilter) {
   var filterSelect = 
-    SELECT(OPTION({ value: 'test_score' }, "Test Score"),
+    SELECT(
 	   OPTION({ value: 'score' }, "Committee Score"),
            OPTION({ value: 'gender' }, "Gender"),
 	   //           OPTION({ value: 'ethnicity' }, "Ethnicity"),
@@ -855,54 +815,7 @@ function makeFilterClause(basicInfo,reviewer,baseFilter) {
   var filterTypeB = extractValue_b(filterSelect);
   
   var detailsB = filterTypeB.lift_b(function(filterType) {
-      if(filterType == "test_score") {
-	var testCategories = map(function(comp) {
-	    return OPTION({ value: comp.id.toString()}, comp.name);
-	  },
-	  filter(function(comp) {
-	      return comp.type == 'test_score';
-	    },
-	    basicInfo.components));
-	var testSelect = SELECT.apply(this,testCategories);
-	var verifiedCheckbox = INPUT({ type: 'checkbox', value: false});
-	var boundTypeSelect = SELECT(OPTION({ value: "gt" }, "Greater Than"),
-				     OPTION({ value: "lt" }, "Less Than"),
-				     OPTION({ value: "undef" }, "Undefined"));
-	var boundValueInput = INPUT({ type: 'text', size: "5"});
-	var boundTypeB = extractValue_b(boundTypeSelect);
-
-	return {
-	domB: SPANB("is ",boundTypeSelect," " ,
-		    boundTypeB.lift_b(function(t) {
-			return t == "undef" ? "" : boundValueInput;
-		      }), " on ", testSelect, " (", verifiedCheckbox, "Only verified scores)"),
-	    filterB: lift_b(function(category,verified,type,bound) {
-		if((type == "gt" || type == "lt") && isNaN(parseInt(bound))) {
-		  return baseFilter;
-		}
-
-		var bound = parseFloat(bound);
-		
-		return function(app) {
-		  var thisTestScore  = getApplicantTestScore(parseInt(category), 
-							     basicInfo,
-							     app,
-							     verified);
-		  var ret = 
-		    (type == "undef" && (thisTestScore == false)) ||
-		    (thisTestScore &&
-		     ((type == "gt" && thisTestScore >= bound) ||
-		      (type == "lt" && thisTestScore <= bound)));
-		  return ret;
-		};
-	      }, 
-			    extractValue_b(testSelect),
-			    extractValue_b(verifiedCheckbox),
-			    boundTypeB,
-			    extractValue_b(boundValueInput))
-	    };
-      }
-      else if (filterType == "citizenship") {
+      if (filterType == "citizenship") {
 	var citizenships = basicInfo.countries;
 	var citizenOptions = map(function(c) { return OPTION({value:c},c); }, citizenships);
 	citizenOptions.unshift(OPTION({value:'none'}, "(select one)"));
