@@ -515,7 +515,16 @@ class GetApplicantHandler(bcap.CapHandler):
 class AppReviewGetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
     pair = granted.apprevpair
-    return bcap.bcapResponse(pair.applicant.to_json())
+    a_json = pair.applicant.to_json()
+    references = pair.applicant.getReferencesModel()
+    refjson = []
+    for r in references:
+      rjson = r.to_json()
+      rjson['getLetter'] = bcap.regrant('get-letter', r)
+      refjson.append(rjson)
+    a_json['refletters'] = refjson
+
+    return bcap.bcapResponse(a_json)
 
 class GetHighlightStatusHandler(bcap.CapHandler):
   def get(self, granted):
