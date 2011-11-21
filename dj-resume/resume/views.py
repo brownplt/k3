@@ -1386,7 +1386,7 @@ class GetBasicHandler(bcap.CapHandler):
        'del' : bcap.grant('scorecategory-delete', s),\
        'id' : s.id,\
        'change' : bcap.grant('scorecategory-change', s)\
-      } for s in granted.department.my(Score)]
+      } for s in granted.department.my(ScoreCategory)]
     basic_info['scores'] = response_scores
     basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
     basic_info['contact'] = granted.department.shortname
