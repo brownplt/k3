@@ -460,6 +460,7 @@ $(function() {
 
         refilterE = receiver_e();
         var tblRowsB = lift_b(function(apps) {
+          apps = apps.sort(function(a1, a2) { return a1.lastname > a2.lastname ? 1 : -1; });
           var i = 0;
           return map(function(app) {
             i++;
