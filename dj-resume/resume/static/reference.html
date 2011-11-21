@@ -71,7 +71,7 @@
                 response = capServer.dataPostProcess(JSON.stringify(response));
                 if(response.error) {
                   return P({ className: 'error' },
-                      'We could\'t verify that your upload was a PDF or Word document.')
+                      'We couldn\'t verify that your upload was a PDF or Word document.')
                 }
                 else {
                   return P({ className: 'feedback-success' },
