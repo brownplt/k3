@@ -292,12 +292,16 @@ def handle(cap_id, method, args, files):
       content = dataPreProcess("proxyHandler: Bad method: %s\n" % request.method)
       xhr_content(response, content, "text/plain;charset=UTF-8")
       response.status_code = 404
-    handler_log += '  Response: %s\n' % str(response)
+    # Don't log file responses
+    if hasattr(response, 'Content-Disposition') and\
+        response['Content-Disposition'].find('attachment') != -1:
+      handler_log += '  Response: %s\n' % str(response)
     logger.error(handler_log)
     return response
   except Exception as e:
     logger.error(handler_log)
     logger.error('BELAY: Uncaught handler exception: %s' % e)
+    raise e
 
 def proxyHandler(request):
 

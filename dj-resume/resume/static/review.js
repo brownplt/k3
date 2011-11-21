@@ -60,7 +60,7 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
 		   fold(function(rl,acc) {
 		       return (acc.length ? acc.concat([', ']) : acc).concat(
 									     rl.submitted ? 
-									     [A({href:'letter-'+rl.id+'.pdf?cookie='+authCookie},rl.name)] : 
+									     [A({href:rl.getLetter.serialize()},rl.name)] : 
 									     [rl.name]);
 		     },[],this.info.refletters)),
 		 P(STRONG('Reviews: '),

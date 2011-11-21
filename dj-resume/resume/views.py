@@ -32,6 +32,9 @@ def get_file_type(contents):
   else:
     return 'unknown'
 
+def get_letter_filename(reference):
+  return 'letter-%d-%d' % (reference.applicant.id, reference.id)
+
 def get_statement_filename(applicant, component_type):
   return '%d-%d' % (applicant.id,component_type.id)
 
@@ -214,6 +217,7 @@ class ResumeInit():
         'change-applicant' : ChangeApplicantHandler,\
         'set-position' : SetPositionHandler,\
         'get-statement' : GetStatementHandler,\
+        'get-letter' : GetLetterHandler,\
         'get-combined' : GetCombinedHandler,\
         'upload-material' : UploadMaterialHandler,\
         'revert-review' : RevertReviewHandler,\
@@ -363,7 +367,6 @@ If you received this message in error, please reply to this email to let us know
   if emailResponse: return emailResponse
   return {'success' : True}
   
-
 class ReferenceLetterHandler(bcap.CapHandler):
   def files_needed(self):
     return ['letter']
@@ -375,8 +378,6 @@ class ReferenceLetterHandler(bcap.CapHandler):
 
     reference = granted.reference
     letter = files['letter']
-
-    filename = 'letter-%d-%d'
 
     try:
       save_file(letter, 'letter-%d-%d' % (reference.applicant.id, reference.id))
@@ -767,6 +768,40 @@ class SetPositionHandler(bcap.CapHandler):
     return logWith404(logger, 'SetPositionHandler: no position with id %s' % id,\
       level='error')
 
+def file_response(filename, response_prefix):
+    full_path = os.path.join(settings.SAVEDFILES_DIR, filename)
+
+    try:
+      full_file = open(full_path, 'r')
+      file_data = full_file.read()
+    except Exception as e:
+      return logWith404(logger,\
+        'file_response: exception reading file: %s' % e,\
+        level='error')
+
+    file_type = get_file_type(file_data)
+    if file_type == 'unknown':
+      return logWith404(logger,\
+        'GetStatementHandler: unknown statement file type',\
+        level='error')
+    elif file_type == 'pdf':
+      mimetype = 'application/pdf'
+    else:
+      mimetype = 'application/msword'
+
+    response = HttpResponse(file_data, mimetype=mimetype)
+    resp_filename = '%s.%s' % (\
+      response_prefix,\
+      file_type)
+    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+    return response
+
+class GetLetterHandler(bcap.CapHandler):
+  def get(self, granted):
+    ref = granted.reference
+    filename = get_letter_filename(ref)
+    return file_response(filename, 'letter')
+
 class GetStatementHandler(bcap.CapHandler):
   def get(self, granted):
     component = granted.component
@@ -952,12 +987,20 @@ class GetApplicantsHandler(bcap.CapHandler):
         [(c.type.id, bcap.grant('get-statement', c))\
         for c in components if c.type.type == 'statement'])
       a_json['components'] = component_caps
+      references = applicant.getReferencesModel()
+      refjson = []
+      for r in references:
+        rjson = r.to_json()
+        rjson['getLetter'] = bcap.regrant('get-letter', r)
+        refjson.append(rjson)
+      a_json['refletters'] = refjson
       applicant_json.append(a_json)
     return bcap.bcapResponse({
       'changed': True,
       'lastChange': reviewer.getLastChange(),
       'value': applicant_json
     })
+
 
 class ScoreCategoryDeleteHandler(bcap.CapHandler):
   def delete(self, grantable):
