@@ -378,6 +378,7 @@ class ReferenceLetterHandler(bcap.CapHandler):
 
     reference = granted.reference
     letter = files['letter']
+    filename = 'letter-%d-%d' % (reference.applicant.id, reference.id)
 
     try:
       save_file(letter, 'letter-%d-%d' % (reference.applicant.id, reference.id))
