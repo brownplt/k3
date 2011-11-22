@@ -887,7 +887,9 @@ class GetCombinedHandler(bcap.CapHandler):
       if ftype != 'pdf':
         self.convert_to_pdf(path)
       pdf = file(path, 'rb')
+      logger.error('!!! before PdfFileReader construction, path = %s' % path)
       reader = PdfFileReader(pdf)
+      logger.error('!!! after PdfFileReader construction')
       for pagenum in range(reader.getNumPages()):
         out.addPage(reader.getPage(pagenum))
 
@@ -901,13 +903,7 @@ class GetCombinedHandler(bcap.CapHandler):
     tdir = tempfile.mkdtemp()
     cover_file.close()
     tfile = open(os.path.join(tdir,'o.tex'),'w')
-    tfile.write(coverTemplate % (\
-      texEscape(applicant.fullname()),\
-      texEscape(applicant.auth.email),\
-      '\n\n'.join(['{\\bf %s:} %s' % (texEscape(c.type.name), texEscape(c.value))\
-          for c in applicant.get_component_objects() if c.type.type != 'statement']),\
-      '\n\n'.join(texEscape(a['name']) for a in applicant.getAreas()),\
-      '\n\\medskip\n'.join([self.get_rev_tex(rev) for rev in applicant.myReviews()])))
+    tfile.write(coverTemplate % (texEscape(applicant.fullname()), texEscape(applicant.auth.email), '\n\n'.join(['{\\bf %s:} %s' % (texEscape(c.type.name), texEscape(c.value)) for c in applicant.get_component_objects() if c.type.type != 'statement']), '\n\n'.join(texEscape(a['name']) for a in applicant.getAreas()), '\n\\medskip\n'.join([self.get_rev_tex(rev) for rev in applicant.myReviews()])))
     tfile.close()
     os.system('pdflatex -output-directory %s %s' % (tdir, os.path.join(tdir,'o.tex')))
     review_pdf = PdfFileReader(file(os.path.join(tdir, 'o.pdf'), 'rb'))
