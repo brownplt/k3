@@ -874,7 +874,7 @@ class GetCombinedHandler(bcap.CapHandler):
         return ''
       else:
         return ', '.join(['%s: %d' % (texEscape(sc.value.category.shortform),sc.value.number) for sc in scores])
-    return '{\\bf %s} %s %s\n\n%s\n\n' % (texEscape(rev.reviewer.auth.email), getRscores(), getAdv(), texEscape(rev.comments))
+    return '{\\bf %s} %s %s\n\n%s\n\n' % (texEscape(rev.reviewer.auth.username), getRscores(), getAdv(), texEscape(rev.comments))
 
   def append_files(self, out, filenames):
     for filename in filenames:
@@ -903,7 +903,7 @@ class GetCombinedHandler(bcap.CapHandler):
     tdir = tempfile.mkdtemp()
     cover_file.close()
     tfile = open(os.path.join(tdir,'o.tex'),'w')
-    tfile.write(coverTemplate % (texEscape(applicant.fullname()), texEscape(applicant.auth.email), '\n\n'.join(['{\\bf %s:} %s' % (texEscape(c.type.name), texEscape(c.value)) for c in applicant.get_component_objects() if c.type.type != 'statement']), '\n\n'.join(texEscape(a['name']) for a in applicant.getAreas()), '\n\\medskip\n'.join([self.get_rev_tex(rev) for rev in applicant.myReviews()])))
+    tfile.write(coverTemplate % (texEscape(applicant.fullname()), texEscape(applicant.auth.email), '\n\n'.join(['{\\bf %s:} %s' % (texEscape(c.type.name), texEscape(c.value)) for c in applicant.get_component_objects() if c.type.type != 'statement']), '\n\n'.join(texEscape(a.name) for a in applicant.getAreas()), '\n\\medskip\n'.join([getRevTex(rev) for rev in applicant.myReviews()])))
     tfile.close()
     os.system('pdflatex -output-directory %s %s' % (tdir, os.path.join(tdir,'o.tex')))
     review_pdf = PdfFileReader(file(os.path.join(tdir, 'o.pdf'), 'rb'))
