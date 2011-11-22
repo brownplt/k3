@@ -384,6 +384,7 @@ class ReferenceLetterHandler(bcap.CapHandler):
 
     reference = granted.reference
     letter = files['letter']
+    filename = 'letter-%d-%d' % (reference.applicant.id, reference.id)
 
     try:
       save_file(letter, 'letter-%d-%d' % (reference.applicant.id, reference.id))
@@ -520,7 +521,16 @@ class GetApplicantHandler(bcap.CapHandler):
 class AppReviewGetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
     pair = granted.apprevpair
-    return bcap.bcapResponse(pair.applicant.to_json())
+    a_json = pair.applicant.to_json()
+    references = pair.applicant.getReferencesModel()
+    refjson = []
+    for r in references:
+      rjson = r.to_json()
+      rjson['getLetter'] = bcap.regrant('get-letter', r)
+      refjson.append(rjson)
+    a_json['refletters'] = refjson
+
+    return bcap.bcapResponse(a_json)
 
 class GetHighlightStatusHandler(bcap.CapHandler):
   def get(self, granted):
@@ -1428,6 +1438,12 @@ class FindRefsHandler(bcap.CapHandler):
   def post(self, grantable, args):
 
     refs = grantable.department.findRefs(args['email'])
+    for r in refs:
+      ref = r['reference']
+      submitcap = bcap.regrant('launch-reference', ref)
+      submitlink = '%s/submit-reference/#%s' % (bcap.this_server_url_prefix(), submitcap.serialize())
+      r['submitlink'] = submitlink
+      del r['reference']
     return bcap.bcapResponse(refs)
 
 class ContactHandler(bcap.CapHandler):
@@ -1464,7 +1480,7 @@ class GetBasicHandler(bcap.CapHandler):
        'del' : bcap.grant('scorecategory-delete', s),\
        'id' : s.id,\
        'change' : bcap.grant('scorecategory-change', s)\
-      } for s in granted.department.my(Score)]
+      } for s in granted.department.my(ScoreCategory)]
     basic_info['scores'] = response_scores
     basic_info['svnum'] = dict([(s.id, s.number) for s in all_svals])
     basic_info['contact'] = granted.department.shortname

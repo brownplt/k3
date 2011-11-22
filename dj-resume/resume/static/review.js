@@ -460,6 +460,7 @@ $(function() {
 
         refilterE = receiver_e();
         var tblRowsB = lift_b(function(apps) {
+          apps = apps.sort(function(a1, a2) { return a1.lastname > a2.lastname ? 1 : -1; });
           var i = 0;
           return map(function(app) {
             i++;
@@ -735,6 +736,19 @@ function rejectedFilter() {
       }
     });
 };
+
+function readyFilter() {
+  getObj('filterReady').checked = 
+    getCookie("readyFilter") === "true" || false; 
+  
+  return extractValue_b('filterReady').lift_b(function(showRejected) {
+      setCookie("readyFilter",30,showRejected.toString());
+      if (showRejected) { return filterNone; }
+      else {
+	return function(applicant) { return applicant.info.ready; };
+      }
+    });
+}
 
 function acceptedFilter() {
   getObj('filterAccepted').checked = 
@@ -1230,6 +1244,7 @@ function initializeFilters(basicInfo, hiddensB, reviewer) {
       makeWithFilter(basicInfo, "filterCV", "Curriculum Vitae"),
       makeWithFilter(basicInfo, "filterRS", "Research Statement"),
       rejectedFilter(),
+      readyFilter(),
       letterCountFilter(),
       reviewCountFilter(),
       hiddenFilter(basicInfo, hiddensB)]);

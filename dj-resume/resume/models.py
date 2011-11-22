@@ -33,7 +33,8 @@ class Department(bcap.Grantable):
   def findRefs(self, email):
     refs = self.my(Reference).filter(email=email)
     return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,
-      'appemail' : r.applicant.auth.email} for r in refs]
+      'appemail' : r.applicant.auth.email,
+      'reference' : r} for r in refs]
   def getBasic(self):
     return {\
       'info' : self.to_json(),\

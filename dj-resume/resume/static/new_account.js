@@ -22,7 +22,7 @@ $(function() {
 
   // Snag the fragment off before initializing Belay
   var hash = window.location.hash.substr(1);
-  window.location.hash = "";
+  window.location.hash = "#";
 
   var tempServer = new CapServer();
   var emailAndCreate = tempServer.restore(hash);

@@ -264,8 +264,9 @@ $(function() {
           if (results.length > 0) return UL(
             map(function(apl) {
               return LI(
-                A({href:'appreview.html?id='+apl.appid},apl.appname),
-                A({href:'mailto:'+apl.appemail},' ',IMG({border:0,src:'images/envelope.png',alt:'Email Candidate'})));
+                SPAN(apl.appname + ": "),
+                A({href:apl.submitlink, target: '_blank'},'Submit Reference'),
+                A({href:'mailto:'+apl.appemail},' ',IMG({border:0,src:'/static/images/envelope.png',alt:'Email Candidate'})));
             },results)); else return P('No requests have gone to that email address.');}),'lwresults');
 
     insertDomB(switch_b(pendingE.transform_e(function(pending) {

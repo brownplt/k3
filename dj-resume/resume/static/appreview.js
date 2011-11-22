@@ -184,7 +184,7 @@ $(function() {
         ULB({className:'material-list'},
           map(function(lttr) {
             if(lttr.submitted)
-              return LI({className:'submitted'},A({href:'letter-'+lttr.id+'.pdf?cookie=none&id='+lttr.id},lttr.name), " (" + lttr.email + ")");
+              return LI({className:'submitted'},A({href:lttr.getLetter.serialize()},lttr.name), " (" + lttr.email + ")");
             else {
               if(curAuth.role == 'admin') {							
                 upl = new ToggleWidget('(upload)','(close upload box)');

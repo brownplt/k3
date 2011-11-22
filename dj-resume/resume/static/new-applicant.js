@@ -27,7 +27,7 @@ $(function() {
 
   var capServer = new CapServer();
   var hash = window.location.hash;
-  window.location.hash = "";
+  window.location.hash = "#";
   var createCapSer = hash.substr(1);
 
   var createCap = capServer.restore(createCapSer);
