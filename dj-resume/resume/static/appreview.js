@@ -174,7 +174,7 @@ $(function() {
               LI({className:'submitted'},A({href:launchInfo.componentCaps[stmt.id].serialize()},stmt.name)) :
               LI({className:'unsubmitted'},stmt.name);
             },comps.statements),
-          LI(A({href:'Applicant/'+comps.id+'/getCombined.pdf?cookie='},IMG({src:'/static/images/pdficon_small.gif',alt:'Get Combined PDF',border:0,style:{'padding-right': '.5em'}}),SPAN('Get Combined PDF') ))
+          LI(A({href:launchInfo.getCombined.serialize()},IMG({src:'/static/images/pdficon_small.gif',alt:'Get Combined PDF',border:0,style:{'padding-right': '.5em'}}),SPAN('Get Combined PDF') ))
           ));
       }),'personal','beginning');
     

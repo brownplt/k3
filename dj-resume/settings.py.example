@@ -115,3 +115,5 @@ LOGGING = {
 }
 
 SAVEDFILES_DIR = '/path/to/k3/dj-resume/savedfiles/'
+
+COVER_TEMPLATE = '/path/to/cover_template.tex' 
