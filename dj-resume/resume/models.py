@@ -418,6 +418,14 @@ class Highlight(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class UnverifiedUser(bcap.Grantable):
+  def belay_account(self):
+    belay_creates = UnverifiedBelayAccount.objects.filter(uu=self)
+    if len(belay_creates) > 1:
+      raise Exception('Ambiguous belay_account')
+    elif len(belay_creates) == 0:
+      return None
+    return belay_creates[0].create
+
   roles = [\
     ('applicant', 'applicant'),\
     ('reviewer', 'reviewer'),\
@@ -427,6 +435,10 @@ class UnverifiedUser(bcap.Grantable):
   name = models.TextField()
   role = models.TextField(choices=roles)
   department = models.ForeignKey(Department)
+
+class UnverifiedBelayAccount(bcap.Grantable):
+  uu = models.ForeignKey(UnverifiedUser)
+  create = models.TextField()
 
 class UnverifiedApplicant(bcap.Grantable):
   email = models.EmailField()

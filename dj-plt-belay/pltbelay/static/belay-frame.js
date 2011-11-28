@@ -15,6 +15,7 @@ $(function() {
   var clientLocation, clientEmail;
   var clientkey = null;
   var createAccount;
+  var noAccountsMessage;
   var loginEmail;
   var sessionToken;
   var capServer = new CapServer(newUUIDv4());
@@ -99,6 +100,10 @@ $(function() {
     console.log('The client\'s email is: ', clientEmail);
   });
 
+  $('#createpending').click(function() {
+    showCreateAccount({createCap: createAccount});
+  });
+
   $('#request-submit').click(function() {
     function invalid(str) {
       var p = $('<p>');
@@ -155,8 +160,12 @@ $(function() {
     console.log(data);
     clientLocation = data.clientLocation;
     clientEmail = data.email;
+    if(data.noAccountsMessage) { noAccountsMessage = data.noAccountsMessage; }
     if(data.showCreate) {
       $('#createplt').show();
+    }
+    if(data.showOptions) {
+      $('#createpending').show();
     }
     console.log('Client location is: ', clientLocation);
     if(!clientLocation) {
@@ -166,7 +175,8 @@ $(function() {
     console.log("CL: ", clientLocation);
     console.log("CLH: ", clientLocation.hash);
     console.log('Starting with: ', data);
-    if(data.createCap) { showCreateAccount(data); }
+    if(data.createCap && !data.showOptions) { showCreateAccount(data); }
+    if(data.createCap && data.showOptions) { createAccount = data.createCap; }
     else if(clientLocation.hash !== "" && clientLocation.hash !== "#") go();
   });
 
@@ -331,6 +341,7 @@ $(function() {
         }
         else {
           hideAll();
+          if(noAccountsMessage) { $('#nobody').text(noAccountsMessage); }
           $('#nobody').fadeIn();
           launchNonInstance(false);
         }

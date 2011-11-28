@@ -122,7 +122,7 @@ def make_index_handler(index_file, dept_name):
 
 cs_index_handler = make_index_handler('index.html','cs')
 bhort_index_handler = make_index_handler('index.html','bhort')
-new_applicant_handler = make_index_handler('new-applicant.html','cs')
+new_applicant_handler = make_index_handler('new-applicant.html','bhort')
 
 def make_contact_handler(dept_name):
   def contact_handler(request):
@@ -239,7 +239,7 @@ class ApplicantEmailAndCreateHandler(bcap.CapHandler):
     create_cap = bcap.regrant('add-verified-applicant', ua)
     return bcap.bcapResponse({
       'email': email,
-      'create': create_cap
+      'create': create_cap,
     })
 
 class AdminEmailAndCreateHandler(bcap.CapHandler):
@@ -248,10 +248,14 @@ class AdminEmailAndCreateHandler(bcap.CapHandler):
     uu = granted.unverifieduser
     email = uu.email
     create_cap = bcap.regrant('add-admin', uu)
-    return bcap.bcapResponse({
+    response = {
       'email': email,
       'create': create_cap
-    })
+    }
+    maybeBelayAccount = uu.belay_account()
+    if maybeBelayAccount:
+      response['createBelay'] = maybeBelayAccount
+    return bcap.bcapResponse(response)
 
 class ReviewerEmailAndCreateHandler(bcap.CapHandler):
   # granted: UnverifiedUser
@@ -259,10 +263,14 @@ class ReviewerEmailAndCreateHandler(bcap.CapHandler):
     uu = granted.unverifieduser
     email = uu.email
     create_cap = bcap.regrant('add-reviewer', uu)
-    return bcap.bcapResponse({
+    response = {
       'email': email,
       'create': create_cap
-    })
+    }
+    maybeBelayAccount = uu.belay_account()
+    if maybeBelayAccount:
+      response['createBelay'] = maybeBelayAccount
+    return bcap.bcapResponse(response)
 
 class AddApplicantRelationshipHandler(bcap.CapHandler):
   def get(self, granted):
@@ -1232,6 +1240,14 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
     except:
       resp = {'success' : False, 'message' : 'failed to create UnverifiedUser'}
       return bcap.bcapResponse(resp)
+
+    create_belay = bcap.Capability(settings.BELAY_CREATE)
+    response = create_belay.post(bcap.dataPreProcess({'email': args['email']}))
+    create_cap = response['create']
+
+    ub = UnverifiedBelayAccount(uu=uu,\
+      create=create_cap.serialize())
+    ub.save()
 
     if role == 'admin': create_cap = bcap.grant('get-admin-email-and-create', uu)
     elif role == 'reviewer': create_cap = bcap.grant('get-reviewer-email-and-create', uu)

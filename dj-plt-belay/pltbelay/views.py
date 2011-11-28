@@ -156,6 +156,31 @@ Visit this link to get started:
 
   return bcap.bcapResponse({'success': True})
 
+
+def request_plt_account_silent(request):
+  """Allows requests only from those listed in settings.REQUESTING_DOMAINS
+    Currently, used by Resume as a trusted channel to ask for new accounts
+    so that service isn't exposed to arbitrary clients, and can be controlled
+    through emails sent from Resume"""
+  def request_allowed():
+    return request.META['REMOTE_ADDR'] in settings.REQUESTING_DOMAINS
+    
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+
+  if not request_allowed():
+    return logWith404(logger, 'request_silent: bad request %s' %\
+      request.META['REMOTE_ADDR'])
+
+  args = bcap.dataPostProcess(request.read())
+  pa = PendingAccount(email = args['email'])
+  pa.save()
+  create_cap = bcap.grant('create-account', pa)
+
+  return bcap.bcapResponse({'create': create_cap})
+
+  
+
 class CreatePLTAccountHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['username', 'password']

@@ -43,6 +43,10 @@ SITE_ID = 1
 SITE_NAME = "http://localhost:8000"
 BELAY_LOCATION = SITE_NAME
 
+# These domains can ask for accounts to be created
+# (not capability-friendly, but easier configuration)
+REQUESTING_DOMAINS = ['localhost', '127.0.0.1']
+
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True

@@ -10,10 +10,17 @@
 #nobody {
   display: none;
 }
-#createplt {
+#createpending {
   display: none;
+  width: 40%;
+  height: 4em;
+  max-width: 15em;
+  max-height: 5em;
+  margin-left: 2em;
+  font-weight: bold;
 }
 #createplt {
+  display: none;
   width: 40%;
   height: 4em;
   max-width: 15em;

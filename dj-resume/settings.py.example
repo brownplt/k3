@@ -32,6 +32,7 @@ LANGUAGE_CODE = 'en-us'
 SITE_ID = 1
 SITE_NAME = "http://localhost:8001"
 BELAY_LOCATION = "http://localhost:8000"
+BELAY_CREATE = "http://localhost:8000/request_account_silent"
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.

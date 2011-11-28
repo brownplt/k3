@@ -3,6 +3,7 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('',
   (r'^belay-frame/$', 'pltbelay.views.belay_frame'),
   (r'^request_account/$', 'pltbelay.views.request_plt_account'),
+  (r'^request_account_silent/$', 'pltbelay.views.request_plt_account_silent'),
   (r'^glogin/$', 'pltbelay.views.glogin'),
   (r'^glogin_landing/.*$', 'pltbelay.views.glogin_landing'),
   (r'^plt_login/$', 'pltbelay.views.plt_login'),

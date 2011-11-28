@@ -90,6 +90,7 @@ def invokeCapURL(capURL, meth, data=""):
     result = conn.getresponse()
 
     if result.status >= 400 and result.status <= 600:
+      logger.error('Status: %s\nBody: %s' % (result.status, result.read()))
       raise BelayException('CapServer: remote invoke of ' + capURL + ' failed.')
     elif re.match('image/.*', result.getheader('Content-Type', '')):
       return result 

@@ -1,5 +1,4 @@
 $(function() {
-  var theFrame;
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
     frame.attr({
@@ -12,7 +11,6 @@ $(function() {
       height: '20em',
       padding: '3em'
     });
-    theFrame = frame;
     return frame;
   }
   function addFrame(frame) {
@@ -27,7 +25,13 @@ $(function() {
   var tempServer = new CapServer();
   var emailAndCreate = tempServer.restore(hash);
   emailAndCreate.get(function(eAndC) {
-    window.belay.belayInit(makeBelayFrame, addFrame, { email: eAndC.email });
+    window.belay.belayInit(makeBelayFrame, addFrame, {
+      email: eAndC.email,
+      createCap: eAndC.createBelay,
+      showOptions: true,
+      showCreate: false,
+      noAccountsMessage: 'Success!  Wait a moment to be redirected to the review page.'
+    });
 
     function error(message) {
       var left = $('.left-part');
