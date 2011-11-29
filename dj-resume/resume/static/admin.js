@@ -261,10 +261,20 @@ $(function() {
           if (results.length > 0) return UL(
             map(function(apl) {
               return LI(
-                SPAN(apl.appname + ": "),
+                SPAN([A({target:'_blank',href:apl.launch}, apl.appname), ": "]),
                 A({href:apl.submitlink, target: '_blank'},'Submit Reference'),
                 A({href:'mailto:'+apl.appemail},' ',IMG({border:0,src:'/static/images/envelope.png',alt:'Email Candidate'})));
             },results)); else return P('No requests have gone to that email address.');}),'lwresults');
+
+    insertDomE(
+        belayGetWSO_e(snapshot_e(extractEvent_e('appbut','click'),$B('appemail')).transform_e(function(email) {
+          return {fields:{email:email}};
+        }), launchInfo.findApplicant).transform_e(function(results) {
+          if (results.length > 0) return UL(
+            map(function(apl) {
+              return LI(
+                SPAN(A({target:'_blank',href:apl.launch}, apl.name)))
+            },results)); else return P('No applicants with that email address.');}),'appresults');
 
     insertDomB(switch_b(pendingE.transform_e(function(pending) {
       return new ModListWidget(pending,

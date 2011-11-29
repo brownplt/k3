@@ -30,6 +30,12 @@ class Department(bcap.Grantable):
       'name' : r.auth.name,\
       'uname' : '%s (%s)' % (r.auth.name, r.auth.email),\
       'role' : r.auth.role} for r in reviewers]
+  def findApplicants(self, email):
+    auths = self.my(AuthInfo).filter(email=email)
+    apps = []
+    for auth in auths:
+      apps += self.my(Applicant).filter(auth=auth)
+    return apps
   def findRefs(self, email):
     refs = self.my(Reference).filter(email=email)
     return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,

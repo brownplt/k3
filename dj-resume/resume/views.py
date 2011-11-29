@@ -183,6 +183,7 @@ class ResumeInit():
         'launch-reviewer': ReviewerLaunchHandler,
         'launch-admin': AdminLaunchHandler,
         'launch-applicant' : ApplicantLaunchHandler,\
+        'stash-applicant' : ApplicantStashHandler,\
         'update-applicant-name' : ApplicantUpdateNameHandler,\
         'launch-app-review' : LaunchAppReviewHandler,\
         'get-app-review' : GetAppReviewHandler,\
@@ -193,6 +194,7 @@ class ResumeInit():
         'appreview-get-reviewers' : AppReviewGetReviewersHandler,\
         'change-contacts' : ChangeContactsHandler,\
         'find-refs' : FindRefsHandler,\
+        'find-applicant' : FindApplicantHandler,\
         'get-basic' : GetBasicHandler,\
         'get-applicant-basic' : GetApplicantBasicHandler,\
         'set-basic' : SetBasicHandler,\
@@ -294,6 +296,7 @@ class AdminLaunchHandler(bcap.CapHandler):
       'getBasic' : bcap.grant('get-basic', department),\
       'setBasic' : bcap.grant('set-basic', department),\
       'findRefs' : bcap.grant('find-refs', department),\
+      'findApplicant' : bcap.grant('find-applicant', department),\
       'changeContacts' : bcap.grant('change-contacts', department),\
       'getCSV' : bcap.grant('get-csv', department)\
     }
@@ -1363,6 +1366,35 @@ class ChangeContactsHandler(bcap.CapHandler):
     resp = {'success' : True}
     return bcap.bcapResponse(resp)
 
+
+class ApplicantStashHandler(bcap.CapHandler):
+  def get(self, grantable):
+    launchCap = bcap.regrant('launch-applicant', grantable.applicant)
+
+    return bcap.bcapResponse(launchCap)
+
+class FindApplicantHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['email']
+
+  def name_str(self):
+    return 'FindApplicantsHandler'
+
+  def post(self, grantable, args):
+
+    applicants = grantable.department.findApplicants(args['email'])
+    apps = []
+    for a in applicants:
+      a_json = {}
+      a_json['name'] = a.fullname()
+      launchCap = bcap.regrant('stash-applicant', a)
+      launchurl = '%s/applicant/#%s' % \
+        (bcap.this_server_url_prefix(), launchCap.serialize())
+      a_json['launch'] = launchurl
+      apps.append(a_json)
+
+    return bcap.bcapResponse(apps)
+
 class FindRefsHandler(bcap.CapHandler):
   def post_arg_names(self):
     return ['email']
@@ -1379,6 +1411,10 @@ class FindRefsHandler(bcap.CapHandler):
       submitlink = '%s/submit-reference/#%s' % (bcap.this_server_url_prefix(), submitcap.serialize())
       r['submitlink'] = submitlink
       del r['reference']
+      launchCap = bcap.regrant('stash-applicant', ref.applicant)
+      launchurl = '%s/applicant/#%s' % \
+        (bcap.this_server_url_prefix(), launchCap.serialize())
+      r['launch'] = launchurl
     return bcap.bcapResponse(refs)
 
 class ContactHandler(bcap.CapHandler):
