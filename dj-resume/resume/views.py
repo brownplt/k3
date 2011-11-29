@@ -1026,6 +1026,7 @@ class GetApplicantsHandler(bcap.CapHandler):
         refjson.append(rjson)
       a_json['refletters'] = refjson
       applicant_json.append(a_json)
+      a_json['getCombined'] = bcap.grant('get-combined', applicant)
     return bcap.bcapResponse({
       'changed': True,
       'lastChange': reviewer.getLastChange(),

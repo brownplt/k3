@@ -235,7 +235,7 @@ function getTblColumns(bi,reviewer) {
 	    return TD(a.statements[c.id] ? A({href:a.components[c.id].serialize()},c.short) : '');});
       },bi.statements)).concat([
 				makeColumn('combined-col','All',function(a,b) {return 0;},function(a,cookie) {
-				    return TD(A({href:'Applicant/'+a.id+'/getCombined.pdf?cookie='+cookie},
+				    return TD(A({href:a.info.getCombined.serialize()},
 						(a.info.statements.length ? IMG({alt:'Get Combined PDF',title:'Get Combined PDF',border:0,src:'/static/images/pdficon_small.gif'}) : '')));}),
 				/*				batchCol,*/
 				makeColumn('summary', "My Scores", 
