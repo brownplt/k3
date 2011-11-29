@@ -2,6 +2,7 @@ import belaylibs.models as bcap
 from django.db import models
 import time
 import logging
+import sha
 
 logger = logging.getLogger('default')
 
@@ -123,8 +124,11 @@ class Conference(bcap.Grantable):
     paper.save()
 
     adm = User(conference=c, username=admin_user, 
-      password_hash=sha.new(admin_password).hexdigest(), fullname=admin_name, 
+      password_hash=sha.new(admin_password).hexdigest(), full_name=admin_name,
       email=admin_email)
+    # 2 saves because you can't add ManyToMany relationships until the instance
+    # is saved
+    adm.save()
     adm.roles.add(admin_role)
     adm.roles.add(reviewer_role)
     adm.save()
@@ -134,7 +138,7 @@ class Conference(bcap.Grantable):
     c.conflict_bid = conf_bid
     c.default_overall = no_rate
     c.default_expertise = no_exp
-    c.default_target = accept
+    c.default_target = accepted
     c.default_decision = undecided
     c.display_component = abstract
     c.save()
@@ -210,7 +214,7 @@ class ReviewComponentType(bcap.Grantable):
 class User(bcap.Grantable):
   username = models.CharField(max_length=20)
   full_name = models.TextField()
-  email = models.TextField()
+  email = models.EmailField()
   password_hash = models.TextField()
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
