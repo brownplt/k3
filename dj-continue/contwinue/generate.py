@@ -27,12 +27,12 @@ def generate(request):
       grace_hours=48, conference=c)
     writer_bio.save()
 
-  fave_colors = ComponentType.objects.filter(abbr='C')
-  if len(fave_colors) == 0:
-    fave_color = ComponentType(abbr='C', description='Favourite colour',
-      fmt='Text', size_limit=10, deadline=int(time.time())+1, mandatory=False,
+  extended_abstracts = ComponentType.objects.filter(abbr='C')
+  if len(extended_abstracts) == 0:
+    extended_abstract = ComponentType(abbr='C', description='Extended Abstract',
+      fmt='Text', size_limit=1000, deadline=int(time.time())+1, mandatory=False,
       grace_hours=96, conference=c)
-    fave_color.save()
+    extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) == 0:

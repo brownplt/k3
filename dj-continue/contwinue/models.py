@@ -153,7 +153,7 @@ class Conference(bcap.Grantable):
   default_decision = models.ForeignKey('DecisionValue', related_name='dd', null=True)
   display_component = models.ForeignKey('ComponentType', related_name='dc', null=True)
   name = models.TextField()
-  shortname = models.TextField()
+  shortname = models.TextField(unique=True)
   admin_contact = models.ForeignKey('User', related_name='ac', null=True)
   last_change = models.IntegerField(default=0)
   show_bid = models.BooleanField()
@@ -196,10 +196,10 @@ class ComponentType(bcap.Grantable):
   def deadline_str(self):
 	  return time.strftime("%A, %B %d, %Y %I:%M %p GMT", 
       time.gmtime(self.deadline))
-  roles = [('Text', 'Text'), ('PDF', 'PDF'), ('Any', 'Any')]
+  formats = [('Text', 'Text'), ('PDF', 'PDF'), ('Any', 'Any')]
   abbr = models.CharField(max_length=1)
   description = models.TextField()
-  fmt = models.TextField(choices=roles)
+  fmt = models.TextField(choices=formats)
   size_limit = models.IntegerField()
   deadline = models.IntegerField()
   grace_hours = models.IntegerField()
