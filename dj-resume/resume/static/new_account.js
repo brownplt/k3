@@ -1,4 +1,7 @@
 $(function() {
+
+  COMMON.setContact(contactURL);
+
   function makeBelayFrame() {
     var frame = $('<iframe></iframe>');
     frame.attr({
@@ -7,9 +10,10 @@ $(function() {
     });
     frame.css({
       border: 'none',
-      width: '40em',
-      height: '20em',
-      padding: '3em'
+      width: '80%',
+      'min-height': '24em',
+      'margin-top': '1em',
+      'margin-left': '3em'
     });
     return frame;
   }
