@@ -147,6 +147,10 @@ class Applicant(bcap.Grantable):
     components = Component.objects.filter(applicant=self).exclude(value='')
     components = filter(lambda c: c.type.type == 'contactweb', components)
     return [{'name' : c.type.short, 'value' : c.value} for c in components]
+  def get_submitted_objects(self):
+    components = Component.objects.filter(applicant=self).exclude(lastSubmitted=0)
+    components = filter(lambda c: c.type.type == 'statement', components)
+    return components
   def getStatements(self):
     components = Component.objects.filter(applicant=self).exclude(lastSubmitted=0)
     components = filter(lambda c: c.type.type == 'statement', components)
@@ -219,6 +223,8 @@ class Applicant(bcap.Grantable):
     else:
       readies[0].ready = readiness
       readies[0].save()
+  def get_submitted_refs(self):
+    return Reference.objects.filter(applicant=self).exclude(submitted=0)
   def to_json(self):
     return {
       'id' : self.id,
@@ -385,6 +391,8 @@ class Review(bcap.Grantable):
     for other_score in Score.objects.filter(review=other):
       s = Score(value=other_score.value, review=self, department=self.department)
       s.save()
+  def get_scores(self):
+    return Score.objects.filter(review=self)
   applicant = models.ForeignKey(Applicant)
   reviewer = models.ForeignKey(Reviewer)
   ord = models.IntegerField(default=0)

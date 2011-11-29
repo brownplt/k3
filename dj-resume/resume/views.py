@@ -860,7 +860,14 @@ class GetStatementHandler(bcap.CapHandler):
 class GetCombinedHandler(bcap.CapHandler):
   def get(self, granted):
     applicant = granted.applicant
-    return logWith404(logger, 'GetCombinedHandler NYI')
+    try:
+      from lib.py.combiner import get_combined_data
+      combined_data = get_combined_data(applicant)
+      response = HttpResponse(combined_data, mimetype='pdf')
+      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
+      return response
+    except Exception as e:
+      return logWith404(logger, 'GetCombinedHandler: %s' % e, level='error')
 
 class UploadMaterialHandler(bcap.CapHandler):
   def name_str(self):
