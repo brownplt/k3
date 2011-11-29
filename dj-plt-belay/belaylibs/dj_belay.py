@@ -27,7 +27,7 @@ import settings
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest
 from lib.py.common import logWith404
 
-from models import Grant
+from models import Grant, Grantable
 
 logger = logging.getLogger('default')
 
@@ -147,6 +147,36 @@ def dataPostProcess(serialized):
     logging.debug(str(exn))
     logging.debug("Unloadable: " + str(serialized))
 
+def dbPreProcess(data):
+  class Declassifier(json.JSONEncoder):
+    def default(self, obj):
+      if isinstance(obj, Grantable):
+        return {'#': obj.id}
+      else:
+        return obj
+
+  try:
+    return json.dumps(data, cls=Declassifier)
+  except TypeError as exn:
+    logging.debug(str(exn))
+    logging.debug("Unserializable: " + str(data))
+
+def dbPostProcess(serialized):
+  def classify(obj):
+    if '#' in obj:
+      grantables = Grantable.objects.filter(id=obj['#'])
+      if len(grantables) == 0: return None
+      else: return grantables[0]
+    else:
+      return obj
+
+  try:
+    return json.loads(serialized, object_hook=classify)
+  except ValueError as exn:
+    logging.debug(str(exn))
+    logging.debug("Unloadable: " + str(serialized))
+  
+
 # Base class for handlers that process capability invocations.
 class CapHandler(object):
   methods = ['get', 'put', 'post', 'delete']
@@ -261,12 +291,13 @@ def handle(cap_id, method, args, files):
   if using_files:
     files_granted = dict([(n, files[n]) for n in files_needed if files.has_key(n)])
 
-  item = grant.db_entity
+  item = dbPostProcess(grant.db_data)
 
   handler_log = ""
   handler_log += 'Handler: %s\n' % str(grant.internal_path)
   handler_log += '  Time: %s\n' % datetime.datetime.now() 
-  if files_needed > 1: handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
+  if files_needed > 1:
+    handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
   if args and (grant.internal_path != 'create-account'):
     handler_log += ('  Args: %s\n' % str(args))
 
@@ -338,21 +369,24 @@ def proxyHandler(request):
     return handle(request.path_info[len(handlerData.cap_prefix):], \
         request.method, args, req_files)
 
-def grant(path, entity):
+def grant(path, data):
   cap_id = str(uuid.uuid4())
-  item = Grant(cap_id=cap_id, internal_path=path, db_entity=entity)
+  serialized = dbPreProcess(data)
+  item = Grant(cap_id=cap_id, internal_path=path, db_data=serialized)
   item.save()
   return Capability(cap_url(cap_id))
 
-def regrant(path, entity):
-  items = Grant.objects.filter(internal_path=path, db_entity=entity)
+def regrant(path, data):
+  serialized = dbPreProcess(data)
+  items = Grant.objects.filter(internal_path=path, db_data=serialized)
   if len(items) >= 1:
     return Capability(cap_url(items[0].cap_id))
   else:
-    return grant(path, entity)
+    return grant(path, data)
 
 def revoke(path_or_handler, entity):
   entity.grant_set.filter(internal_path=path).delete()
 
 def revokeEntity(entity):
   entity.grant_set.delete()
+

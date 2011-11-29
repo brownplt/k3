@@ -601,3 +601,49 @@ class TestUpdateApplicantName(ResumeTest):
 
   def tearDown(self):
     self.department.delete()
+
+
+class TestDBPrePost(ResumeTest):
+  def setUp(self):
+    super(TestDBPrePost, self).setUp()
+    self.makeCSDept()
+
+  def testPrePost1(self):
+    cs = self.department
+    pre = bcap.dbPreProcess(cs)
+    post = bcap.dbPostProcess(pre)
+    self.assertEqual(cs.id, post.id)
+    self.assertEqual(cs.department.shortname, post.department.shortname)
+
+  def testPrePost2(self):
+    auth = AuthInfo(email='foo@foo.com', name='foo', role='applicant',\
+      department=self.department)
+    auth.save()
+    position = ApplicantPosition(department=self.department, name='thepos',\
+      shortform='tp', autoemail=True)
+    position.save()
+    applicant = Applicant(auth=auth, firstname='foo', lastname='foo',\
+      country='usa', department=self.department, position=position)
+    applicant.save()
+
+    data = {'applicant': applicant,
+            'dept': self.department}
+
+    pre = bcap.dbPreProcess(data)
+    post = bcap.dbPostProcess(pre)
+
+    self.assertEqual(post['applicant'].applicant, applicant)
+    self.assertEqual(post['dept'].department, self.department)
+
+  def testSameGrantable(self):
+    data = [self.department, self.department]
+    pre = bcap.dbPreProcess(data)
+    post = bcap.dbPostProcess(pre)
+
+    self.assertEqual(self.department, post[0].department)
+    self.assertEqual(self.department, post[1].department)
+    self.assertEqual(len(post), 2)
+
+  def tearDown(self):
+    self.department.delete()
+
