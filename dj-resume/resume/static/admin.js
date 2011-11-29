@@ -168,15 +168,12 @@ function reviewerTable(allrevs) {
     // NOTE(joe): The full name can become a log-in-as link (or some other ui)
     makeColumn('name','Full Name',function(a, b) {return stringCmp(a.name,b.name);},function(r, cookie) {return TD(r.name);}),
     makeColumn('email','Email',function(a, b) {return stringCmp(a.email,b.email);},function(r, cookie) {return TD(r.email);}),
-    makeColumn('committee','Comm?',
-        function(a, b) {return (a.committee ? 1 : 0) + (b.committee ? -1 : 0); },
-        function(r, cookie) {return TD(r.committee ? 'Yes' : 'No');}),
     makeColumn('admin','Admin?',
         function(a, b) {return (a.role == 'admin' ? 1 : 0) + (b.role == 'admin' ? -1 : 0);},
         function(r,cookie) {return TD(r.role == 'admin' ? 'Yes' : 'No');}),
     makeColumn('numrevs','Revs',
         function(a, b) {return a.numrevs - b.numrevs;},
-        function(r,cookie) {return TD(''+r.numrevs);})
+        function(r,cookie) {return TD(''+(r.numrevs || 0));})
       ];
   var reventsB = constant_b(map(function(r) {return new RevEntry(r,cols);},allrevs));
   return new TableWidget(reventsB,'reviewer',cols).dom;
