@@ -218,3 +218,28 @@ class User(bcap.Grantable):
   password_hash = models.TextField()
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
+
+class UnverifiedUser(bcap.Grantable):
+  name = models.TextField()
+  email = models.EmailField()
+  # Note: this is directly from contwinue.py
+  # role is not a foreign key to role, just a text field
+  roletext = models.TextField(default='user')
+  conference = models.ForeignKey(Conference)
+
+class Topic(bcap.Grantable):
+  name = models.TextField()
+  papers = models.ManyToManyField('Paper')
+  conference = models.ForeignKey(Conference)
+
+class Paper(bcap.Grantable):
+  contact = models.ForeignKey(User)
+  author = models.TextField()
+  title = models.TextField(default='No Paper Title Given')
+  target = models.ForeignKey(DecisionValue)
+  other_cats = models.BooleanField(default=True)
+  pc_paper = models.BooleanField(default=False)
+  hidden = models.BooleanField(default=False)
+  conference = models.ForeignKey(Conference)
+  json = models.TextField(default='')
+  oscore = models.IntegerField(default=-3)
