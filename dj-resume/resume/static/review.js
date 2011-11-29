@@ -337,7 +337,7 @@ function getTable(tblColumns,filterB,tblRowsB) {
   });
 
   return DIVB({className:'applicant-list'},hld,nohld,DIVB(//DIVB({align:'center'},batchA),
-							  DIVB({align:'center'},csvDownload)));
+							  DIVB({align:'center'}/*,csvDownload*/)));
 }
 
 var basicInfo;
