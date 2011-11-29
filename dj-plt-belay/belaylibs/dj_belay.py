@@ -59,11 +59,11 @@ class BelayException(Exception):
 # http://code.google.com/appengine/docs/python/urlfetch/responseobjects.html
 def invokeCapURL(capURL, meth, data=""):
   parsed = urlparse.urlparse(capURL)
-  prefix = this_server_url_prefix()
+  prefix = this_server_url_prefix() + handlerData.cap_prefix
 
   parsed_prefix = parsed.scheme + "://" + parsed.netloc
 
-  if parsed_prefix == prefix:
+  if capURL.find(prefix) == 0:
     result = handle(cap_id_from_url(capURL), meth, data, {})
     # TODO(jpolitz): other Content-Types
     if re.match('image/.*', result['Content-Type']):
@@ -81,6 +81,8 @@ def invokeCapURL(capURL, meth, data=""):
       return Wrapper()
     else:
       if result.status_code >= 400:
+	logger.error('Prefix was: %s' % parsed_prefix)
+        logger.error('Body: %s' % (result.read()))
         raise BelayException('invokeCapURL Failed')
       return dataPostProcess(result.content)
   else:
