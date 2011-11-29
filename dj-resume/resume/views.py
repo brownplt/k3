@@ -122,7 +122,8 @@ def make_index_handler(index_file, dept_name):
 
 cs_index_handler = make_index_handler('index.html','cs')
 bhort_index_handler = make_index_handler('index.html','bhort')
-new_applicant_handler = make_index_handler('new-applicant.html','bhort')
+new_applicant_handler = make_index_handler('new-applicant.html','cs')
+new_account_handler = make_index_handler('new_account.html', 'cs')
 
 def make_contact_handler(dept_name):
   def contact_handler(request):
@@ -162,7 +163,6 @@ appreview_handler = make_get_handler('appreview.html')
 reference_handler = make_get_handler('reference.html')
 review_handler = make_get_handler('review.html')
 admin_handler = make_get_handler('admin.html')
-new_account_handler = make_get_handler('new_account.html')
 applicant_handler = make_get_handler('application.html')
 contact_handler = make_get_handler('contact.html')
 
@@ -1245,8 +1245,7 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
     response = create_belay.post(bcap.dataPreProcess({'email': args['email']}))
     create_cap = response['create']
 
-    ub = UnverifiedBelayAccount(uu=uu,\
-      create=create_cap.serialize())
+    ub = UnverifiedBelayAccount(uu=uu, create=create_cap.serialize())
     ub.save()
 
     if role == 'admin': create_cap = bcap.grant('get-admin-email-and-create', uu)
