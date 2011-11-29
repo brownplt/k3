@@ -2,7 +2,10 @@ function ContactInfoRowWidget(ct,comp) {
 	if(ct.type == 'contactlong')
 	    TextAreaWidget.apply(this,[(comp ? comp.value : ''),5,40]);
 	else if(ct.type == 'contactshort')
-	    TextInputWidget.apply(this,[(comp ? comp.value : ''),20]);
+      TextInputWidget.apply(this,[(comp ? comp.value : ''),20]);
+  else if(ct.type == 'options')
+      SelectWidget.apply(this,[comp ? comp.value : ct.defaultValue,
+        map(function(val) { return OPTION({value: val.value}, val.display) },ct.values)]);
 	else
 	    TextInputWidget.apply(this,[(comp ? comp.value : ''),40]);
 	this.dom = TR(TH(ct.name),TD(this.dom));
@@ -101,10 +104,42 @@ function makeAppTable(basicInfo, appInfo, submitContactInfo, submitStatement) {
 	var comps = toObj(appInfo.components,function(c) {return c.typeID;});
 	var ciWidgets = [];
 	var statementDoms = [];
+
+  var genderDisplay = function(g) {
+    return g === 'Unknown' ? 'I choose not to indicate my gender' : g;
+  }
+  var genderWidget = new ContactInfoRowWidget({
+      id: 'gender',
+      name: 'Gender',
+      type: 'options',
+      defaultValue: 'Unknown',
+      values: map(function(g) { return {value: g, display: genderDisplay(g)}; },
+                  basicInfo.genders)},
+    { value: appInfo.gender });
+  ciWidgets.push(genderWidget);
+
+  var ethOptions = [
+    { value: 'zu', display: 'I choose not to indicate my ethnicity' },
+    { value: 'am', display: 'American Indian or Alaskan Native' },
+    { value: 'as', display: 'Asian or Pacific Islander' },
+    { value: 'b',  display: 'Black, non-Hispanic' },
+    { value: 'h',  display: 'Hispanic' },
+    { value: 'w',  display: 'White, non-Hispanic' },
+    { value: 'zo', display: 'Other' } ];
+  var ethWidget = new ContactInfoRowWidget({
+      id: 'ethname',
+      name: 'Ethnicity',
+      type: 'options',
+      defaultValue: 'zu',
+      values: ethOptions
+    },
+    { value: appInfo.ethname });
+  ciWidgets.push(ethWidget);
         ciWidgets.push(new ContactInfoRowWidget({ id: 'firstname', name: 'First Name', type: 'contactshort' },
                                                 { value: appInfo.firstname }))
         ciWidgets.push(new ContactInfoRowWidget({ id: 'lastname', name: 'Last Name', type: 'contactshort' },
                                                 { value: appInfo.lastname }));
+
 	map(function(c) {
 		if(c.type == 'statement') {
 			var subWidg = INPUT({type:'submit',value:'OK'});
@@ -227,7 +262,7 @@ $(function () {
       }).startsWith(SPAN());
 
       return DIVB([readyB,
-                   SPAN('My application is ready for review.  '),
+                   SPAN('I have finished submitting my information.  '),
                    savedB]);
     }, launchE.startsWith(null), appInfoB);
     insertDomB(readyDivB.switch_b(), 'readybox');

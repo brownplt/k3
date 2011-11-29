@@ -267,12 +267,18 @@ li.current {
 	text-align: right;
 	padding: 0.1em;
 	font-weight: normal;
-	vertical-align: top;
+	vertical-align: center;
 }
 .key-value input[type=text], .key-value textarea {
     border: 2px solid #a0a0a0;
     padding: 5px 3px;
 
+}
+
+.key-value select {
+    padding: 5px 3px;
+    border: 2px solid #a0a0a0;
+    width: 20em;
 }
 
 .modlist th 

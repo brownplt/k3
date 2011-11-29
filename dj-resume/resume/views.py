@@ -510,6 +510,12 @@ class SubmitContactInfoHandler(bcap.CapHandler):
       elif key == 'comp-lastname':
         applicant.lastname = val
         applicant.save()
+      elif key == 'comp-gender':
+        applicant.gender = val
+        applicant.save()
+      elif key == 'comp-ethname':
+        applicant.ethnicity = val
+        applicant.save()
       elif key.find('comp-') == 0:
         id = key[5:]
         applicant.componentUpdate(id, val)
