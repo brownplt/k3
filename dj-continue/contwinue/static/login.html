@@ -95,7 +95,7 @@ function loader() {
 	var requestedE = getFilteredWSO_e(extractEvent_e('reqacctok','click').transform_e(function(_) {
 		return genRequest({
 			url: 'UnverifiedUser/add',
-			fields: {name:$('full_name').value,email:$('email').value}});
+			fields: {name:getObj('full_name').value,email:getObj('email').value}});
 		}));
 	
 	insertValueB(

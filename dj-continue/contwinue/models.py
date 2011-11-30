@@ -6,6 +6,9 @@ import sha
 
 logger = logging.getLogger('default')
 
+def convertTime(secs):
+	return time.strftime("%A, %B %d, %Y %I:%M %p GMT",time.gmtime(secs))
+
 class FoundMoreThanOneException(Exception):
   pass
 
@@ -173,6 +176,8 @@ class Conference(bcap.Grantable):
   ds_cutoff_lo = models.FloatField(default=2.0)
   ds_conflict_cut = models.FloatField(default=0.05)
 
+  def my(self, cls):
+    return cls.objects.filter(conference=self)
   def get_title_and_contact(self):
     return {
       'info' : {
@@ -185,6 +190,25 @@ class Conference(bcap.Grantable):
   def get_by_shortname(cls, shortname):
     items = Conference.objects.filter(shortname=shortname)
     return get_one(items)
+  def get_writer_basic(self):
+    decisions = self.my(DecisionValue)
+    decision_json = [d.to_json() for d in decisions if d.targetable]
+    components = self.my(ComponentType)
+    component_json = [c.to_json() for c in components]
+    topics = self.my(Topic)
+    topic_json = [t.to_json() for t in topics]
+    info = {
+      'showNum': self.show_num,
+      'name': self.name,
+      'shortname': self.shortname
+    }
+    return {
+      'decisions': decision_json,
+      'components': component_json,
+      'topics': topic_json,
+      'info': info
+    }
+
 
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
@@ -212,6 +236,15 @@ class DecisionValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   conference = models.ForeignKey(Conference)
+  
+  def to_json(self):
+    return {
+      'id': self.id,
+      'abbr': self.abbr,
+      'description': self.description,
+      'targetable': self.targetable
+    }
+
 
 class ComponentType(bcap.Grantable):
   def deadline_str(self):
@@ -226,6 +259,19 @@ class ComponentType(bcap.Grantable):
   grace_hours = models.IntegerField()
   mandatory = models.BooleanField()
   conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'id': self.id,
+      'format': self.fmt,
+      'description': self.description,
+      'abbr': self.abbr,
+      'sizelimit': self.size_limit,
+      'deadline': self.deadline,
+      'deadlineStr': self.deadline_str(),
+      'mandatory': self.mandatory,
+      'gracehours': self.grace_hours,
+    }
 
 class ReviewComponentType(bcap.Grantable):
   description = models.TextField()
@@ -253,6 +299,12 @@ class Topic(bcap.Grantable):
   papers = models.ManyToManyField('Paper')
   conference = models.ForeignKey(Conference)
 
+  def to_json(self):
+    return {
+      'id': self.id,
+      'name': self.name
+    }
+
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
   author = models.TextField()
@@ -264,3 +316,33 @@ class Paper(bcap.Grantable):
   conference = models.ForeignKey(Conference)
   json = models.TextField(default='')
   oscore = models.IntegerField(default=-3)
+
+  def my(self, cls):
+    return cls.objects.filter(paper=self)
+
+  def get_paper(self):
+    return {
+      'id': self.id,
+      'othercats': self.other_cats,
+      'pcpaper': self.pc_paper,
+      'title': self.title,
+      'target': self.target.to_json(),
+      'author': self.author,
+      'topics': [t.to_json() for t in self.topic_set.all()],
+      'components': [c.to_json() for c in self.my(Component)]
+    }
+
+class Component(bcap.Grantable):
+  type = models.ForeignKey(ComponentType)
+  paper = models.ForeignKey(Paper)
+  lastSubmitted = models.IntegerField()
+  value = models.TextField()
+  mimetype = models.TextField()
+  conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'typeID': self.type.id,
+      'lsStr': convertTime(self.lastSubmitted),
+      'value': self.value
+    }

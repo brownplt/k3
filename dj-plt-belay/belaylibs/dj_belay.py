@@ -329,10 +329,12 @@ def handle(cap_id, method, args, files):
       handler_log += '  Response: %s\n' % str(response)
     logger.error(handler_log)
     return response
-  except Exception as e:
-    logger.error(handler_log)
-    logger.error('BELAY: Uncaught handler exception: %s' % e)
-    raise e
+  finally:
+    pass
+  #except Exception as e:
+  #  logger.error(handler_log)
+  #  logger.error('BELAY: Uncaught handler exception: %s' % e)
+  #  raise e
 
 def proxyHandler(request):
 
