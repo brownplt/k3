@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Loading...</title>
+		<link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+		<script type="text/javascript" src="/static/lib/js/flapjax/flapjax.js"></script>
+		<script type="text/javascript" src="/static/lib/js/flapjax/json.js"></script>
+		<script type="text/javascript" src="/static/lib/js/flapjax/plug.js"></script>
+		<script type="text/javascript" src="/static/lib/js/flapjax/myfjws.js"></script>
+		<script type="text/javascript" src="/static/gcommon.js"></script>
+		<script type="text/javascript" src="/static/common.js"></script>
+		<script type="text/javascript">
+function getAuthInfoE(onLoadTimeE) {
+	var loginclickedE = merge_e(
+			extractEvent_e('loginbutton','click'),
+			merge_e(
+				extractEvent_e('usernamebox','keypress'),
+				extractEvent_e('passwordbox','keypress')
+			).filter_e(function(e) {return e.keyCode == 13;}));
+
+	var loginQueryE = loginclickedE.transform_e(function(lc) {
+			$('loginbutton').focus();
+			return genRequest(
+				{url:'Auth/getCookie',
+				fields:{username:$('usernamebox').value,password:$('passwordbox').value}}
+			);
+	});
+	var loginE = getFilteredWSO_e(loginQueryE);
+
+	var failedLoginE = loginE.filter_e(function(v) {return !v;});
+	failedLoginE.transform_e(function(_) {
+		/*TODO: do something else here? */
+		window.alert("Login Failed!");
+	});
+
+	var authInfoE = loginE.filter_e(function(v) { return v != false; });
+	return authInfoE;
+}
+function getLogoutEventsE(onLoadTimeE) {
+    if ($URL('logout'))
+	return getFilteredWSO_e(onLoadTimeE.constant_e(
+		    genRequest({url:'Auth/logOut',fields: {cookie:$URL('logout')}})));
+    else
+	return receiver_e();
+}
+function doResetPassword(fpClicksE) {
+    var rpWidget = new CombinedInputWidget(
+	    [new TextInputWidget('',40),
+	    new TextInputWidget('',40)],
+	    function(un,em) {
+	    	return TABLE({className:'key-value'},
+		    TR(TH('Username:'),TD(un)),
+		    TR(TH('Email: '),TD(em)));
+		}).withButton(
+		    new ButtonWidget('Reset Password'),
+		    function(tbl,btn) {
+			    return DIV(
+				P('To reset your password, please enter your username and email address above. You will be emailed with a link that will enable you to enter a new password.'),
+				tbl,
+				P({style:{textAlign:'center'}},btn));
+		    }).serverSaving(
+			function(rpi) {
+				return genRequest(
+				    {url:'User/resetPassword',
+				    fields:{username:rpi[0],email:rpi[1]}})});
+    return merge_e(fpClicksE.constant_e(rpWidget.dom),rpWidget.events.serverResponse.transform_e(
+    	function(sr) {
+		if(sr.error) return P({className:'error'},sr.error);
+		else return P('Thanks! You will be emailed shortly.');
+		})).startsWith(DIV());
+}
+function loader() {
+	var flapjax = flapjaxInit();
+	demoEventsE = consumer_e();
+	document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);});};
+	var onLoadTimeE = receiver_e();
+	var exceptsE = captureServerExcepts();
+	handleExcepts(exceptsE);
+	var basicInfoE = getBasicInfoE(onLoadTimeE).transform_e(function(bi) {
+    return bi.value;
+  });
+	doConfHead(basicInfoE);
+	basicInfoE.transform_e(function(bi) {
+		document.title = bi.info.name;
+	});
+	var authInfoE = getAuthInfoE(onLoadTimeE);
+	getLogoutEventsE(onLoadTimeE);
+	authInfoE.transform_e(function(ai) {
+		if (inList('user',ai[1].rolenames))
+			window.location = 'writer.html?cookie='+ai[0];
+		else
+			window.location = 'continue.html?cookie='+ai[0];
+	});
+
+	var requestedE = getFilteredWSO_e(extractEvent_e('reqacctok','click').transform_e(function(_) {
+		return genRequest({
+			url: 'UnverifiedUser/add',
+			fields: {name:$('full_name').value,email:$('email').value}});
+		}));
+	
+	insertValueB(
+		merge_e(extractEvent_e('reqacct','click').constant_e('block'),requestedE.constant_e('none')).startsWith('none'),
+		'reqacct_content','style','display');
+	insertValueB(requestedE.constant_e('block').startsWith('none'),'requested','style','display');
+
+	insertValueB(extractEvent_e('reqacct','click').constant_e('none').startsWith('inline'),'reqacct','style','display');
+
+	insertDomB(doResetPassword(extractEvent_e('rp-open','click')),'rp-info');
+
+	onLoadTimeE.sendEvent('loaded!');
+	
+	if($URL('session') == 'expired' || $URL('session') == 'denied') 
+	    insertDomB(merge_e(authInfoE,requestedE).constant_e('').startsWith('Your session has expired due to inactivity. Please login again.'),'expired','beginning');
+    
+}
+		</script>
+	</head>
+	<body onload="loader();">
+		<h1 id="confhead"></h1>
+
+		<div id="loginview">
+			<h3>If you are an author and do not have an account...</h3>
+			<p style="text-align: center;"><input id="reqacct" type="button" value="Request an account" /></p>
+			<div id="reqacct_content" style="display:none">
+				<p><strong>This account request should be conducted by the point of contact for your submission.</strong></p>
+				<p>If you plan on making multiple submissions, please register multiple accounts, with different user names. For example, you could use the user names <code>Harry Granger -- Practical</code> and <code>Harry Granger -- Theoretical</code>.</p>
+				<p>This form ensures that we have a working email address for the contact.</p>
+				<table class="key-value"><tbody>
+						<tr><th>Full Name:</th><td><input id="full_name" size="40" value="" type="text"></td></tr>
+						<tr><th>Email:</th><td><input id="email" size="40" value="" type="text"></td></tr>
+				</tbody></table>
+				<p>When you submit this form, it will send an email containing a URL to the given email address. Use that URL to complete your request.</p>
+				<p><input id="reqacctok" value="OK" type="button" /></p>
+			</div>
+			<p id="requested" style="display:none">Thank you for requesting an account! We have sent you an email message; you must go to the URL provided in the message to proceed. If this email address is incorrect, please re-submit your contact information.</p>
+			<h3>If you are a PC member or already have an author account...</h3>
+			<p class="error" id="expired"></p>
+			<table class="key-value">
+				<tr><th>Username:</th><td><input type="text" size="40" id="usernamebox" /></td></tr>
+				<tr><th>Password:</th><td><input type="password" size="40" id="passwordbox" /></td></tr>
+			</table>
+			<p style="text-align: center;"><input id="loginbutton" type="button" value="Login" /></p>
+			<p style="text-align: center; font-size: small;"><a id="rp-open" href="javascript://Forgot Password">(Forgot Password?)</a></p>
+			<div id="rp-info"></div>
+		</div>
+
+		<hr noshade="noshade" size="1" />
+		<table id="footer">
+			<tbody>
+				<tr>
+					<td align="left">Please send questions, comments, <br> problems, etc to <a href="mailto:arjun@cs.brown.edu">arjun@cs.brown.edu</a>.</td>
+					<td align="right"><a href="http://continue2.cs.brown.edu/">Continue conference management server</a><br>Powered by <a href="http://www.flapjax-lang.org/">Flapjax</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</body>
+</html>

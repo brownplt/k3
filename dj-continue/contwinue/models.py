@@ -6,6 +6,14 @@ import sha
 
 logger = logging.getLogger('default')
 
+class FoundMoreThanOneException(Exception):
+  pass
+
+def get_one(query_dict):
+  if len(query_dict) == 0: return None
+  elif len(query_dict) == 1: return query_dict[0]
+  else: raise FoundMoreThanOneException('Found more than one')
+
 class Conference(bcap.Grantable):
   @classmethod
   def make_new(cls, name, shortname, admin_user, admin_password, admin_name, admin_email, use_ds):
@@ -164,6 +172,19 @@ class Conference(bcap.Grantable):
   ds_cutoff_hi = models.FloatField(default=7.0)
   ds_cutoff_lo = models.FloatField(default=2.0)
   ds_conflict_cut = models.FloatField(default=0.05)
+
+  def get_title_and_contact(self):
+    return {
+      'info' : {
+        'name': self.name,
+        'shortname' : self.shortname
+      },
+      'adminContact' : self.admin_contact.email
+    }
+  @classmethod
+  def get_by_shortname(cls, shortname):
+    items = Conference.objects.filter(shortname=shortname)
+    return get_one(items)
 
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
