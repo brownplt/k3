@@ -111,10 +111,18 @@ function loader() {
 	var flapjax = flapjaxInit();
 	demoEventsE = consumer_e();
 	document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);});};
+  var capServer = new CapServer();
+  
 	var onLoadTimeE = receiver_e();
+
+  var launchCap = capServer.restore(getLaunchCap());
+  var launchE = getE(onLoadTimeE.constant_e(launchCap));
+
 	var exceptsE = captureServerExcepts();
 	handleExcepts(exceptsE);
-	var basicInfoE = getBasicInfoE(onLoadTimeE);
+	var basicInfoE = getE(launchE.transform_e(function(li) {
+    return li.getBasic;
+  }));
 	basicInfoE.transform_e(function(bi) {
 		document.title = bi.info.shortname + ' - Paper Submission';
   });
@@ -123,19 +131,20 @@ function loader() {
 	$('logout_tab').href = 'login.html?logout='+authCookie;
 	var curUserE = getCurUserE(onLoadTimeE,authCookie);
 	doLoginDivB(curUserE);
-	var detailsQueryE = curUserE.transform_e(function(cu) {
+  var defaultsQueryE = getE(launchE.transform_e(function(li) {
+    return li.getPaper;
+  });
+/*	var detailsQueryE = curUserE.transform_e(function(cu) {
 		return genRequest(
 			{url: 'Author/get',
 			fields: {cookie:authCookie}});
-		});
+		});*/
 	var perE = iframeLoad_e('subtarget');
 	var perB = perE.startsWith(true);
 	var allDetailsQuerysE = merge_e(snapshot_e(perE,detailsQueryE.startsWith(null)),detailsQueryE);
 	var detailsInfoE = getFilteredWSO_e(allDetailsQuerysE);
-	var deadextE = getFilteredWSO_e(detailsInfoE.transform_e(function(di) {
-		return genRequest(
-			{url: 'Author/getDeadlineExts',
-			fields: {cookie:authCookie,key:'paperID',val:di.id}});
+	var deadextE = getE(launchE.transform_e(function(li) {
+		return li.getDeadlineExts;
 		}));
 	var authorTextE = getFilteredWSO_e(onLoadTimeE.constant_e(
 			genRequest({url: 'getAuthorText',

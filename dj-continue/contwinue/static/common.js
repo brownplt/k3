@@ -153,3 +153,15 @@ function handleExcepts(exceptsE) {
 		return false;
 	});
 }
+
+function getLaunchCap() {
+  var hash = window.location.hash;
+  if(hash === "" || hash ==="#") {
+    hash = window.name;
+  }
+  else {
+    window.name = hash;
+  }
+  return hash.substr(1);
+}
+

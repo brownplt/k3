@@ -1,9 +1,4 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
+import time, datetime
 
 from django.test import TestCase
 
@@ -40,7 +35,7 @@ class TestBasic(Generator):
 
   def test_writer_basic(self):
     conf = Conference.get_by_shortname('SC')
-    cap = bcap.grant('get-writer-basic', conf)
+    cap = bcap.grant('writer-basic', conf)
 
     response = cap.get()
 
@@ -58,7 +53,7 @@ class TestAuthorLaunch(Generator):
     writer = User.objects.filter(username='writer')[0]
     paper = Paper.objects.filter(contact=writer)[0]
 
-    cap = bcap.grant('get-writer-paper-info', {'writer': writer, 'paper': paper})
+    cap = bcap.grant('writer-paper-info', {'writer': writer, 'paper': paper})
 
     response = cap.get()
 
@@ -70,4 +65,26 @@ class TestAuthorLaunch(Generator):
     self.assertTrue(type(response['target']['id']), int)
     self.assertEqual(len(response['topics']), 3)
 
+class TestGetDeadlineExtension(Generator):
+  def test_extension(self):
+    writer = User.objects.filter(username='writer')[0]
+    paper = Paper.objects.filter(contact=writer)[0]
+    paperc = ComponentType.objects.filter(description='Paper')[0]
+
+    newdeadline = int(time.time() + 24 * 3600 * 7)
+
+    extension = DeadlineExtension(
+      type=paperc,
+      paper=paper,
+      until=newdeadline,
+      conference=writer.conference
+    )
+    extension.save()
+
+    response = bcap.grant('paper-deadline-extensions', paper).get()
+
+    self.assertEqual(response[0]['typeID'], paperc.id)
+    self.assertEqual(response[0]['paperID'], paper.id)
+    self.assertEqual(response[0]['untilStr'], convertTime(newdeadline))
+    self.assertEqual(response[0]['until'], newdeadline)
 

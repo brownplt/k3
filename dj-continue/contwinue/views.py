@@ -35,16 +35,33 @@ class WriterBasicHandler(bcap.CapHandler):
     basic = granted.conference.get_writer_basic()
     return bcap.bcapResponse(basic)
 
-class GetWriterPaperInfoHandler(bcap.CapHandler):
+class WriterPaperInfoHandler(bcap.CapHandler):
   def get(self, granted):
     paper = granted['paper'].paper
     return bcap.bcapResponse(paper.get_paper())
 
+class PaperDeadlineExtensionsHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(granted.paper.get_deadline_extensions())
+
+class LaunchPaperHandler(bcap.CapHandler):
+  def get(self, granted):
+    paper = granted['paper'].paper
+
+    return bcap.bcapResponse({
+      'getPaper': bcap.regrant('writer-paper-info', granted),
+      'getBasic': bcap.regrant('writer-basic', paper.conference),
+      'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', paper)
+    })
+
 class ContinueInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
-      'get-writer-basic': WriterBasicHandler,
-      'get-writer-paper-info': GetWriterPaperInfoHandler
+      'writer-basic': WriterBasicHandler,
+      'writer-paper-info': WriterPaperInfoHandler,
+      'paper-deadline-extensions': PaperDeadlineExtensionsHandler,
+      'launch-paper': LaunchPaperHandler
+
     })
     return None
 

@@ -332,6 +332,10 @@ class Paper(bcap.Grantable):
       'components': [c.to_json() for c in self.my(Component)]
     }
 
+  def get_deadline_extensions(self):
+    return [ext.to_json() for ext in
+            DeadlineExtension.objects.filter(paper=self)]
+
 class Component(bcap.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
@@ -345,4 +349,18 @@ class Component(bcap.Grantable):
       'typeID': self.type.id,
       'lsStr': convertTime(self.lastSubmitted),
       'value': self.value
+    }
+
+class DeadlineExtension(bcap.Grantable):
+  type = models.ForeignKey(ComponentType)
+  paper = models.ForeignKey(Paper)
+  until = models.IntegerField()
+  conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'typeID': self.type.id,
+      'paperID': self.paper.id,
+      'until': self.until,
+      'untilStr': convertTime(self.until)
     }

@@ -159,3 +159,4 @@ def generate(request):
     conf_bid.save()
 
   return HttpResponse('OK')
+
