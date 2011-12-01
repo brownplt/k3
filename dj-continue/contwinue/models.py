@@ -355,6 +355,19 @@ class Paper(bcap.Grantable):
     return [ext.to_json() for ext in
             DeadlineExtension.objects.filter(paper=self)]
 
+  def update_target_by_id(self, targetID):
+    target = DecisionValue.objects.filter(id=targetID, targetable=True)
+    if len(target) == 0: return None
+    else: self.target = target[0]
+    return None
+
+  def update_othercats(self, othercats):
+    if othercats == 'yes':
+      self.other_cats = True
+    else:
+      self.other_cats = False
+    return None
+
 class Component(bcap.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)

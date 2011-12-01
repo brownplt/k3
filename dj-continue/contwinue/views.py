@@ -75,6 +75,16 @@ class PaperSetPcPaperHandler(bcap.CapHandler):
     granted.paper.conference.update_last_change(granted.paper)
     return bcap.bcapResponse(granted.paper.get_paper())
 
+class PaperSetTargetsHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['targetID', 'othercats']  
+  def post(self, granted, args):
+    paper = granted.paper
+    paper.update_target_by_id(args['targetID'])
+    paper.update_othercats(args['othercats'])
+    paper.save()
+    paper.conference.update_last_change(paper)
+    return bcap.bcapResponse(paper.get_paper())
+
 class PaperSetTopicsHandler(bcap.CapHandler):
   def post_arg_names(self): return ['topics']
   def post(self, granted, args):
@@ -99,6 +109,7 @@ class LaunchPaperHandler(bcap.CapHandler):
       'setTitle': bcap.regrant('paper-set-title', paper),
       'setAuthor': bcap.regrant('paper-set-author', paper),
       'setPcPaper': bcap.regrant('paper-set-pcpaper', paper),
+      'setTarget': bcap.regrant('paper-set-target', paper),
       'setTopics': bcap.regrant('paper-set-topics', paper),
       'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', paper)
     })
@@ -113,6 +124,7 @@ class ContinueInit():
       'paper-set-title': PaperSetTitleHandler,
       'paper-set-author': PaperSetAuthorHandler,
       'paper-set-pcpaper': PaperSetPcPaperHandler,
+      'paper-set-target': PaperSetTargetsHandler,
       'paper-set-topics': PaperSetTopicsHandler,
       'launch-paper': LaunchPaperHandler
       # End LaunchPaper handlers

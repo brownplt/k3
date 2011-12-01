@@ -133,3 +133,30 @@ class TestAuthorLaunch(Generator):
 
     self.assertEqual(len(topicnames), 3)
     self.assertEqual(set([t.name for t in topics]), set(topicnames))
+
+  def test_set_topics_to_none(self):
+    response = bcap.grant('paper-set-topics', self.paper).post({
+      'topics': []
+    })
+
+    afterpaper = Paper.objects.filter(contact=self.writer)[0]
+    topicnames = [t.name for t in afterpaper.topic_set.all()]
+    self.assertEqual(len(topicnames), 0)
+
+  def test_set_target(self):
+    target = DecisionValue.objects.filter(abbr='A')[0]
+    response = bcap.grant('paper-set-target', self.paper).post({
+      'targetID': target.id, 'othercats': 'no'
+    })
+
+    afterpaper = Paper.objects.filter(contact=self.writer)[0]
+    self.assertEqual(afterpaper.target_id, target.id)
+    self.assertEqual(afterpaper.other_cats, False)
+
+    response = bcap.grant('paper-set-target', self.paper).post({
+      'targetID': target.id, 'othercats': 'yes'
+    })
+    afterpaper = Paper.objects.filter(contact=self.writer)[0]
+    self.assertEqual(afterpaper.target_id, target.id)
+    self.assertEqual(afterpaper.other_cats, True)
+
