@@ -144,11 +144,11 @@ function loader() {
 	var allDetailsQuerysE = merge_e(snapshot_e(perE,detailsQueryE.startsWith(null)),detailsQueryE);
 	var detailsInfoE = getFilteredWSO_e(allDetailsQuerysE);
 	var deadextE = getE(launchE.transform_e(function(li) {
-		return li.getDeadlineExts;
-		}));
-	var authorTextE = getFilteredWSO_e(onLoadTimeE.constant_e(
-			genRequest({url: 'getAuthorText',
-			 fields: {cookie:authCookie}})));
+		return li.getDeadlineExtensions;
+	}));
+	var authorTextE = getE(launchE.transform_e(function(li) {
+    return li.getAuthorText;
+  });
 	var detailsTabB = lift_b(function(cu,di,bi,at,de) {
 			if (cu && di && bi && at && de)
 				return makeDetailsTab(cu,di,bi,at,de,perB); else return constant_b(getLoadingDiv());},
