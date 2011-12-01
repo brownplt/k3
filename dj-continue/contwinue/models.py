@@ -190,6 +190,7 @@ class Conference(bcap.Grantable):
   def get_by_shortname(cls, shortname):
     items = Conference.objects.filter(shortname=shortname)
     return get_one(items)
+
   def get_writer_basic(self):
     decisions = self.my(DecisionValue)
     decision_json = [d.to_json() for d in decisions if d.targetable]
@@ -209,6 +210,19 @@ class Conference(bcap.Grantable):
       'info': info
     }
 
+  def get_author_text(self):
+    return [self.general_text, self.component_text]
+
+  def get_topics(self): return self.my(Topic)
+
+  def update_last_change(self,paper=None):
+    self.lastChange = int(time.time())
+    if paper == None:
+      pl = Paper.objects.filter(conference=self)
+    else:
+      pl = [paper]
+    for p in pl:
+      p.json = ''
 
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
@@ -305,6 +319,10 @@ class Topic(bcap.Grantable):
       'name': self.name
     }
 
+  @classmethod
+  def get_by_conference_and_id(cls, conf, id):
+    return Topic.objects.filter(id=id, conference=conf)
+
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
   author = models.TextField()
@@ -321,7 +339,7 @@ class Paper(bcap.Grantable):
     return cls.objects.filter(paper=self)
 
   def get_paper(self):
-    return {
+    paper_json = {
       'id': self.id,
       'othercats': self.other_cats,
       'pcpaper': self.pc_paper,
@@ -331,6 +349,7 @@ class Paper(bcap.Grantable):
       'topics': [t.to_json() for t in self.topic_set.all()],
       'components': [c.to_json() for c in self.my(Component)]
     }
+    return paper_json
 
   def get_deadline_extensions(self):
     return [ext.to_json() for ext in

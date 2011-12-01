@@ -110,10 +110,10 @@ def generate(request):
       component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
         value="This is actually pretty short", mimetype='text/plain', conference=c)
       component.save()
-      for _ in range(3):
-        t = Topic.objects.all()[random.randint(0, 9)]
-        t.papers.add(p)
-        t.save()
+      # Removed the loop because it was silly
+      t = Topic.objects.all()[random.randint(0, 9)]
+      t.papers.add(p)
+      t.save()
 
   if not check_size(ReviewComponentType, 2):
     pc_comments = ReviewComponentType(
