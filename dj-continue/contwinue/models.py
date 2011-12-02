@@ -243,3 +243,33 @@ class Paper(bcap.Grantable):
   conference = models.ForeignKey(Conference)
   json = models.TextField(default='')
   oscore = models.IntegerField(default=-3)
+
+class Component(bcap.Grantable):
+  type = models.ForeignKey(ComponentType)
+  paper = models.ForeignKey(Paper)
+  last_submitted = models.IntegerField()
+  value = models.TextField()
+  mimetype = models.TextField()
+  conference = models.ForeignKey(Conference)
+
+class DeadlineExtension(bcap.Grantable):
+  type = models.ForeignKey(ComponentType)
+  paper = models.ForeignKey(Paper)
+  until = models.IntegerField()
+
+class ReviewComponent(bcap.Grantable):
+  type = models.ForeignKey(ReviewComponentType)
+  review = models.ForeignKey('Review')
+  value = models.TextField()
+  conference = models.ForeignKey(Conference)
+
+class Review(bcap.Grantable):
+  reviewer = models.ForeignKey(User)
+  paper = models.ForeignKey(Paper)
+  submitted = models.BooleanField(default=False)
+  published = models.BooleanField(default=False)
+  overall = models.ForeignKey(RatingValue)
+  experties = models.ForeignKey(ExpertiseValue)
+  subreviewers = models.TextField(default='')
+  last_saved = models.IntegerField()
+  conference = models.ForeignKey(Conference)

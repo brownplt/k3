@@ -61,15 +61,13 @@ def generate(request):
       writer_user.roles.add(writer_role)
       writer_user.save()
 
-  all_uus = UnverifiedUser.objects.all()
-  if len(all_uus) != 10:
+  if len(UnverifiedUser.objects.all()) != 10:
     for _ in range(10):
       uu = UnverifiedUser(name=rand_str(10), email=rand_email(),
         roletext=rand_str(10), conference=c)
       uu.save()
 
-  all_topics = Topic.objects.all()
-  if len(all_topics) != 10:
+  if len(Topic.objects.all()) != 10:
     topics = ['Programming Languages', 'Distributed Systems', 'Web Security', 
       'Computer Vision', 'Machine Learning', 'Computational Biology', 
       'Artificial Intelligence', 'Cryptography', 'Algorithms', 'Nanocomputing']
@@ -77,8 +75,7 @@ def generate(request):
       t = Topic(name=topics[n], conference=c)
       t.save()
 
-  all_papers = Paper.objects.all()
-  if len(all_papers) != 10:
+  if len(Paper.objects.all()) != 10:
     titles = [
       'A synchronized real-time cache related to a virtual secure technology',
       'An interactive secure compiler related to a synchronized binary interface',
@@ -106,5 +103,21 @@ def generate(request):
         t = Topic.objects.all()[random.randint(0, 9)]
         t.papers.add(p)
         t.save()
+
+  if len(Component.objects.all()) != 10:
+    for _ in range(10):
+      comp = Component(type=ComponentType.objects.all()[random.randint(0, 2)],
+        paper=Paper.objects.all()[random.randint(0, 9)],
+        last_submitted=random.randint(0, 100), value=rand_str(20),
+        mimetype=rand_str(5), conference=c)
+      comp.save()
+
+  if len(DeadlineExtension.objects.all()) != 5:
+    for _ in range(5):
+      ext = DeadlineExtension(
+        type=ComponentType.objects.all()[random.randint(0, 2)],
+        paper=Paper.objects.all()[random.randint(0, 9)],
+        until=int(time.time())+(86400*15))
+      ext.save()
 
   return HttpResponse('OK')
