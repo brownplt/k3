@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Loading...</title>
+		<link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+		<script src="/static/lib/js/flapjax/flapjax.js"></script>
+		<script src="/static/lib/js/flapjax/json.js"></script>
+		<script src="/static/lib/js/flapjax/plug.js"></script>
+		<script src="/static/lib/js/flapjax/myfjws.js"></script>
+    <script src="/static/lib/js/caps.js"></script>
+		<script src="/static/common.js"></script>
+		<script src="/static/gcommon.js"></script>
+		<script src="/common.js"></script>
+    <script src="/static/login.js"></script>
+	</head>
+	<body onload="loader();">
+		<h1 id="confhead"></h1>
+
+		<div id="loginview">
+			<h3>If you are an author and do not have an account...</h3>
+			<p style="text-align: center;"><input id="reqacct" type="button" value="Get Started" /></p>
+			<div id="reqacct_content" >
+
+        <p>This form establishes an email address for contacting you about your
+submission(s).  We offer two methods for validating your email:</p>
+
+        <div style='padding-top: 2em;max-width: 70%; margin-left: 15%;'>
+        <div style='float:left;width:49%;border-right:2px dotted gray;'>
+          <h4>Option 1:</h4> <p>Share your Google address via OpenID.</p>
+          <button id='glogin' style='font-size:large;height:3em;width:49%;margin-top:1em;margin-left:25%'>Sign in with Google</button>
+        </div>
+        <div style='float:right; max-width:45%;'>
+          <h4>Option 2:</h4> <p>Receive an email with a validation link.</p>
+          <table class="key-value"><tbody>
+              <tr><th>Email:</th><td><input id="email" size="30" value="" type="text"></td></tr>
+          </tbody></table>
+          <p><input id="reqacctok" value="OK" type="button"/></p>
+        </div>
+        <div style='clear:both'></div>
+			</div>
+			<p id="requested" style="display:none">Thank you for requesting an account! We have sent you an email message; you must go to the URL provided in the message to proceed. If this email address is incorrect, please re-submit your contact information.</p>
+      </div>
+			<h3>If you are a PC member or already have an author account...</h3>
+			<p class="error" id="expired"></p>
+			<table class="key-value">
+				<tr><th>Username:</th><td><input type="text" size="40" id="usernamebox" /></td></tr>
+				<tr><th>Password:</th><td><input type="password" size="40" id="passwordbox" /></td></tr>
+			</table>
+			<p style="text-align: center;"><input id="loginbutton" type="button" value="Login" /></p>
+			<p style="text-align: center; font-size: small;"><a id="rp-open" href="javascript://Forgot Password">(Forgot Password?)</a></p>
+			<div id="rp-info"></div>
+		</div>
+
+		<hr noshade="noshade" size="1" />
+		<table id="footer">
+			<tbody>
+				<tr>
+					<td align="left">Please send questions, comments, <br> problems, etc to <a href="mailto:arjun@cs.brown.edu">arjun@cs.brown.edu</a>.</td>
+					<td align="right"><a href="http://continue2.cs.brown.edu/">Continue conference management server</a><br>Powered by <a href="http://www.flapjax-lang.org/">Flapjax</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</body>
+</html>

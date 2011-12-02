@@ -22,10 +22,6 @@ class GoogleCredentials(bcap.Grantable):
   identity = models.CharField(max_length=200)
   account = models.ForeignKey(BelayAccount)
 
-class BelaySession(bcap.Grantable):
-  session_id = models.CharField(max_length=200)
-  account = models.ForeignKey(BelayAccount)
-
 class Stash(bcap.Grantable):
   stashed_content = models.TextField(max_length=1000)
 

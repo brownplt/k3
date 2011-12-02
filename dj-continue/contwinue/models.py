@@ -6,6 +6,17 @@ import sha
 
 logger = logging.getLogger('default')
 
+def convertTime(secs):
+	return time.strftime("%A, %B %d, %Y %I:%M %p GMT",time.gmtime(secs))
+
+class FoundMoreThanOneException(Exception):
+  pass
+
+def get_one(query_dict):
+  if len(query_dict) == 0: return None
+  elif len(query_dict) == 1: return query_dict[0]
+  else: raise FoundMoreThanOneException('Found more than one')
+
 class Conference(bcap.Grantable):
   @classmethod
   def make_new(cls, name, shortname, admin_user, admin_password, admin_name, admin_email, use_ds):
@@ -24,6 +35,8 @@ class Conference(bcap.Grantable):
     admin_role.save()
     reviewer_role = Role(conference=c, name='reviewer')
     reviewer_role.save()
+    user_role = Role(conference=c,name='user')
+    user_role.save()
 
     pc_comments = ReviewComponentType(
       conference=c,
@@ -124,7 +137,7 @@ class Conference(bcap.Grantable):
     paper.save()
 
     adm = User(conference=c, username=admin_user, 
-      password_hash=sha.new(admin_password).hexdigest(), full_name=admin_name,
+      full_name=admin_name,
       email=admin_email)
     # 2 saves because you can't add ManyToMany relationships until the instance
     # is saved
@@ -165,6 +178,57 @@ class Conference(bcap.Grantable):
   ds_cutoff_lo = models.FloatField(default=2.0)
   ds_conflict_cut = models.FloatField(default=0.05)
 
+  def my(self, cls):
+    return cls.objects.filter(conference=self)
+  def get_title_and_contact(self):
+    return {
+      'info' : {
+        'name': self.name,
+        'shortname' : self.shortname
+      },
+      'adminContact' : self.admin_contact.email
+    }
+  @classmethod
+  def get_by_shortname(cls, shortname):
+    items = Conference.objects.filter(shortname=shortname)
+    return get_one(items)
+
+  def get_writer_basic(self):
+    decisions = self.my(DecisionValue)
+    decision_json = [d.to_json() for d in decisions if d.targetable]
+    components = self.my(ComponentType)
+    component_json = [c.to_json() for c in components]
+    topics = self.my(Topic)
+    topic_json = [t.to_json() for t in topics]
+    info = {
+      'showNum': self.show_num,
+      'name': self.name,
+      'shortname': self.shortname
+    }
+    return {
+      'decisions': decision_json,
+      'components': component_json,
+      'topics': topic_json,
+      'info': info
+    }
+
+  def get_author_text(self):
+    return [self.general_text, self.component_text]
+
+  def get_topics(self): return self.my(Topic)
+
+  def component_type_by_abbr(self, abbr):
+    return get_one(ComponentType.objects.filter(conference=self, abbr=abbr))
+
+  def update_last_change(self,paper=None):
+    self.lastChange = int(time.time())
+    if paper == None:
+      pl = Paper.objects.filter(conference=self)
+    else:
+      pl = [paper]
+    for p in pl:
+      p.json = ''
+
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
   conference = models.ForeignKey(Conference)
@@ -191,6 +255,15 @@ class DecisionValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   conference = models.ForeignKey(Conference)
+  
+  def to_json(self):
+    return {
+      'id': self.id,
+      'abbr': self.abbr,
+      'description': self.description,
+      'targetable': self.targetable
+    }
+
 
 class ComponentType(bcap.Grantable):
   def deadline_str(self):
@@ -206,16 +279,28 @@ class ComponentType(bcap.Grantable):
   mandatory = models.BooleanField()
   conference = models.ForeignKey(Conference)
 
+  def to_json(self):
+    return {
+      'id': self.id,
+      'format': self.fmt,
+      'description': self.description,
+      'abbr': self.abbr,
+      'sizelimit': self.size_limit,
+      'deadline': self.deadline,
+      'deadlineStr': self.deadline_str(),
+      'mandatory': self.mandatory,
+      'gracehours': self.grace_hours,
+    }
+
 class ReviewComponentType(bcap.Grantable):
   description = models.TextField()
   pc_only = models.BooleanField()
   conference = models.ForeignKey(Conference)
 
 class User(bcap.Grantable):
-  username = models.CharField(max_length=20)
+  username = models.CharField(max_length=30)
   full_name = models.TextField()
-  email = models.EmailField()
-  password_hash = models.TextField()
+  email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
 
@@ -232,6 +317,16 @@ class Topic(bcap.Grantable):
   papers = models.ManyToManyField('Paper')
   conference = models.ForeignKey(Conference)
 
+  def to_json(self):
+    return {
+      'id': self.id,
+      'name': self.name
+    }
+
+  @classmethod
+  def get_by_conference_and_id(cls, conf, id):
+    return Topic.objects.filter(id=id, conference=conf)
+
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
   author = models.TextField()
@@ -244,18 +339,72 @@ class Paper(bcap.Grantable):
   json = models.TextField(default='')
   oscore = models.IntegerField(default=-3)
 
+  def my(self, cls):
+    return cls.objects.filter(paper=self)
+
+  def get_paper(self):
+    paper_json = {
+      'id': self.id,
+      'othercats': self.other_cats,
+      'pcpaper': self.pc_paper,
+      'title': self.title,
+      'target': self.target.to_json(),
+      'author': self.author,
+      'topics': [t.to_json() for t in self.topic_set.all()],
+      'components': [c.to_json() for c in self.my(Component)]
+    }
+    return paper_json
+
+  def get_deadline_extensions(self):
+    return [ext.to_json() for ext in
+            DeadlineExtension.objects.filter(paper=self)]
+
+  def update_target_by_id(self, targetID):
+    target = DecisionValue.objects.filter(id=targetID, targetable=True)
+    if len(target) == 0: return None
+    else: self.target = target[0]
+    return None
+
+  def update_othercats(self, othercats):
+    if othercats == 'yes':
+      self.other_cats = True
+    else:
+      self.other_cats = False
+    return None
+
 class Component(bcap.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
-  last_submitted = models.IntegerField()
+  lastSubmitted = models.IntegerField()
   value = models.TextField()
   mimetype = models.TextField()
   conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'typeID': self.type.id,
+      'lsStr': convertTime(self.lastSubmitted),
+      'value': self.value
+    }
 
 class DeadlineExtension(bcap.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
   until = models.IntegerField()
+  conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'typeID': self.type.id,
+      'paperID': self.paper.id,
+      'until': self.until,
+      'untilStr': convertTime(self.until)
+    }
+
+  @classmethod
+  def get_by_ct_and_paper(self, ct, paper):
+    des = DeadlineExtension.objects.filter(type=ct, paper=paper)
+    return get_one(des)
 
 class ReviewComponent(bcap.Grantable):
   type = models.ForeignKey(ReviewComponentType)
@@ -273,3 +422,46 @@ class Review(bcap.Grantable):
   subreviewers = models.TextField(default='')
   last_saved = models.IntegerField()
   conference = models.ForeignKey(Conference)
+
+# For accounts...
+class Launchable(): pass
+class Account(bcap.Grantable):
+  email = models.TextField(max_length=100)
+  key = models.TextField(max_length=36)
+
+  def get_launchables(self):
+    launchables = [l.to_json() for l in Launchable.objects.filter(account=self)]
+    return launchables
+
+class Launchable(bcap.Grantable):
+  account = models.ForeignKey(Account)
+  launchbase = models.TextField(max_length=500)
+  launchcap = models.TextField(max_length=500)
+  display = models.TextField(max_length=1000)
+
+  def to_json(self):
+    return {
+      'launchbase': self.launchbase,
+      'launchcap': self.launchcap,
+      'display': self.display
+    }
+
+class PendingAccount(bcap.Grantable):
+  email = models.TextField(max_length=100)
+
+class PendingLogin(bcap.Grantable):
+  # Key is for this server to trust the openID provider's request
+  key = models.CharField(max_length=36)
+  # ClientKey is a secret provided by the client to trust that new
+  # windows were served from this server
+  clientkey = models.CharField(max_length=36)
+
+class GoogleCredentials(bcap.Grantable):
+  identity = models.CharField(max_length=200)
+  account = models.ForeignKey(Account)
+
+class ContinueCredentials(bcap.Grantable):
+  username = models.CharField(max_length=200)
+  salt = models.CharField(max_length=200)
+  hashed_password = models.CharField(max_length=200)
+  account = models.ForeignKey(Account)

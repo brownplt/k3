@@ -1,4 +1,4 @@
-# Copyright 2011 Google Inc. All Rights Reserved.
+# Copyright 2011 Brown University. All Rights Reserved.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -186,6 +186,9 @@ class CapHandler(object):
   def files_needed(self):
     return []
 
+  def all_files(self):
+    return False
+
   def allowedMethods(self):
     return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
 
@@ -290,6 +293,10 @@ def handle(cap_id, method, args, files):
   using_files = len(files_needed) > 0
   if using_files:
     files_granted = dict([(n, files[n]) for n in files_needed if files.has_key(n)])
+  elif handler.all_files():
+    using_files = True
+    files_granted = files
+    
 
   item = dbPostProcess(grant.db_data)
 
@@ -329,10 +336,12 @@ def handle(cap_id, method, args, files):
       handler_log += '  Response: %s\n' % str(response)
     logger.error(handler_log)
     return response
-  except Exception as e:
-    logger.error(handler_log)
-    logger.error('BELAY: Uncaught handler exception: %s' % e)
-    raise e
+  finally:
+    pass
+  #except Exception as e:
+  #  logger.error(handler_log)
+  #  logger.error('BELAY: Uncaught handler exception: %s' % e)
+  #  raise e
 
 def proxyHandler(request):
 
