@@ -111,17 +111,18 @@ def glogin_landing(request):
 
   q = GoogleCredentials.objects.filter(identity=identity)
   if len(q) == 0:
+    logger.error('Creating an account: %s' % email)
     account_key = str(uuid.uuid4())
     account = Account(email=email, key=account_key)
     account.save()
-    newaccount = True
+    newaccount = 'true'
 
     gc = GoogleCredentials(account=account, identity=identity)
     gc.save()
   else:
     account = q[0].account
     account_key = account.key
-    newaccount = False
+    newaccount = 'false'
 
   response = render_to_response('glogin.html', {
     'email': email,

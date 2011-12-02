@@ -44,13 +44,27 @@ submission(s).  We offer two methods for validating your email:</p>
       </div>
 			<h3>If you are a PC member or already have an author account...</h3>
 			<p class="error" id="expired"></p>
+			<div id="reqacct_content" >
+
+        <p style='text-align:center;'>Use the same method you used to create your account to log in.</p>
+
+        <div style='padding-top: 2em;max-width: 70%; margin-left: 15%;'>
+        <div style='float:left;width:49%;border-right:2px dotted gray;'>
+          <button id='glogin-return' style='font-size:large;height:3em;width:49%;margin-top:1em;margin-left:25%'>Sign in with Google</button>
+        </div>
+        <div style='float:right; max-width:45%;'>
 			<table class="key-value">
-				<tr><th>Username:</th><td><input type="text" size="40" id="usernamebox" /></td></tr>
+				<tr><th>Email:</th><td><input type="text" size="40" id="usernamebox" /></td></tr>
 				<tr><th>Password:</th><td><input type="password" size="40" id="passwordbox" /></td></tr>
 			</table>
 			<p style="text-align: center;"><input id="loginbutton" type="button" value="Login" /></p>
 			<p style="text-align: center; font-size: small;"><a id="rp-open" href="javascript://Forgot Password">(Forgot Password?)</a></p>
 			<div id="rp-info"></div>
+        </div>
+        <div style='clear:both'></div>
+			</div>
+			<p id="requested" style="display:none">Thank you for requesting an account! We have sent you an email message; you must go to the URL provided in the message to proceed. If this email address is incorrect, please re-submit your contact information.</p>
+      </div>
 		</div>
 
 		<hr noshade="noshade" size="1" />

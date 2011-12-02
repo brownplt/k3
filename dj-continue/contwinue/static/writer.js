@@ -1,4 +1,4 @@
-function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB) {
+function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo) {
 	var deadlineExts = toObj(extensions,function(e) {return e.typeID;});
 	var getDeadline = function(compType) {
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].until; else return compType.deadline;
@@ -51,14 +51,19 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 	var targetables = fold(function(v, acc) {return v.targetable ? acc+1 : acc;},0,basicInfo.decisions);
 
 	var titleWidget = new TextInputWidget(paperInfo.title,40)
-			.serverSaving(function(title) {return genRequest({url:'Author/setTitle',fields:{cookie:authCookie,title:title}});})
+			.belayServerSaving(function(title) {
+        return genRequest({fields:{title:title}});
+      }, true, launchInfo.setTitle)
 			.toTableRow('Paper Title:');
 	var authorWidget = new TextInputWidget(paperInfo.author,70)
-			.serverSaving(function(author) {return genRequest({url:'Author/setAuthor',fields:{cookie:authCookie,author:author}});})
+			.belayServerSaving(function(author) {
+        return {fields:{author:author}};
+      }, true, launchInfo.setAuthor)
 			.toTableRow('Author List:');
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
-			.serverSaving(function(pcpaper) {
-					return genRequest({url:'Author/setPcPaper',fields:{cookie:authCookie,pcpaper:(pcpaper ? 'yes' : 'no')}});})
+			.belayServerSaving(function(pcpaper) {
+					return {fields:{pcpaper:(pcpaper ? 'yes' : 'no')}};
+      }, true, launchInfo.setPcPaper)
 			.toTableRow('PC Paper?');
 	var twDom = '';
 	if(targetables > 1) {
@@ -67,15 +72,15 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 		var targetWidget = new CombinedInputWidget([targetsel,othercats],function(tsdom,ocdom) {
 							return DIV(tsdom,BR(),ocdom,'Yes, I/we would like the paper considered in other categories also.');
 							}).serverSaving(function(to) {
-								return genRequest({url:'Author/setTarget',fields:{cookie:authCookie,target:to[0],othercats:(to[1] ? 'yes' : 'no')}});
-							}).toTableRow('Target Category:');
+								return {fields:{target:to[0],othercats:(to[1] ? 'yes' : 'no')}};
+							}, true, launchInfo.setTarget).toTableRow('Target Category:');
 		twDom = targetWidget.dom;
 	}
 	var topicsWidget = new CheckboxListWidget(map(function(t) {return {k:t.id,v:t.name};},basicInfo.topics),
 												map(function(t) {return t.id;},paperInfo.topics))
-							.serverSaving(function(tids) {
-								return genRequest({url:'Author/setTopics',fields:{cookie:authCookie,topics:tids}});})
-							.toTableRow('Topic(s):');
+    .belayServerSaving(function(tids) {	return {fields:{topics:tids}}; },
+                true, launchInfo.setTopics)
+    .toTableRow('Topic(s):');
 	var errorsDomB = errorsB.transform_b(function(e) {if(e.error) return P({className:'error'},e.error); else return SPAN();});
 	return DIVB(
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
@@ -128,10 +133,10 @@ function loader() {
   });
 	doConfHead(basicInfoE);
 	authCookie = $URL('cookie');
-	$('logout_tab').href = 'login.html?logout='+authCookie;
+	getObj('logout_tab').href = 'login.html?logout='+authCookie;
 	var curUserE = getCurUserE(onLoadTimeE,authCookie);
-	doLoginDivB(curUserE);
-  var defaultsQueryE = getE(launchE.transform_e(function(li) {
+//	doLoginDivB(curUserE);
+  var detailsQueryE = launchE.transform_e(function(li) {
     return li.getPaper;
   });
 /*	var detailsQueryE = curUserE.transform_e(function(cu) {
@@ -142,17 +147,17 @@ function loader() {
 	var perE = iframeLoad_e('subtarget');
 	var perB = perE.startsWith(true);
 	var allDetailsQuerysE = merge_e(snapshot_e(perE,detailsQueryE.startsWith(null)),detailsQueryE);
-	var detailsInfoE = getFilteredWSO_e(allDetailsQuerysE);
+	var detailsInfoE = getE(allDetailsQuerysE);
 	var deadextE = getE(launchE.transform_e(function(li) {
 		return li.getDeadlineExtensions;
 	}));
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
-  });
-	var detailsTabB = lift_b(function(cu,di,bi,at,de) {
-			if (cu && di && bi && at && de)
-				return makeDetailsTab(cu,di,bi,at,de,perB); else return constant_b(getLoadingDiv());},
-			curUserE.startsWith(null),detailsInfoE.startsWith(null),basicInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null)); 
+  }));
+	var detailsTabB = lift_b(function(cu,di,bi,at,de,li) {
+			if (!cu && di && bi && at && de && li)
+				return makeDetailsTab(cu,di,bi,at,de,perB,li); else return constant_b(getLoadingDiv());},
+			curUserE.startsWith(null),detailsInfoE.startsWith(null),basicInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null),launchE.startsWith(null)); 
 	insertDomB(switch_b(detailsTabB),'main_content');
 	onLoadTimeE.sendEvent('loaded!');
 }
