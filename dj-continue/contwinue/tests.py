@@ -160,3 +160,28 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(afterpaper.target_id, target.id)
     self.assertEqual(afterpaper.other_cats, True)
 
+  def test_update_components(self):
+    pass
+#    filedata = open('testfiles/testpdf.pdf', 'r').read()
+
+#    acomp = ComponentType.objects.filter(abbr='A')[0]
+#    pcomp = ComponentType.objects.filter(abbr='P')[0]
+
+#    filesDict = {
+#      'P': filedata
+#    }
+#    textDict = {
+#      'A': 'This is the abstract'
+#    }
+
+#    handler = PaperUpdateComponentsHandler()
+#    response = handler.post_files(self.paper, textDict, filesDict)
+
+#    aftercomponent = Component.objects.filter(type=acomp, paper=self.paper)
+
+#    component_path = os.path.join(settings.SAVEDFILES_DIR,
+#                                  '%d-%d-component' % (self.paper.id, pcomp.id))
+
+#    self.assertEqual(filedata, component_path.read())
+#    self.assertEqual(aftercomponent.value, 'This is the abstract')
+

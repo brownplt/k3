@@ -186,6 +186,9 @@ class CapHandler(object):
   def files_needed(self):
     return []
 
+  def all_files(self):
+    return False
+
   def allowedMethods(self):
     return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
 
@@ -290,6 +293,10 @@ def handle(cap_id, method, args, files):
   using_files = len(files_needed) > 0
   if using_files:
     files_granted = dict([(n, files[n]) for n in files_needed if files.has_key(n)])
+  elif handler.all_files():
+    using_files = True
+    files_granted = files
+    
 
   item = dbPostProcess(grant.db_data)
 

@@ -35,6 +35,8 @@ class Conference(bcap.Grantable):
     admin_role.save()
     reviewer_role = Role(conference=c, name='reviewer')
     reviewer_role.save()
+    user_role = Role(conference=c,name='user')
+    user_role.save()
 
     pc_comments = ReviewComponentType(
       conference=c,
@@ -135,7 +137,7 @@ class Conference(bcap.Grantable):
     paper.save()
 
     adm = User(conference=c, username=admin_user, 
-      password_hash=sha.new(admin_password).hexdigest(), full_name=admin_name,
+      full_name=admin_name,
       email=admin_email)
     # 2 saves because you can't add ManyToMany relationships until the instance
     # is saved
@@ -215,6 +217,9 @@ class Conference(bcap.Grantable):
 
   def get_topics(self): return self.my(Topic)
 
+  def component_type_by_abbr(self, abbr):
+    return get_one(ComponentType.objects.filter(conference=self, abbr=abbr))
+
   def update_last_change(self,paper=None):
     self.lastChange = int(time.time())
     if paper == None:
@@ -293,10 +298,9 @@ class ReviewComponentType(bcap.Grantable):
   conference = models.ForeignKey(Conference)
 
 class User(bcap.Grantable):
-  username = models.CharField(max_length=20)
+  username = models.CharField(max_length=30)
   full_name = models.TextField()
-  email = models.EmailField()
-  password_hash = models.TextField()
+  email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
 
@@ -396,3 +400,54 @@ class DeadlineExtension(bcap.Grantable):
       'until': self.until,
       'untilStr': convertTime(self.until)
     }
+
+  @classmethod
+  def get_by_ct_and_paper(self, ct, paper):
+    des = DeadlineExtension.objects.filter(type=ct, paper=paper)
+    return get_one(des)
+
+
+# For accounts...
+class Launchable(): pass
+class Account(bcap.Grantable):
+  email = models.TextField(max_length=100)
+  key = models.TextField(max_length=36)
+
+  def get_launchables(self):
+    launchables = [l.to_json() for l in Launchable.objects.filter(account=self)]
+    return launchables
+
+class Launchable(bcap.Grantable):
+  account = models.ForeignKey(Account)
+  launchbase = models.TextField(max_length=500)
+  launchcap = models.TextField(max_length=500)
+  display = models.TextField(max_length=1000)
+
+  def to_json(self):
+    return {
+      'launchbase': self.launchbase,
+      'launchcap': self.launchcap,
+      'display': self.display
+    }
+
+class PendingAccount(bcap.Grantable):
+  email = models.TextField(max_length=100)
+
+class PendingLogin(bcap.Grantable):
+  # Key is for this server to trust the openID provider's request
+  key = models.CharField(max_length=36)
+  # ClientKey is a secret provided by the client to trust that new
+  # windows were served from this server
+  clientkey = models.CharField(max_length=36)
+
+class GoogleCredentials(bcap.Grantable):
+  identity = models.CharField(max_length=200)
+  account = models.ForeignKey(Account)
+
+class ContinueCredentials(bcap.Grantable):
+  username = models.CharField(max_length=200)
+  salt = models.CharField(max_length=200)
+  hashed_password = models.CharField(max_length=200)
+  account = models.ForeignKey(Account)
+
+

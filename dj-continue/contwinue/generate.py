@@ -47,7 +47,7 @@ def generate(request):
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != 10:
     writer_user = User(username='writer', full_name='Joe Writer',
-      email='joe@writer.com', password_hash=sha.new('writer').hexdigest(),
+      email='joe@writer.com',
       conference=c)
     # 2 saves because you can't add ManyToMany relationships until the instance
     # is saved
@@ -59,7 +59,7 @@ def generate(request):
       nstr = str(n)
       writer_user = User(username='writer%s' % nstr, 
         full_name='Joe Writer%s' % nstr, email='joe@writer%s.com' % nstr, 
-        password_hash=sha.new('writer%s' % nstr).hexdigest(), conference=c)
+        conference=c)
       writer_user.save()
       writer_user.roles.add(writer_role)
       writer_user.save()

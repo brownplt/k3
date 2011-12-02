@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+</body>
+<script>
+var loginInfo = {
+  email: "{{ email }}",
+  key: "{{ key }}",
+  newaccount: "{{ newaccount }}",
+};
+window.opener.login(JSON.stringify(loginInfo));
+window.close();
+</script>
+</html>

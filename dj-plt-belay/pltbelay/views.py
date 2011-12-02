@@ -278,7 +278,6 @@ def plt_login(request):
   }
   return bcap.bcapResponse(response)
 
-# TODO : fix intermediate page (to get on google's domain)
 def glogin(request):
   if(request.method != 'GET'):
     logwith404(logger, "pltbelay: Tried to glogin with method: " % request.method)
