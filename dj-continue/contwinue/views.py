@@ -24,6 +24,20 @@ def conf_from_path(request):
   shortname = path[1:slash]
   return (False, Conference.get_by_shortname(shortname))
 
+def get_launch(request):
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+  (err, conf) = conf_from_path(request)
+  if err: return conf
+  args = bcap.dataPostProcess(request.read())
+  args.update(request.POST)
+
+  key = args['key']
+  account = get_one(Account.objects.filter(key=key))
+  if key is None: return logWith404('Bad account: %s' % key)
+
+  return bcap.bcapResponse(account.get_launchables())
+
 def create_user(request):
   if request.method != 'POST':
     return HttpResponseNotAllowed(['POST'])
@@ -35,30 +49,33 @@ def create_user(request):
 
   key = args['key']
   account = get_one(Account.objects.filter(key=key))
+  if key is None: return logWith404('Bad account: %s' % key)
   
+  if get_one(User.objects.filter(email=account.email)):
+    return bcap.bcapResponse({'error': True, 'message': 'Account exists'})
   user = User(username=account.email,
               email=account.email,
-              fullname=args['name'],
+              full_name=account.email,
               conference=conf)
   user.save()
   user.roles.add(get_one(Role.objects.filter(name='user')))
   user.save()
 
   paper = Paper(contact=user,
-                author=args['name'],
-                title=u'',
+                author=args['email'],
+                title=u'No Title Given',
                 target=conf.default_target,
                 conference=conf)
   paper.save()
 
-  launchcap = bcap.grant('launch-paper', paper)
+  launchcap = bcap.grant('launch-paper', {'writer': user, 'paper': paper})
   launchbase = '%s/paper' % bcap.this_server_url_prefix()
 
-  launch = Launchable(account=account,
-                      launchbase=launchbase,
-                      launchcap=launchcap,
-                      public='Paper (no title yet)')
-  launch.save()
+  launchable = Launchable(account=account,
+                          launchbase=launchbase,
+                          launchcap=launchcap.serialize(),
+                          display='See my papers')
+  launchable.save()
 
   return bcap.bcapResponse(account.get_launchables())
 
@@ -67,6 +84,8 @@ def get_basic(request):
   if err: return logWith404(logger, 'Conf not found: %s' % shortname)
 
   return bcap.bcapResponse(conference.get_title_and_contact())
+
+paper = make_get_handler('writer.html', {})
 
 class WriterBasicHandler(bcap.CapHandler):
   def get(self, granted):

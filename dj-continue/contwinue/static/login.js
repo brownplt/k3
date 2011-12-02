@@ -66,24 +66,56 @@ function loader() {
 	handleExcepts(exceptsE);
   var capServer = new CapServer();
 
-  window.login = function(jsonData) {
-    var data = JSON.parse(jsonData);
-    console.log('Made it: ', data);
-    if(data.newaccount) {
-      // create an account using data.key
-    }
-    else {
-      // show accounts using data.key or launchables
-      // or maybe just launch using data.key
-    }
-  }
-
+  var expecting_existing;
   extractEvent_e('glogin', 'click').transform_e(function(_) {
+    expecting_existing = false;
     clientkey = newUUIDv4();
     window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
   });
 
+  extractEvent_e('glogin-return', 'click').transform_e(function(_) {
+    clientkey = newUUIDv4();
+    expecting_existing = true;
+    window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
+  });
+
 	var basicInfoE = getBasicInfoE(onLoadTimeE).transform_e(function(bi) {
+    var deptURL = function(tail) {
+      return COMMON.urlPrefix + '/' + bi.value.info.shortname + tail;
+    };
+    window.login = function(jsonData) {
+      var data = JSON.parse(jsonData);
+      console.log('Made it: ', data);
+      if(data.newaccount) {
+        capServer.restore(deptURL('/create_user')).post({
+            key: data.key,
+            email: data.email
+          },
+          function(success) {
+            if(success.error) { return; /* TODO(joe): handle */ }
+            console.log('Success! ', success);
+            var newLoc = success[0].launchbase + '#' + success[0].launchcap;
+            window.location.href = newLoc;
+          },
+          function(fail) {
+            console.log('Failed, ', fail);
+          });
+      }
+      else {
+        capServer.restore(deptURL('/get_launch')).post({
+            key: data.key
+          },
+          function(success) {
+            console.log('Success (login)!', success); 
+            var newLoc = success[0].launchbase + '#' + success[0].launchcap;
+            window.location.href = newLoc;
+          },
+          function(fail) {
+            console.log('Failed (login)!', fail); 
+          });
+      }
+    }
+
     return bi.value;
   });
 	doConfHead(basicInfoE);

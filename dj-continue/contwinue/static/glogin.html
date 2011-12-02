@@ -8,7 +8,7 @@
 var loginInfo = {
   email: "{{ email }}",
   key: "{{ key }}",
-  newaccount: "{{ newaccount }}",
+  newaccount: {{ newaccount }},
 };
 window.opener.login(JSON.stringify(loginInfo));
 window.close();
