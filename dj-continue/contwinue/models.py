@@ -217,6 +217,14 @@ class Conference(bcap.Grantable):
 
   def get_topics(self): return self.my(Topic)
 
+  def get_topic_by_name(self, name):
+    topics = self.my(Topic).filter(name=name)
+    # Unique-together constraint on (conference, name) makes this OK
+    return topics[0]
+
+  def has_topic_named(self, name):
+    return len(self.my(Topic).filter(name=name)) > 0
+
   def component_type_by_abbr(self, abbr):
     return get_one(ComponentType.objects.filter(conference=self, abbr=abbr))
 
@@ -341,6 +349,9 @@ class UnverifiedUser(bcap.Grantable):
   conference = models.ForeignKey(Conference)
 
 class Topic(bcap.Grantable):
+  class Meta:
+    unique_together = (('conference', 'name'))
+
   name = models.TextField()
   papers = models.ManyToManyField('Paper')
   conference = models.ForeignKey(Conference)

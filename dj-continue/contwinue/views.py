@@ -228,6 +228,7 @@ class ContinueInit():
       # End LaunchAdmin handlers
       'get-admin': GetAdminHandler,
       'get-all' : GetAllHandler,
+      'add-topic': AddTopicHandler,
       
       # End LaunchContinue handlers
 
@@ -246,3 +247,22 @@ class GetAllHandler(bcap.CapHandler):
   def get(self, granted):
     conference = granted.conference
     return bcap.bcapResponse(conference.get_all())
+
+class AddTopicHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['name']
+
+  def post(self, granted, args):
+    conference = granted.conference
+    name = args['name']
+
+    if conference.has_topic_named(name):
+      t = conference.get_topic_by_name(name)
+    else:
+      try:
+        t = Topic(name=args['name'], conference=granted.conference)
+        t.save()
+      except Exception as e:
+        return logWith404(logger, 'AddTopicHandler: %s' % e, level='error')
+
+    return bcap.bcapResponse(t.to_json())

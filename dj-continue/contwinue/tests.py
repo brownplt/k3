@@ -241,3 +241,13 @@ class TestAdminPage(Generator):
       else:
         nstr = wu['username'][6:]
       test_writer_user(wu, nstr)
+
+  def test_topic_add(self):
+    self.assertEqual(len(Topic.objects.all()), 10)
+    add_cap = bcap.grant('add-topic', self.conference)
+    response = add_cap.post({'name' : 'New Topic'})
+    self.assertTrue(response.has_key('name'))
+    self.assertEqual(response['name'], 'New Topic')
+    self.assertEqual(len(Topic.objects.all()), 11)
+    add_cap.post({'name' : 'New Topic'})
+    self.assertEqual(len(Topic.objects.all()), 11)
