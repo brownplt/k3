@@ -202,11 +202,12 @@ class ContinueInit():
       'paper-set-pcpaper': PaperSetPcPaperHandler,
       'paper-set-target': PaperSetTargetsHandler,
       'paper-set-topics': PaperSetTopicsHandler,
-      'launch-paper': LaunchPaperHandler
+      'launch-paper': LaunchPaperHandler,
       # End LaunchPaper handlers
 
       
       # End LaunchAdmin handlers
+      'get-admin': GetAdminHandler,
 
       
       # End LaunchContinue handlers
@@ -217,3 +218,7 @@ class ContinueInit():
     })
     return None
 
+class GetAdminHandler(bcap.CapHandler):
+  def get(self, granted):
+    conference = granted.conference
+    return bcap.bcapResponse(conference.get_admin())

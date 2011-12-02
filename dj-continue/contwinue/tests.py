@@ -185,3 +185,13 @@ class TestAuthorLaunch(Generator):
 #    self.assertEqual(filedata, component_path.read())
 #    self.assertEqual(aftercomponent.value, 'This is the abstract')
 
+class TestAdminPage(Generator):
+  def test_get_admin(self):
+    response = bcap.grant('get-admin', Conference.get_by_shortname('SC')).get()
+    self.assertTrue(all(response.has_key(k)\
+      for k in ['adminContact', 'dsCutoffHi', 'dsCutoffLo', 'dsConflictCut']))
+    # TODO(matt): for now, adminContact is admin's email
+    self.assertEqual(response['adminContact'], 'joe@fake.com')
+    self.assertEqual(response['dsCutoffHi'], 7.0)
+    self.assertEqual(response['dsCutoffLo'], 2.0)
+    self.assertEqual(response['dsConflictCut'], 0.05)

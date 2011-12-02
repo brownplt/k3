@@ -229,6 +229,15 @@ class Conference(bcap.Grantable):
     for p in pl:
       p.json = ''
 
+  def get_admin(self):
+    return {
+      # TODO(matt): name? username? email?
+      'adminContact' : self.admin_contact.email,
+      'dsCutoffHi' : self.ds_cutoff_hi,
+      'dsCutoffLo' : self.ds_cutoff_lo,
+      'dsConflictCut' : self.ds_conflict_cut
+    }
+
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
   conference = models.ForeignKey(Conference)
