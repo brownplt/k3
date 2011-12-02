@@ -238,6 +238,9 @@ class Conference(bcap.Grantable):
       'dsConflictCut' : self.ds_conflict_cut
     }
 
+  def get_all(self):
+    return [u.to_json() for u in self.my(User)]
+
 class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
   conference = models.ForeignKey(Conference)
@@ -312,6 +315,22 @@ class User(bcap.Grantable):
   email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
+
+  def role_names(self):
+    return [r.name for r in self.roles.all()]
+
+  def to_json(self):
+    review_count = len(Review.objects.filter(
+      conference=self.conference, 
+      reviewer=self, 
+      published=True))
+    return {
+      'username' : self.username,
+      'fullname' : self.full_name,
+      'email' : self.email,
+      'rolenames' : self.role_names(),
+      'reviewCount' : review_count
+    }
 
 class UnverifiedUser(bcap.Grantable):
   name = models.TextField()

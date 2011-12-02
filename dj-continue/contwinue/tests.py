@@ -11,6 +11,9 @@ import belaylibs.dj_belay as bcap
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.
 
+def has_keys(d, keys):
+  return all([d.has_key(k) for k in keys])
+
 class FakeHttp(object):
   def __init__(self, path, method):
     self.path_info = path
@@ -186,12 +189,55 @@ class TestAuthorLaunch(Generator):
 #    self.assertEqual(aftercomponent.value, 'This is the abstract')
 
 class TestAdminPage(Generator):
+  def setUp(self):
+    super(TestAdminPage, self).setUp()
+    self.conference = Conference.get_by_shortname('SC')
+
   def test_get_admin(self):
-    response = bcap.grant('get-admin', Conference.get_by_shortname('SC')).get()
-    self.assertTrue(all(response.has_key(k)\
-      for k in ['adminContact', 'dsCutoffHi', 'dsCutoffLo', 'dsConflictCut']))
+    response = bcap.grant('get-admin', self.conference).get()
+    self.assertTrue(has_keys(response,
+      ['adminContact', 'dsCutoffHi', 'dsCutoffLo', 'dsConflictCut']))
     # TODO(matt): for now, adminContact is admin's email
     self.assertEqual(response['adminContact'], 'joe@fake.com')
     self.assertEqual(response['dsCutoffHi'], 7.0)
     self.assertEqual(response['dsCutoffLo'], 2.0)
     self.assertEqual(response['dsConflictCut'], 0.05)
+
+  def test_get_all(self):
+    def test_writer_user(writer, nstr):
+      self.assertEqual(writer['username'], 'writer%s' % nstr)
+      self.assertEqual(writer['fullname'], 'Joe Writer%s' % nstr)
+      self.assertEqual(writer['email'], 'joe@writer%s.com' % nstr)
+      self.assertEqual(len(writer['rolenames']), 1)
+      self.assertEqual(writer['rolenames'][0], 'writer')
+      self.assertEqual(writer['reviewCount'], 0)
+
+    user_keys = ['username', 'fullname', 'email', 'rolenames', 'reviewCount']
+    response = bcap.grant('get-all', self.conference).get()
+
+    self.assertEqual(len(response), 11)
+    self.assertTrue(all([has_keys(u, user_keys)\
+      for u in response]))
+
+    # Check admin user
+    admin_users = filter(lambda u: 'admin' in u['rolenames'], response)
+    self.assertEqual(len(admin_users), 1)
+    admin_user = admin_users[0]
+    self.assertEqual(admin_user['username'], 'admin')
+    self.assertEqual(admin_user['fullname'], 'Joe Admin')
+    self.assertEqual(admin_user['email'], 'joe@fake.com')
+    self.assertEqual(len(admin_user['rolenames']), 2)
+    self.assertTrue('reviewer' in admin_user['rolenames'])
+    # TODO(matt): generate currently does not create reviews
+    # must update this later when it does
+    self.assertEqual(admin_user['reviewCount'], 0)
+
+    # Check writer users
+    writer_users = filter(lambda u: 'writer' in u['rolenames'], response)
+    self.assertEqual(len(writer_users), 10)
+    for wu in writer_users:
+      if wu['username'] == 'writer':
+        nstr = ''
+      else:
+        nstr = wu['username'][6:]
+      test_writer_user(wu, nstr)

@@ -208,7 +208,7 @@ class ContinueInit():
       
       # End LaunchAdmin handlers
       'get-admin': GetAdminHandler,
-
+      'get-all' : GetAllHandler,
       
       # End LaunchContinue handlers
 
@@ -222,3 +222,8 @@ class GetAdminHandler(bcap.CapHandler):
   def get(self, granted):
     conference = granted.conference
     return bcap.bcapResponse(conference.get_admin())
+
+class GetAllHandler(bcap.CapHandler):
+  def get(self, granted):
+    conference = granted.conference
+    return bcap.bcapResponse(conference.get_all())
