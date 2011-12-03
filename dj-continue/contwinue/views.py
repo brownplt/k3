@@ -227,12 +227,13 @@ class ContinueInit():
       
       # End LaunchAdmin handlers
       'get-admin': GetAdminHandler,
-      'get-all' : GetAllHandler,
+      'get-all': GetAllHandler,
       'add-topic': AddTopicHandler,
       'delete-topic': DeleteTopicHandler,
       'add-decision-value': AddDecisionValueHandler,
       'delete-decision-value': DeleteDecisionValueHandler,
       'add-review-component-type': AddReviewComponentTypeHandler, 
+      'add-component-type': AddComponentTypeHandler,
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
@@ -331,3 +332,28 @@ class AddReviewComponentTypeHandler(bcap.CapHandler):
           level='error')
 
     return bcap.bcapResponse(rct.to_json())
+
+class AddComponentTypeHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['format', 'abbr', 'description', 'sizelimit', 'deadline',\
+      'gracehours', 'mandatory']
+
+  def post(self, granted, args): 
+    conference = granted.conference
+    abbr = args['abbr']
+    description = args['description']
+
+    if conference.has_component_type(abbr):
+      ct = conference.component_type_by_abbr(abbr)
+    else:
+      try:
+        ct = ComponentType(abbr=abbr, description=description,\
+          fmt=args['format'], size_limit=args['sizelimit'],\
+          deadline=args['deadline'], grace_hours=args['gracehours'],\
+          mandatory=args['mandatory'], conference=conference)
+        ct.save()
+      except Exception as e:
+        return logWith404(logger, 'AddComponentTypeHandler: %s' % e,\
+          level='error')
+
+    return bcap.bcapResponse(ct.to_json())

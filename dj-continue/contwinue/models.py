@@ -225,6 +225,9 @@ class Conference(bcap.Grantable):
   def has_topic_named(self, name):
     return len(self.my(Topic).filter(name=name)) > 0
 
+  def has_component_type(self, abbr):
+    return len(self.my(ComponentType).filter(abbr=abbr)) > 0
+
   def component_type_by_abbr(self, abbr):
     return get_one(ComponentType.objects.filter(conference=self, abbr=abbr))
 
@@ -302,8 +305,9 @@ class DecisionValue(bcap.Grantable):
       'targetable': self.targetable
     }
 
-
 class ComponentType(bcap.Grantable):
+  class Meta:
+    unique_together = (('abbr', 'conference'))
   def deadline_str(self):
 	  return time.strftime("%A, %B %d, %Y %I:%M %p GMT", 
       time.gmtime(self.deadline))

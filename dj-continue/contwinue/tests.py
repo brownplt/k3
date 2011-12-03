@@ -328,3 +328,43 @@ class TestAdminPage(Generator):
     self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))
     self.assertEquals(1, len(ReviewComponentType.objects.filter(\
       description=description, pc_only=False)))
+
+  def test_add_component_type(self):
+    num_types = len(ComponentType.objects.all())
+    add_cap = bcap.grant('add-component-type', self.conference)
+    abbr = '<'
+    description = 'A new component type'
+    format_ = 'Any'
+    deadline = 1000000000000
+    grace_hours = 10
+    size_limit = 1000000000000
+    response = add_cap.post({
+      'abbr' : abbr,
+      'description' : description,
+      'format' : format_,
+      'deadline' : deadline,
+      'mandatory' : False,
+      'gracehours' : grace_hours,
+      'sizelimit' : size_limit
+    })
+    self.assertTrue(has_keys(response, ['abbr', 'description', 'format', \
+      'deadline', 'mandatory', 'gracehours','sizelimit']))
+    self.assertEquals(num_types + 1, len(ComponentType.objects.all()))
+    self.assertEquals(1, len(ComponentType.objects.filter(abbr=abbr,\
+      description=description, fmt=format_, deadline=deadline, mandatory=False,\
+      grace_hours=grace_hours, size_limit=size_limit)))
+    response = add_cap.post({
+      'abbr' : abbr,
+      'description' : description,
+      'format' : format_,
+      'deadline' : deadline,
+      'mandatory' : False,
+      'gracehours' : grace_hours,
+      'sizelimit' : size_limit
+    })
+    self.assertTrue(has_keys(response, ['abbr', 'description', 'format', \
+      'deadline', 'mandatory', 'gracehours','sizelimit']))
+    self.assertEquals(num_types + 1, len(ComponentType.objects.all()))
+    self.assertEquals(1, len(ComponentType.objects.filter(abbr=abbr,\
+      description=description, fmt=format_, deadline=deadline, mandatory=False,\
+      grace_hours=grace_hours, size_limit=size_limit)))
