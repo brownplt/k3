@@ -229,6 +229,7 @@ class ContinueInit():
       'get-admin': GetAdminHandler,
       'get-all' : GetAllHandler,
       'add-topic': AddTopicHandler,
+      'delete-topic': DeleteTopicHandler,
       
       # End LaunchContinue handlers
 
@@ -266,3 +267,12 @@ class AddTopicHandler(bcap.CapHandler):
         return logWith404(logger, 'AddTopicHandler: %s' % e, level='error')
 
     return bcap.bcapResponse(t.to_json())
+
+class DeleteTopicHandler(bcap.CapHandler):
+  def delete(self, granted):
+    topic = granted.topic
+    try:
+      topic.delete()
+    except Exception as e:
+      return logWith404(logger, 'DeleteTopicHandler: %s' % e, level='error')
+    return bcap.bcapNullResponse()

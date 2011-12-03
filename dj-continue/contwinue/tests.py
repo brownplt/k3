@@ -251,3 +251,13 @@ class TestAdminPage(Generator):
     self.assertEqual(len(Topic.objects.all()), 11)
     add_cap.post({'name' : 'New Topic'})
     self.assertEqual(len(Topic.objects.all()), 11)
+
+  def test_topic_delete(self):
+    all_topics = Topic.objects.all()
+    t = all_topics[0]
+    t_name = t.name
+    num_before = len(all_topics)
+
+    bcap.grant('delete-topic', t).delete()
+    self.assertEqual(num_before - 1, len(Topic.objects.all()))
+    self.assertEqual(0, len(Topic.objects.filter(name=t_name)))

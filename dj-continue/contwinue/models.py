@@ -218,9 +218,7 @@ class Conference(bcap.Grantable):
   def get_topics(self): return self.my(Topic)
 
   def get_topic_by_name(self, name):
-    topics = self.my(Topic).filter(name=name)
-    # Unique-together constraint on (conference, name) makes this OK
-    return topics[0]
+    return get_one(self.my(Topic).filter(name=name))
 
   def has_topic_named(self, name):
     return len(self.my(Topic).filter(name=name)) > 0
