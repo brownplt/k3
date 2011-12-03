@@ -79,15 +79,15 @@ function loader() {
     window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
   });
 
+  var deptURL = function(bi, tail) {
+    return COMMON.urlPrefix + '/' + bi.info.shortname + tail;
+  };
 	var basicInfoE = getBasicInfoE(onLoadTimeE).transform_e(function(bi) {
-    var deptURL = function(tail) {
-      return COMMON.urlPrefix + '/' + bi.value.info.shortname + tail;
-    };
     window.login = function(jsonData) {
       var data = JSON.parse(jsonData);
       console.log('Made it: ', data);
       if(data.newaccount) {
-        capServer.restore(deptURL('/create_user')).post({
+        capServer.restore(deptURL(bi.value, '/create_user')).post({
             key: data.key,
             email: data.email
           },
@@ -102,7 +102,7 @@ function loader() {
           });
       }
       else {
-        capServer.restore(deptURL('/get_launch')).post({
+        capServer.restore(deptURL(bi.value, '/get_launch')).post({
             key: data.key
           },
           function(success) {
@@ -131,12 +131,17 @@ function loader() {
 			window.location = 'continue.html?cookie='+ai[0];
 	});
 
-	var requestedE = getFilteredWSO_e(extractEvent_e('reqacctok','click').transform_e(function(_) {
-		return genRequest({
-			url: 'UnverifiedUser/add',
-			fields: {name:getObj('full_name').value,email:getObj('email').value}});
-		}));
-	
+  var requestedB = lift_b(function(bi, email) {
+    console.log('Email, bi: ', email, bi);
+    if(!bi || !email) return null;
+    return [capServer.restore(deptURL(bi, '/request_account')),
+            {email: email}];
+  }, basicInfoE.startsWith(null),
+     extractValue_b('email'));
+
+  var requestedE =
+    postE(extractEvent_e('reqacctok', 'click').snapshot_e(requestedB));
+
 	insertValueB(
   	merge_e(extractEvent_e('reqacct','click').constant_e('block'),
             requestedE.constant_e('none')).startsWith('none'),

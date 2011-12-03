@@ -8,6 +8,7 @@ urlpatterns = patterns('',
 
   (r'^.*/create_user$', 'contwinue.views.create_user'),
   (r'^.*/get_launch$', 'contwinue.views.get_launch'),
+  (r'^.*/request_account$', 'contwinue.accounts.request_account'),
 
   (r'^paper$', 'contwinue.views.paper'),
 

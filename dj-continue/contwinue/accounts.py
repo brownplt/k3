@@ -1,4 +1,6 @@
+from django.core.validators import validate_email
 from django.shortcuts import redirect, render_to_response
+
 from xml.dom import minidom
 import logging
 import urllib2
@@ -12,9 +14,75 @@ from lib.py.common import logWith404
 import belaylibs.dj_belay as bcap
 
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
- ContinueCredentials, Account 
+ ContinueCredentials, Account, Conference
+from contwinue.email import send_and_log_email
 
 logger = logging.getLogger('default')
+
+def conf_from_path(request):
+  path = request.path_info
+  slash = path.find('/', 1)
+  if slash == -1: return (True, logWith404(logger, 'Badly formed path: %s' % path))
+
+  shortname = path[1:slash]
+  return (False, Conference.get_by_shortname(shortname))
+
+class VerifyHandler(bcap.CapHandler):
+  def post_arg_names(self): return []
+  def post(self, grantable, args):
+    pending = grantable.pending_account
+
+    key = str(uuid.uuid4())
+    account = Account(email=pending.email,
+                      key=key)
+
+    return bcap.bcapResponse({
+      'email': email,
+      'newaccount': True,
+      'key': account_key
+    })
+    
+
+def request_account(request):
+  if request.method != 'POST':
+    return HttpResponseNotAllowed(['POST'])
+  (err, conf) = conf_from_path(request)
+  if err: return conf
+  args = bcap.dataPostProcess(request.read())
+  args.update(request.POST)
+
+  email = args['email']
+
+  pending = PendingAccount(email=email)
+
+  verify = bcap.grant('verify-pending', pending)
+
+  message=u"""
+You've made a request to submit a paper for %(confname)s.  This link will take
+you to a page where you can verify your email and get started:
+
+%(base)s/verify#%(key)s
+
+If you run into any problems, simply reply to this email.
+
+Thanks!
+%(confname)s
+"""
+
+  filled_message = message % {
+    'confname': conf.name,
+    'base': bcap.this_server_url_prefix(),
+    'key': verify.serialize()
+  }
+
+  subject = 'Create an Account for %s' % conf.name
+  fromaddr = conf.admin_contact.email
+  
+  resp = send_and_log_email(subject, filled_message, email, fromaddr, logger)
+
+  if resp: return resp
+  return bcap.bcapResponse({'success': True})
+
 
 def glogin(request):
   if(request.method != 'GET'):
