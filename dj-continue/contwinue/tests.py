@@ -261,3 +261,34 @@ class TestAdminPage(Generator):
     bcap.grant('delete-topic', t).delete()
     self.assertEqual(num_before - 1, len(Topic.objects.all()))
     self.assertEqual(0, len(Topic.objects.filter(name=t_name)))
+
+  def test_decision_value_add(self):
+    num_values = len(DecisionValue.objects.all())
+    add_cap = bcap.grant('add-decision-value', self.conference)
+    self.assertEqual(0, len(DecisionValue.objects.filter(
+      abbr='X',
+      description='A New Decision Value',
+      targetable=True)))
+    response = add_cap.post({
+      'abbr' : 'X',
+      'description' : 'A New Decision Value',
+      'targetable' : True
+    })
+    self.assertTrue(has_keys(response, ['abbr', 'targetable', 'description']))
+    self.assertEqual(num_values + 1, len(DecisionValue.objects.all()))
+    self.assertEqual(1, len(DecisionValue.objects.filter(
+      abbr='X',
+      description='A New Decision Value',
+      targetable=True)))
+    # Repeat to test only creating 1
+    response = add_cap.post({
+      'abbr' : 'X',
+      'description' : 'A New Decision Value',
+      'targetable' : True
+    })
+    self.assertTrue(has_keys(response, ['abbr', 'targetable', 'description']))
+    self.assertEqual(num_values + 1, len(DecisionValue.objects.all()))
+    self.assertEqual(1, len(DecisionValue.objects.filter(
+      abbr='X',
+      description='A New Decision Value',
+      targetable=True)))

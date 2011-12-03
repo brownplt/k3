@@ -226,6 +226,14 @@ class Conference(bcap.Grantable):
   def component_type_by_abbr(self, abbr):
     return get_one(ComponentType.objects.filter(conference=self, abbr=abbr))
 
+  def has_decision_value(self, targetable, abbr, description):
+    return len(self.my(DecisionValue).filter(targetable=targetable, abbr=abbr,\
+      description=description, conference=self)) > 0
+
+  def get_decision_value(self, targetable, abbr, description):
+    return get_one(DecisionValue.objects.filter(targetable=targetable,\
+      abbr=abbr, description=description, conference=self))
+
   def update_last_change(self,paper=None):
     self.lastChange = int(time.time())
     if paper == None:
@@ -269,6 +277,8 @@ class ExpertiseValue(bcap.Grantable):
   conference = models.ForeignKey(Conference)
 
 class DecisionValue(bcap.Grantable):
+  class Meta:
+    unique_together = (('targetable', 'abbr', 'description', 'conference'))
   targetable = models.BooleanField(default=True)
   abbr = models.CharField(max_length=1)
   description = models.TextField()

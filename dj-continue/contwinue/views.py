@@ -230,6 +230,7 @@ class ContinueInit():
       'get-all' : GetAllHandler,
       'add-topic': AddTopicHandler,
       'delete-topic': DeleteTopicHandler,
+      'add-decision-value': AddDecisionValueHandler,
       
       # End LaunchContinue handlers
 
@@ -276,3 +277,25 @@ class DeleteTopicHandler(bcap.CapHandler):
     except Exception as e:
       return logWith404(logger, 'DeleteTopicHandler: %s' % e, level='error')
     return bcap.bcapNullResponse()
+
+class AddDecisionValueHandler(bcap.CapHandler):
+  def post_arg_name(self):
+    return ['abbr', 'description', 'targetable']
+
+  def post(self, granted, args):
+    conference = granted.conference
+    abbr = args['abbr']
+    description = args['description']
+    targetable = args['targetable']
+
+    if conference.has_decision_value(targetable, abbr, description):
+      ndv = conference.get_decision_value(targetable, abbr, description)
+    else:
+      try:
+        ndv = DecisionValue(targetable=targetable, abbr=abbr, \
+          description=description, conference=conference)
+        ndv.save()
+      except Exception as e:
+        return logWith404(logger, 'AddDecisionValueHandler: %s' % e, level='error')
+
+    return bcap.bcapResponse(ndv.to_json())
