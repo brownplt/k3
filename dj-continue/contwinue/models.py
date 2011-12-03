@@ -162,8 +162,10 @@ class Conference(bcap.Grantable):
   conflict_bid = models.ForeignKey('BidValue', related_name='cb', null=True)
   default_overall = models.ForeignKey('RatingValue', related_name='do', null=True)
   default_expertise = models.ForeignKey('ExpertiseValue', related_name='de', null=True)
-  default_target = models.ForeignKey('DecisionValue', related_name='dt', null=True)
-  default_decision = models.ForeignKey('DecisionValue', related_name='dd', null=True)
+  default_target = models.ForeignKey('DecisionValue', related_name='dt',\
+    null=True, on_delete=models.SET_NULL)
+  default_decision = models.ForeignKey('DecisionValue', related_name='dd',\
+    null=True, on_delete=models.SET_NULL)
   display_component = models.ForeignKey('ComponentType', related_name='dc', null=True)
   name = models.TextField()
   shortname = models.TextField(unique=True)

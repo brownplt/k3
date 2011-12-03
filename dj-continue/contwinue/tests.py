@@ -292,3 +292,18 @@ class TestAdminPage(Generator):
       abbr='X',
       description='A New Decision Value',
       targetable=True)))
+
+  def test_decision_value_delete(self):
+    all_values = DecisionValue.objects.all()
+    dv = all_values[0]
+    abbr = dv.abbr
+    description = dv.description
+    targetable = dv.targetable
+    num_before = len(all_values)
+
+    bcap.grant('delete-decision-value', dv).delete()
+
+    self.assertEqual(num_before - 1, len(DecisionValue.objects.all()))
+    self.assertEqual(0, len(DecisionValue.objects.filter(abbr=abbr,\
+      description=description, targetable=targetable, \
+      conference=self.conference)))

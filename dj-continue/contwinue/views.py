@@ -231,6 +231,7 @@ class ContinueInit():
       'add-topic': AddTopicHandler,
       'delete-topic': DeleteTopicHandler,
       'add-decision-value': AddDecisionValueHandler,
+      'delete-decision-value': DeleteDecisionValueHandler,
       
       # End LaunchContinue handlers
 
@@ -299,3 +300,12 @@ class AddDecisionValueHandler(bcap.CapHandler):
         return logWith404(logger, 'AddDecisionValueHandler: %s' % e, level='error')
 
     return bcap.bcapResponse(ndv.to_json())
+
+class DeleteDecisionValueHandler(bcap.CapHandler):
+  def delete(self, granted):
+    dv = granted.decisionvalue
+    try:
+      dv.delete()
+    except Exception as e:
+      return logWith404(logger, 'DeleteDecisionHandler: %s' % e, level='error')
+    return bcap.bcapNullResponse()
