@@ -307,3 +307,24 @@ class TestAdminPage(Generator):
     self.assertEqual(0, len(DecisionValue.objects.filter(abbr=abbr,\
       description=description, targetable=targetable, \
       conference=self.conference)))
+
+  def test_add_review_component_type(self):
+    num_types = len(ReviewComponentType.objects.all())
+    add_cap = bcap.grant('add-review-component-type', self.conference)
+    description = 'A new review component type'
+
+    response = add_cap.post({'description' : description, 'pcOnly' : False})
+
+    self.assertTrue(has_keys(response, ['description', 'pcOnly']))
+    self.assertEquals(response['description'], description)
+    self.assertEquals(response['pcOnly'], False)
+    self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))
+    self.assertEquals(1, len(ReviewComponentType.objects.filter(\
+      description=description, pc_only=False)))
+
+    add_cap.post({'description' : description, 'pcOnly' : False})
+    self.assertEquals(response['description'], description)
+    self.assertEquals(response['pcOnly'], False)
+    self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))
+    self.assertEquals(1, len(ReviewComponentType.objects.filter(\
+      description=description, pc_only=False)))

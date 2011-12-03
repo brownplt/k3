@@ -232,7 +232,7 @@ class ContinueInit():
       'delete-topic': DeleteTopicHandler,
       'add-decision-value': AddDecisionValueHandler,
       'delete-decision-value': DeleteDecisionValueHandler,
-      
+      'add-review-component-type': AddReviewComponentTypeHandler, 
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
@@ -309,3 +309,25 @@ class DeleteDecisionValueHandler(bcap.CapHandler):
     except Exception as e:
       return logWith404(logger, 'DeleteDecisionHandler: %s' % e, level='error')
     return bcap.bcapNullResponse()
+
+class AddReviewComponentTypeHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['description', 'pcOnly']
+
+  def post(self, granted, args): 
+    conference = granted.conference
+    description = args['description']
+    pc_only = args['pcOnly']
+
+    if conference.has_rc_type(description, pc_only):
+      rct = conference.get_rc_type(description, pc_only)
+    else:
+      try:
+        rct = ReviewComponentType(description=description, pc_only=pc_only,\
+          conference=conference)
+        rct.save()
+      except Exception as e:
+        return logWith404(logger, 'AddReviewComponentTypeHandler: %s' % e,\
+          level='error')
+
+    return bcap.bcapResponse(rct.to_json())

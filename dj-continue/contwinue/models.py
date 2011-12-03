@@ -236,6 +236,14 @@ class Conference(bcap.Grantable):
     return get_one(DecisionValue.objects.filter(targetable=targetable,\
       abbr=abbr, description=description, conference=self))
 
+  def has_rc_type(self, description, pc_only):
+    return len(self.my(ReviewComponentType).filter(description=description,\
+      pc_only=pc_only, conference=self)) > 0
+
+  def get_rc_type(self, description, pc_only):
+    return get_one(ReviewComponentType.objects.filter(description=description,\
+      pc_only=pc_only, conference=self))
+
   def update_last_change(self,paper=None):
     self.lastChange = int(time.time())
     if paper == None:
@@ -323,9 +331,17 @@ class ComponentType(bcap.Grantable):
     }
 
 class ReviewComponentType(bcap.Grantable):
+  class Meta:
+    unique_together = (('description', 'conference', 'pc_only'))
   description = models.TextField()
   pc_only = models.BooleanField()
   conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'description' : self.description,
+      'pcOnly' : self.pc_only
+    }
 
 class User(bcap.Grantable):
   username = models.CharField(max_length=30)
