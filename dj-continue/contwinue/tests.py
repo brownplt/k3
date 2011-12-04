@@ -379,3 +379,37 @@ class TestAdminPage(Generator):
     self.assertEqual(num_types - 1, len(ComponentType.objects.all()))
     self.assertEqual(0, len(ComponentType.objects.filter(abbr=abbr,\
       conference=self.conference)))
+
+  def test_change_component_type(self):
+    def changed_fmt(prior_fmt):
+      fmts = [f[0] for f in ComponentType.formats]
+      return fmts[(1 + fmts.index(prior_fmt)) % len(fmts)]
+
+    ct = ComponentType.objects.all()[0]
+    abbr = ct.abbr
+    description = ct.description
+    fmt = ct.fmt
+    deadline = ct.deadline
+    mandatory = ct.mandatory
+    grace_hours = ct.grace_hours
+    size_limit = ct.size_limit
+
+    next_fmt = changed_fmt(fmt)
+    bcap.grant('change-component-type', ct).post({
+      'abbr' : '*',
+      'description' : '******',
+      'format' : next_fmt,
+      'deadline' : deadline + 1,
+      'mandatory' : not mandatory,
+      'gracehours' : grace_hours + 1,
+      'sizelimit' : size_limit + 1
+    })
+
+    self.assertEqual(0, len(ComponentType.objects.filter(abbr=abbr,\
+      description=description, fmt=fmt, deadline=deadline, mandatory=mandatory,\
+      grace_hours=grace_hours, size_limit=size_limit,\
+      conference=self.conference)))
+    self.assertEqual(1, len(ComponentType.objects.filter(abbr='*',\
+      description='******', fmt=next_fmt, deadline=(deadline + 1),\
+      mandatory=(not mandatory), grace_hours=(grace_hours + 1),\
+      size_limit=(size_limit + 1))))

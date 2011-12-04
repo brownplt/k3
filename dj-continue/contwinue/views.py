@@ -235,6 +235,7 @@ class ContinueInit():
       'add-review-component-type': AddReviewComponentTypeHandler, 
       'add-component-type': AddComponentTypeHandler,
       'delete-component-type': DeleteComponentTypeHandler,
+      'change-component-type': ChangeComponentTypeHandler,
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
@@ -335,6 +336,8 @@ class AddReviewComponentTypeHandler(bcap.CapHandler):
     return bcap.bcapResponse(rct.to_json())
 
 class AddComponentTypeHandler(bcap.CapHandler):
+  # TODO(matt): if it turns out change args are always the same as create args,
+  # put this on the model class in order to avoid repetition
   def post_arg_names(self):
     return ['format', 'abbr', 'description', 'sizelimit', 'deadline',\
       'gracehours', 'mandatory']
@@ -368,3 +371,28 @@ class DeleteComponentTypeHandler(bcap.CapHandler):
       return logWith404(logger, 'DeleteComponentType: %' % e,\
         level='error')
     return bcap.bcapNullResponse()
+
+class ChangeComponentTypeHandler(bcap.CapHandler):
+  # TODO(matt): if it turns out change args are always the same as create args,
+  # put this on the model class in order to avoid repetition
+  def post_arg_names(self):
+    return ['format', 'abbr', 'description', 'sizelimit', 'deadline',\
+      'gracehours', 'mandatory']
+
+  def post(self, granted, args):
+    ct = granted.componenttype
+    ct.fmt = args['format']
+    ct.abbr = args['abbr']
+    ct.description = args['description']
+    ct.size_limit = args['sizelimit']
+    ct.deadline = args['deadline']
+    ct.grace_hours = args['gracehours']
+    ct.mandatory = args['mandatory']
+
+    try:
+      ct.save()
+    except Exception as e:
+      return logWith404(logger, 'ChangeComponentType: %' % e,\
+        level='error')
+    
+    return bcap.bcapResponse(ct.to_json())
