@@ -40,6 +40,9 @@ def cap_url(cap):
 
 def cap_id_from_url(capURL):
   return capURL[handlerData.prefix_strip_length:]
+
+def cap_for_hash(cap):
+  return handlerData.cap_prefix + cap_id_from_url(cap.serialize())
  
 class BelayException(Exception):
   pass
@@ -201,7 +204,17 @@ class CapHandler(object):
       if not args.has_key(k):
         return logWith404(logger, self.name_str() + ' error: post args missing ' + k)
     return 'OK'
-  
+
+  def setCurrentGrant(self, grant):
+    self.current_grant = grant
+  def getCurrentGrant(self):
+    return self.current_grant
+  def getCurrentCap(self):
+    return Capability(handlerData.prefix + self.current_grant.cap_id)
+  def updateGrant(self, new_data):
+    self.current_grant.db_data = dbPreProcess(new_data)
+    self.current_grant.save()
+
   def notAllowedResponse(self):
     return HttpResponseNotAllowed(self.allowedMethods())
   def get(self, grantable):
@@ -288,6 +301,7 @@ def handle(cap_id, method, args, files):
   grant = grants[0]   
   handler_class = get_handler(str(grant.internal_path))
   handler = handler_class()
+  handler.setCurrentGrant(grant)
 
   files_needed = handler.files_needed()
   using_files = len(files_needed) > 0

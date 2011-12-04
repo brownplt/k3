@@ -9,6 +9,7 @@
 		<script src="/static/lib/js/flapjax/myfjws.js"></script>
 		<script src="/static/gcommon.js"></script>
 		<script src="/static/common.js"></script>
+    <script src="/common.js"></script>
 		<script src="/static/lib/js/caps.js"></script>
 		<script src="/static/lib/js/flapjax-belay.js"></script>
 		<script src="/static/writer.js"></script>
@@ -28,14 +29,22 @@
 		<div class="tabs" id="maintabs">
 			<h4>Navigation:</h4>
 			<ul>
-				<li class="left-tab"><a class="selected" href="javascript://Details Tab">Details</a></li>
+				<li class="left-tab"><a class="selected writer-tab" id="main_tab" href="javascript://Details Tab">Details</a></li>
 
 				<li class="right-tab"><a href="javascript://Logout Tab" id="logout_tab">Log Out</a></li>
+        <li class="right-tab"><a class="writer-tab" href="javascript://Accounts" id="account_tab">My Account</a></li>
+				<li class="right-tab red"><a href="javascript://New Submission" id="new_submission">New Submission</a></li>
 			</ul>
 		</div>
 
-		<div id="main_content">
-		</div>
+      <div id='details_content'>
+        <div id="main_content">
+        </div>
+      </div>
+      <div id="account_content">
+        <div id="account_placeholder">
+        </div>
+      </div>
 
 		<hr noshade="noshade" size="1" />
 		<table id="footer">

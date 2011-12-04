@@ -349,12 +349,34 @@ class ReviewComponentType(bcap.Grantable):
       'pcOnly' : self.pc_only
     }
 
+class Launchable(): pass
+class Account(bcap.Grantable):
+  email = models.TextField(max_length=100)
+  key = models.TextField(max_length=36)
+
+  def get_launchables(self):
+    launchables = [l.to_json() for l in Launchable.objects.filter(account=self)]
+    return launchables
+
+  def get_credentials(self):
+    googles = []
+    contwinues = []
+    google = get_one(GoogleCredentials.objects.filter(account=self))
+    if not (google is None): googles.append(google)
+    for contwinue in ContinueCredentials.objects.filter(account=self):
+      if not (contwinue is None): contwinues.append(contwinue)
+    return {
+      'googleCreds': [g.to_json() for g in googles],
+      'continueCreds': [c.to_json() for c in contwinues]
+    }
+
 class User(bcap.Grantable):
   username = models.CharField(max_length=30)
   full_name = models.TextField()
   email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
+  accounts = models.ManyToManyField(Account)
 
   def role_names(self):
     return [r.name for r in self.roles.all()]
@@ -370,6 +392,19 @@ class User(bcap.Grantable):
       'email' : self.email,
       'rolenames' : self.role_names(),
       'reviewCount' : review_count
+    }
+
+  def get_credentials(self):
+    googles = []
+    contwinues = []
+    for account in self.accounts.all():
+      google = get_one(GoogleCredentials.objects.filter(account=account))
+      if not (google is None): googles.append(google)
+      contwinue = get_one(ContinueCredentials.objects.filter(account=account))
+      if not (contwinue is None): contwinues.append(contwinue)
+    return {
+      'googleCreds': [g.to_json() for g in googles],
+      'continueCreds': [c.to_json() for c in contwinues]
     }
 
 class UnverifiedUser(bcap.Grantable):
@@ -495,14 +530,6 @@ class Review(bcap.Grantable):
   conference = models.ForeignKey(Conference)
 
 # For accounts...
-class Launchable(): pass
-class Account(bcap.Grantable):
-  email = models.TextField(max_length=100)
-  key = models.TextField(max_length=36)
-
-  def get_launchables(self):
-    launchables = [l.to_json() for l in Launchable.objects.filter(account=self)]
-    return launchables
 
 class Launchable(bcap.Grantable):
   account = models.ForeignKey(Account)
@@ -531,8 +558,19 @@ class GoogleCredentials(bcap.Grantable):
   identity = models.CharField(max_length=200)
   account = models.ForeignKey(Account)
 
+  def to_json(self):
+    return {
+      'email': self.account.email
+    }
+
 class ContinueCredentials(bcap.Grantable):
   username = models.CharField(max_length=200)
   salt = models.CharField(max_length=200)
   hashed_password = models.CharField(max_length=200)
   account = models.ForeignKey(Account)
+
+  def to_json(self):
+    return {
+      'username': self.username,
+      'email': self.account.email
+    }

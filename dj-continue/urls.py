@@ -12,6 +12,7 @@ urlpatterns = patterns('',
 
   (r'^paper$', 'contwinue.views.paper'),
 
+  (r'^continue_login', 'contwinue.views.continue_login'),
   (r'^glogin$', 'contwinue.accounts.glogin'),
   (r'^glogin_landing/.*', 'contwinue.accounts.glogin_landing'),
   (r'^generate/$', 'contwinue.generate.generate'),

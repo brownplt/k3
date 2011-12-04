@@ -185,6 +185,15 @@ p.action-link {
     background-color:#fff;
 }
 
+.red a:link, .red a:visited {
+  background: red;
+}
+
+.red a:focus, .red a:hover {
+  color: red;
+  background: white;
+}
+
         
 .tabs a.selected:link, .tabs a.selected:visited {
     background: #fff;
