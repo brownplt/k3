@@ -234,6 +234,7 @@ class ContinueInit():
       'delete-decision-value': DeleteDecisionValueHandler,
       'add-review-component-type': AddReviewComponentTypeHandler, 
       'add-component-type': AddComponentTypeHandler,
+      'delete-component-type': DeleteComponentTypeHandler,
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
@@ -357,3 +358,13 @@ class AddComponentTypeHandler(bcap.CapHandler):
           level='error')
 
     return bcap.bcapResponse(ct.to_json())
+
+class DeleteComponentTypeHandler(bcap.CapHandler):
+  def delete(self, granted):
+    ct = granted.componenttype
+    try:
+      ct.delete()
+    except Exception as e:
+      return logWith404(logger, 'DeleteComponentType: %' % e,\
+        level='error')
+    return bcap.bcapNullResponse()

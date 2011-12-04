@@ -166,10 +166,12 @@ class Conference(bcap.Grantable):
     null=True, on_delete=models.SET_NULL)
   default_decision = models.ForeignKey('DecisionValue', related_name='dd',\
     null=True, on_delete=models.SET_NULL)
-  display_component = models.ForeignKey('ComponentType', related_name='dc', null=True)
+  display_component = models.ForeignKey('ComponentType', related_name='dc',\
+    null=True, on_delete=models.SET_NULL)
   name = models.TextField()
   shortname = models.TextField(unique=True)
-  admin_contact = models.ForeignKey('User', related_name='ac', null=True)
+  admin_contact = models.ForeignKey('User', related_name='ac', null=True,\
+    on_delete=models.SET_NULL)
   last_change = models.IntegerField(default=0)
   show_bid = models.BooleanField()
   show_num = models.BooleanField()

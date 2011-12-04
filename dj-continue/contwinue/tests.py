@@ -368,3 +368,14 @@ class TestAdminPage(Generator):
     self.assertEquals(1, len(ComponentType.objects.filter(abbr=abbr,\
       description=description, fmt=format_, deadline=deadline, mandatory=False,\
       grace_hours=grace_hours, size_limit=size_limit)))
+
+  def test_delete_component_type(self):
+    num_types = len(ComponentType.objects.all())
+    ct = ComponentType.objects.all()[0]
+    abbr = ct.abbr
+
+    bcap.grant('delete-component-type', ct).delete()
+
+    self.assertEqual(num_types - 1, len(ComponentType.objects.all()))
+    self.assertEqual(0, len(ComponentType.objects.filter(abbr=abbr,\
+      conference=self.conference)))
