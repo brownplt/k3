@@ -72,7 +72,11 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
   }
   if(continues.length === 0) { continueDiv = makeEmptyContinueDiv(); }
   else {
-    continueDiv = P("Has CONTINUE");
+    continueDiv = 
+      DIV(
+        P(STRONG("This account has a password, but you can add another if you like.")),
+        makeEmptyContinueDiv()
+      );
   }
 
   var pad = {style:{margin:'1em'}};
