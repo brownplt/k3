@@ -236,6 +236,7 @@ class ContinueInit():
       'add-component-type': AddComponentTypeHandler,
       'delete-component-type': DeleteComponentTypeHandler,
       'change-component-type': ChangeComponentTypeHandler,
+      'change-user-email': ChangeUserEmailHandler,
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
@@ -396,3 +397,18 @@ class ChangeComponentTypeHandler(bcap.CapHandler):
         level='error')
     
     return bcap.bcapResponse(ct.to_json())
+
+class ChangeUserEmailHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['email']
+
+  def post(self, granted, args):
+    user = granted.user
+    try:
+      user.email = args['email']
+      user.save()
+    except Exception as e:
+      return logWith404(logger, 'ChangeUserEmailHandler: %s' % e,\
+        level='error')
+
+    return bcap.bcapResponse('true')

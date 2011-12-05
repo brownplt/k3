@@ -271,6 +271,8 @@ class Conference(bcap.Grantable):
     return [u.to_json() for u in self.my(User)]
 
 class Role(bcap.Grantable):
+  class Meta:
+    unique_together = (('name', 'conference'))
   name = models.CharField(max_length=20)
   conference = models.ForeignKey(Conference)
 

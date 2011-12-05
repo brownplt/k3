@@ -413,3 +413,21 @@ class TestAdminPage(Generator):
       description='******', fmt=next_fmt, deadline=(deadline + 1),\
       mandatory=(not mandatory), grace_hours=(grace_hours + 1),\
       size_limit=(size_limit + 1))))
+
+  def test_change_user_email(self):
+    user = User.objects.all()[0]
+    old_email = user.email
+    username = user.username
+    full_name = user.full_name
+    roles = user.roles.all()
+    old_num = len(User.objects.filter(email=old_email))
+
+    bcap.grant('change-user-email', user).post({'email' : 'x' + old_email})
+
+    self.assertEqual(old_num - 1, len(User.objects.filter(email=old_email)))
+    self.assertEqual(1, len(User.objects.filter(email='x' + old_email,\
+      username=username, full_name=full_name, roles=roles,\
+      conference=self.conference)))
+    self.assertEqual(0, len(User.objects.filter(email=old_email,\
+      username=username, full_name=full_name, roles=roles,\
+      conference=self.conference)))
