@@ -55,7 +55,7 @@ function TabSet(currentRolesB,roleTabs,getCurrentTabB) {
 	});
 
 	map(function(tab) {
-		insertValueB(that.tabsToShowB.transform_b(function(tts) {return inList(tab,tts) ? 'inline' : 'none';}),$(tab).parentNode,'style','display');
+		insertValueB(that.tabsToShowB.transform_b(function(tts) {return inList(tab,tts) ? 'inline' : 'none';}),getObj(tab).parentNode,'style','display');
 	},this.allTabs);
 	this.currentTabB = getCurrentTabB(this);
 	map(function(tab) {
@@ -163,5 +163,21 @@ function getLaunchCap() {
     window.name = hash;
   }
   return hash.substr(1);
+}
+
+
+/*
+  Often, we don't want to put the entire capability into the url.
+  Instead, we put the private part, and restore a capability based
+  on a prefix determined by the client-side code.
+
+  String * CapServer → Capability
+*/
+function launchCapFromKey(prefix, capServer) {
+  var hash = window.location.hash;
+  if(hash === '' || hash === '#') { hash = window.name; }
+  else { window.name = hash; }
+
+  return capServer.restore(prefix + hash.substr(1));
 }
 

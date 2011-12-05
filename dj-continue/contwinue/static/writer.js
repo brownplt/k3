@@ -1,3 +1,108 @@
+function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
+  var makeEmptyGoogleDiv = function() {
+    var btn = INPUT({
+      style: {'text-align': 'center'},
+      id:'google-attach',
+      type:'button',
+      value:'Attach to a Google Account'
+    });
+    return DIV(btn);
+  };
+  var makeEmptyContinueDiv = function() {
+    var password = INPUT({type:'password', size:30});
+    var repassword = INPUT({type:'password', size:30});
+    var submit = INPUT({style:{float:'right'},type:'button',value:'Submit'});
+    var error = DIV();
+    var success = DIV();
+
+    var cdiv = DIV(
+      {className: 'key-value'},
+      TR({style:{float:'right'}},TH('Password'), TD(password)),
+      TR({style:{float:'right'}},TH('Password again'), TD(repassword)),
+      BR(),
+      submit,
+      error,
+      success
+    );
+
+    var attemptsE = extractEvent_e(submit, 'click').transform_e(function() {
+      var p1 = getObj(password).value;
+      var p2 = getObj(repassword).value;
+      if (p1 !== p2) {
+        return {error: true, message: 'Passwords didn\'t match'};
+      }
+      if (p1 === '') {
+        return {error: true, message: 'Empty passwords not allowed'};
+      }
+      return {
+        success: true,
+        val: [launchInfo.addPassword, {password: p1}]
+      };
+    });
+
+    insertDomB(attemptsE.filter_e(function(r) {
+        return r.error;
+      }).
+      transform_e(function(err) {
+        return SPAN({style:{color:'red'}}, err.message);
+      }).startsWith(SPAN()), error);
+
+    var reqE = postE(attemptsE.filter_e(function(r) { return r.success; }).
+                       transform_e(function(r) { return r.val; }));
+
+    insertDomB(reqE.transform_e(function(_) {
+      return SPAN({style:{color:'green'}}, 'Password added');
+    }).startsWith(SPAN()), success);
+
+    return cdiv;
+  };
+
+  var googles = launchInfo.credentials.googleCreds;
+  var continues = launchInfo.credentials.continueCreds;
+  var googleDiv;
+  var continueDiv;
+
+  if(googles.length === 0) { googleDiv = makeEmptyGoogleDiv(); }
+  else {
+    googleDiv = DIV(
+      P('This account is associated with the Gmail account for ',
+STRONG(googles[0].email), '.  This means you can sign in with Google to get back to' +
+' your submissions.'));
+
+  }
+  if(continues.length === 0) { continueDiv = makeEmptyContinueDiv(); }
+  else {
+    continueDiv = 
+      DIV(
+        P(STRONG("This account has a password, but you can add another if you like.")),
+        makeEmptyContinueDiv()
+      );
+  }
+
+  var pad = {style:{margin:'1em'}};
+  var launch = COMMON.urlPrefix + '/paper' + launchKey;
+  var link = DIV(pad,H3('Bookmark this link: '),
+                DIV({style:{'margin':'1em'}},A({href:launch},launch)));
+
+  var search = DIV(pad,H3('Save the message with the link, or search your inbox for:'),
+                  DIV({style:{'text-align':'center', 'margin': '1em'}},
+                      STRONG('paper submit request ' + basicInfo.info.name)))
+  var accountGoogle = DIV(pad,H3('Associate with a Google account:'),
+                     googleDiv);
+  var accountContinue = DIV(pad,H3('Create a password:'),
+                     continueDiv);
+
+  return DIV({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
+             P('You are managing the account for ', STRONG(launchInfo.email), '.  ' +
+               'You have several options available:',
+               P(),
+               UL(
+                link,
+                search,
+                accountGoogle,
+                accountContinue)))
+}
+
 function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo) {
 	var deadlineExts = toObj(extensions,function(e) {return e.typeID;});
 	var getDeadline = function(compType) {
@@ -6,6 +111,26 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 	var getDeadlineStr = function(compType) {
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].untilStr; else return compType.deadlineStr;
 	};
+
+  var newUserWidget = function() {
+    var dismiss = P(A({href:'javascript://Close', id:'dismiss'}, 'Dismiss'));
+    var d = DIV({id: 'new-user-message',
+                 style: {
+                   border: '1px solid black',
+                   'background-color': '#eee',
+                   'margin-left': '10%',
+                   'margin-right': '10%'
+                 }},
+                P('Welcome, ' + launchInfo.email + '!'),
+                P('Enter information for your submission below.  ' +
+                  'For details about managing your account, visit the My ' +
+                  'Account tab above'),
+                dismiss);
+    var msgVisB = extractEvent_e(dismiss, 'click').
+                    constant_e('none').startsWith('block');
+    insertValueB(msgVisB, d, 'style', 'display');
+    return d;
+  };
 
 	var makeComponentBox = function(compType,compVal) {
 		var deadpara = P({className:'small'},'Deadline: ',
@@ -83,10 +208,11 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
     .toTableRow('Topic(s):');
 	var errorsDomB = errorsB.transform_b(function(e) {if(e.error) return P({className:'error'},e.error); else return SPAN();});
 	return DIVB(
+    launchInfo.newUser ? newUserWidget() : '',
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
 		TABLE({className:'key-value'},TBODY(
-			TR(TH('Contact:'),TD(userInfo.fullname,' <',userInfo.email,'>')),
+			TR(TH('Contact:'),TD(userInfo.fullname,' <',launchInfo.email,'>')),
 			basicInfo.info.showNum ? TR(TH('Paper #:'),TD(paperInfo.id)) : '',
 			TR(TH('Remaining Components:'),TD({className:(missinginfo == 'Submission Complete' ? 'yes-submitted' : 'normal')},missinginfo)),
 				titleWidget.dom,
@@ -120,7 +246,7 @@ function loader() {
   
 	var onLoadTimeE = receiver_e();
 
-  var launchCap = capServer.restore(getLaunchCap());
+  var launchCap = launchCapFromKey(COMMON.urlPrefix, capServer);
   var launchE = getE(onLoadTimeE.constant_e(launchCap));
 
 	var exceptsE = captureServerExcepts();
@@ -158,6 +284,29 @@ function loader() {
 			if (!cu && di && bi && at && de && li)
 				return makeDetailsTab(cu,di,bi,at,de,perB,li); else return constant_b(getLoadingDiv());},
 			curUserE.startsWith(null),detailsInfoE.startsWith(null),basicInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null),launchE.startsWith(null)); 
+
+  var accountTabB = lift_b(function(li, bi) {
+    if(li && bi) return makeAccountInfoTab(li, bi, window.name);
+    return SPAN();
+  }, launchE.startsWith(null), basicInfoE.startsWith(null));
+
+  lift_e(function(cu, bi) {
+    var WriterTabs = new TabSet(
+      constant_b(['user']),
+      {admin:[],reviewer:[],user:$$('writer-tab'),logged_out:[]},
+      function(that) {
+        var tabClicksE = map(function(tab) {
+          return extractEvent_e(tab, 'click').constant_e(tab.id);
+        }, that.allTabs);
+        return merge_e.apply(this, tabClicksE).startsWith('main_tab');
+      }
+    );
+    WriterTabs.displayOn('main_tab', 'details_content');
+    WriterTabs.displayOn('account_tab', 'account_content');
+  }, curUserE, basicInfoE);
+
 	insertDomB(switch_b(detailsTabB),'main_content');
+	insertDomB(accountTabB,'account_placeholder');
 	onLoadTimeE.sendEvent('loaded!');
 }
+

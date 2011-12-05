@@ -1,4 +1,4 @@
-function getAuthInfoE(onLoadTimeE) {
+function getAuthInfoE(onLoadTimeE, login) {
 	var loginclickedE = merge_e(
 			extractEvent_e('loginbutton','click'),
 			merge_e(
@@ -8,12 +8,10 @@ function getAuthInfoE(onLoadTimeE) {
 
 	var loginQueryE = loginclickedE.transform_e(function(lc) {
 			$('loginbutton').focus();
-			return genRequest(
-				{url:'Auth/getCookie',
-				fields:{username:$('usernamebox').value,password:$('passwordbox').value}}
-			);
+			return [login,
+				{email:getObj('usernamebox').value,password:getObj('passwordbox').value}];
 	});
-	var loginE = getFilteredWSO_e(loginQueryE);
+	var loginE = postE(loginQueryE);
 
 	var failedLoginE = loginE.filter_e(function(v) {return !v;});
 	failedLoginE.transform_e(function(_) {
@@ -82,6 +80,10 @@ function loader() {
   var deptURL = function(bi, tail) {
     return COMMON.urlPrefix + '/' + bi.info.shortname + tail;
   };
+  var launch = function(launchable) {
+    var newLoc = launchable.launchbase + '#' + launchable.launchcap;
+    window.location.href = newLoc;
+  };
 	var basicInfoE = getBasicInfoE(onLoadTimeE).transform_e(function(bi) {
     window.login = function(jsonData) {
       var data = JSON.parse(jsonData);
@@ -94,8 +96,7 @@ function loader() {
           function(success) {
             if(success.error) { return; /* TODO(joe): handle */ }
             console.log('Success! ', success);
-            var newLoc = success[0].launchbase + '#' + success[0].launchcap;
-            window.location.href = newLoc;
+            launch(success[0]);
           },
           function(fail) {
             console.log('Failed, ', fail);
@@ -107,8 +108,7 @@ function loader() {
           },
           function(success) {
             console.log('Success (login)!', success); 
-            var newLoc = success[0].launchbase + '#' + success[0].launchcap;
-            window.location.href = newLoc;
+            launch(success[0]);
           },
           function(fail) {
             console.log('Failed (login)!', fail); 
@@ -122,17 +122,15 @@ function loader() {
 	basicInfoE.transform_e(function(bi) {
 		document.title = bi.info.name;
 	});
-	var authInfoE = getAuthInfoE(onLoadTimeE);
+	var authInfoE = getAuthInfoE(onLoadTimeE, capServer.restore(COMMON.urlPrefix + '/continue_login'));
 	getLogoutEventsE(onLoadTimeE);
 	authInfoE.transform_e(function(ai) {
-		if (inList('user',ai[1].rolenames))
-			window.location = 'writer.html?cookie='+ai[0];
-		else
-			window.location = 'continue.html?cookie='+ai[0];
+    if(ai && ai.launch && ai.launch.length === 1) {
+      launch(ai.launch[0]);
+    }
 	});
 
   var requestedB = lift_b(function(bi, email) {
-    console.log('Email, bi: ', email, bi);
     if(!bi || !email) return null;
     return [capServer.restore(deptURL(bi, '/request_account')),
             {email: email}];
@@ -142,16 +140,15 @@ function loader() {
   var requestedE =
     postE(extractEvent_e('reqacctok', 'click').snapshot_e(requestedB));
 
-	insertValueB(
-  	merge_e(extractEvent_e('reqacct','click').constant_e('block'),
-            requestedE.constant_e('none')).startsWith('none'),
+  insertValueB(
+  	extractEvent_e('reqacct','click').constant_e('block').startsWith('none'),
     'reqacct_content','style','display');
   insertValueB(requestedE.constant_e('block').startsWith('none'),
                'requested','style','display');
 
   insertValueB(extractEvent_e('reqacct','click').constant_e('none').startsWith('inline'),'reqacct','style','display');
 
-	insertDomB(doResetPassword(extractEvent_e('rp-open','click')),'rp-info');
+  insertDomB(doResetPassword(extractEvent_e('rp-open','click')),'rp-info');
 
 	onLoadTimeE.sendEvent('loaded!');
 	

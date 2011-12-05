@@ -14,7 +14,7 @@ from lib.py.common import logWith404
 import belaylibs.dj_belay as bcap
 
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
- ContinueCredentials, Account, Conference
+ ContinueCredentials, Account, Conference, UnverifiedUser
 from contwinue.email import send_and_log_email
 
 logger = logging.getLogger('default')
@@ -35,13 +35,16 @@ class VerifyHandler(bcap.CapHandler):
     key = str(uuid.uuid4())
     account = Account(email=pending.email,
                       key=key)
+    account.save()
+    pending.delete()
 
     return bcap.bcapResponse({
       'email': email,
       'newaccount': True,
-      'key': account_key
+      'key': key
     })
-    
+  def get(self, grantable):
+    return bcap.bcapResponse({ 'email': grantable.pending.email })
 
 def request_account(request):
   if request.method != 'POST':
@@ -53,17 +56,28 @@ def request_account(request):
 
   email = args['email']
 
-  pending = PendingAccount(email=email)
+  user = UnverifiedUser(
+    name=u'',
+    email=email,
+    roletext=u'user',
+    conference=conf
+  )
+  user.save()
 
-  verify = bcap.grant('verify-pending', pending)
+  launch = bcap.grant('launch-paper', {'unverified': user})
 
   message=u"""
 You've made a request to submit a paper for %(confname)s.  This link will take
-you to a page where you can verify your email and get started:
+you to a page where you can get started:
 
-%(base)s/verify#%(key)s
+%(base)s/paper#%(key)s
 
-If you run into any problems, simply reply to this email.
+You can revisit this link as often as you like to edit your submission.  The
+submission page has instructions for creating an optional password-based
+account at your convenience.
+
+If you run into any problems, or you received this message in error, please
+reply to this email.
 
 Thanks!
 %(confname)s
@@ -72,7 +86,7 @@ Thanks!
   filled_message = message % {
     'confname': conf.name,
     'base': bcap.this_server_url_prefix(),
-    'key': verify.serialize()
+    'key': bcap.cap_for_hash(launch)
   }
 
   subject = 'Create an Account for %s' % conf.name

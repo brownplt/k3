@@ -1,4 +1,6 @@
 import logging
+import uuid
+import hashlib
 
 from django.http import HttpResponseNotFound, HttpResponseNotAllowed
 
@@ -14,7 +16,6 @@ from lib.py.common import logWith404, make_get_handler
 logger = logging.getLogger('default')
 
 index_handler = make_get_handler('login.html', {})
-
 
 def conf_from_path(request):
   path = request.path_info
@@ -59,6 +60,7 @@ def create_user(request):
               conference=conf)
   user.save()
   user.roles.add(get_one(Role.objects.filter(name='user')))
+  user.accounts.add(account)
   user.save()
 
   paper = Paper(contact=user,
@@ -73,11 +75,34 @@ def create_user(request):
 
   launchable = Launchable(account=account,
                           launchbase=launchbase,
-                          launchcap=launchcap.serialize(),
+                          launchcap=bcap.cap_for_hash(launchcap),
                           display='See my papers')
   launchable.save()
 
   return bcap.bcapResponse(account.get_launchables())
+
+def continue_login(request):
+  args = bcap.dataPostProcess(request.read())
+  args.update(request.POST)
+
+  logger.error('ARGS: %s', args)
+
+  email = args['email']
+  password = args['password']
+
+  creds = ContinueCredentials.objects.filter(username=email)
+
+  for c in creds:
+    salt = c.salt
+    hashed_password = get_hashed(password, salt)
+    if c.hashed_password == hashed_password:
+      account = c.account
+      return bcap.bcapResponse({'launch': c.account.get_launchables()})
+
+  return bcap.bcapResponse({
+    'error': True,
+    'message': 'No account found for that email and password'
+  })
 
 def get_basic(request):
   (err, conference) = conf_from_path(request)
@@ -193,11 +218,106 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
     def saveFile(ct, comp):
       pass
 
+class AssociateHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['key']
+  def post(self, granted, args):
+    user = granted.user
+    account = get_one(Account.objects.filter(key=args['key']))
+    if account is None:
+      return logWith404(logger, 'Bad associate key for %s: %s' %
+        (user.email, args['key']))
+
+    user.accounts.add(account)
+    user.save()
+    return bcap.bcapResponse({'success': True})
+
+HASH_ITERATIONS = 20
+# TODO: non-ASCII characters can break this
+# need to sanitize raw password
+def get_hashed(rawpassword, salt):
+  salted = rawpassword + salt
+  for i in range(HASH_ITERATIONS):
+    m1 = hashlib.sha1()
+    m1.update(salted)
+    salted = m1.hexdigest()
+  return salted
+
+class AddPasswordHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['password']
+  def post(self, granted, args):
+    password = args['password']
+    account = granted.account
+
+    salt = str(uuid.uuid4())
+    credentials = ContinueCredentials(
+      username=account.email,
+      hashed_password=get_hashed(password, salt),
+      salt=salt,
+      account=account
+    )
+    credentials.save()
+
+    return bcap.bcapResponse(account.get_credentials())
+
 class LaunchPaperHandler(bcap.CapHandler):
   def get(self, granted):
-    paper = granted['paper'].paper
+    if 'unverified' in granted:
+      uu = granted['unverified'].unverifieduser
+      conf = uu.conference
+      user = get_one(User.objects.filter(email=uu.email))
+      logger.error('Trying to create paper')
+      if user is None:
+        user = User(
+          email=uu.email,
+          full_name=uu.name,
+          conference=conf,
+          username=uu.email
+        )
+        user.save()
+        user.roles.add(get_one(Role.objects.filter(name='user')))
 
+      logger.error('Trying to create paper')
+      paper = Paper(
+        contact=user,
+        author=user.full_name,
+        title=u'',
+        target=conf.default_target,
+        conference=conf
+      )
+      paper.save()
+
+      key = str(uuid.uuid4())
+      account = Account(key=key, email=user.email)
+      account.save()
+
+      current = self.getCurrentCap()
+      launch = Launchable(
+        launchbase=bcap.this_server_url_prefix() + '/paper',
+        launchcap=bcap.cap_for_hash(current),
+        display=u'',
+        account=account
+      )
+      launch.save()
+
+      logger.error('Trying to update grant')
+      granted = {'writer': user, 'paper': paper}
+      self.updateGrant(granted)
+      newuser = True
+    else:
+      user = granted['writer'].user
+      paper = granted['paper'].paper
+      account = get_one(Account.objects.filter(email=user.email))
+      key = account.key
+      newuser = False
+
+    logger.error('Trying to respond')
+    #TODO(joe): Add an option to attach an account to the paper
     return bcap.bcapResponse({
+      'newUser': newuser,
+      'email': user.email,
+      'accountkey': key,
+      'addPassword': bcap.regrant('add-password', account),
+      'credentials': user.get_credentials(),
       'getPaper': bcap.regrant('writer-paper-info', granted),
       'getBasic': bcap.regrant('writer-basic', paper.conference),
       'getAuthorText': bcap.regrant('author-text', paper.conference),
@@ -209,9 +329,11 @@ class LaunchPaperHandler(bcap.CapHandler):
       'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', paper)
     })
 
+
 class ContinueInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
+      'add-password': AddPasswordHandler,
       'writer-basic': WriterBasicHandler,
       'writer-paper-info': WriterPaperInfoHandler,
       'author-text': AuthorTextHandler,
