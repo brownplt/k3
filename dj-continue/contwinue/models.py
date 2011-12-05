@@ -412,6 +412,9 @@ class User(bcap.Grantable):
       'continueCreds': [c.to_json() for c in contwinues]
     }
 
+  def get_papers(self):
+    return sorted(Paper.objects.filter(contact=self), key=lambda p: p.id)
+
 class UnverifiedUser(bcap.Grantable):
   name = models.TextField()
   email = models.EmailField()

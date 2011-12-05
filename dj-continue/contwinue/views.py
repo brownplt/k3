@@ -259,6 +259,44 @@ class AddPasswordHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(account.get_credentials())
 
+class AddPaperHandler(bcap.CapHandler):
+  def post_arg_names(self): return []
+  def post(self, granted, args):
+    user = granted.user
+    conf = user.conference
+    paper = Paper(
+        contact=user,
+        author=user.full_name,
+        title=u'',
+        target=conf.default_target,
+        conference=conf
+      )
+    paper.save()
+
+    paper_json = {
+      'getPaper': bcap.regrant('writer-paper-info', {
+        'writer': user,
+        'paper': paper
+      }),
+      'setTitle': bcap.regrant('paper-set-title', paper),
+      'setAuthor': bcap.regrant('paper-set-author', paper),
+      'setPcPaper': bcap.regrant('paper-set-pcpaper', paper),
+      'setTarget': bcap.regrant('paper-set-target', paper),
+      'setTopics': bcap.regrant('paper-set-topics', paper),
+      'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', paper),
+      'title': paper.title,
+      'id': paper.id
+    }
+    launchcap = bcap.regrant('launch-paper', {'writer': user, 'paper': paper})
+    launchbase = '%s/paper' % bcap.this_server_url_prefix()
+    return bcap.bcapResponse({
+      'success': True,
+      'launch': {
+        'launchcap': bcap.cap_for_hash(launchcap),
+        'launchbase': launchbase
+      }
+    })
+
 class LaunchPaperHandler(bcap.CapHandler):
   def get(self, granted):
     if 'unverified' in granted:
@@ -310,6 +348,26 @@ class LaunchPaperHandler(bcap.CapHandler):
       key = account.key
       newuser = False
 
+    papers = user.get_papers()
+    paper_jsons = []
+    
+    for p in papers:
+      paper_json = {
+        'getPaper': bcap.regrant('writer-paper-info', {
+          'writer': user,
+          'paper': p
+        }),
+        'setTitle': bcap.regrant('paper-set-title', p),
+        'setAuthor': bcap.regrant('paper-set-author', p),
+        'setPcPaper': bcap.regrant('paper-set-pcpaper', p),
+        'setTarget': bcap.regrant('paper-set-target', p),
+        'setTopics': bcap.regrant('paper-set-topics', p),
+        'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', p),
+        'title': p.title,
+        'id': p.id
+      }
+      paper_jsons.append(paper_json)
+
     logger.error('Trying to respond')
     #TODO(joe): Add an option to attach an account to the paper
     return bcap.bcapResponse({
@@ -318,15 +376,11 @@ class LaunchPaperHandler(bcap.CapHandler):
       'accountkey': key,
       'addPassword': bcap.regrant('add-password', account),
       'credentials': user.get_credentials(),
-      'getPaper': bcap.regrant('writer-paper-info', granted),
+      'papers': paper_jsons,
+      'mainTitle': paper.title,
+      'addPaper': bcap.regrant('add-paper', user),
       'getBasic': bcap.regrant('writer-basic', paper.conference),
       'getAuthorText': bcap.regrant('author-text', paper.conference),
-      'setTitle': bcap.regrant('paper-set-title', paper),
-      'setAuthor': bcap.regrant('paper-set-author', paper),
-      'setPcPaper': bcap.regrant('paper-set-pcpaper', paper),
-      'setTarget': bcap.regrant('paper-set-target', paper),
-      'setTopics': bcap.regrant('paper-set-topics', paper),
-      'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', paper)
     })
 
 
@@ -334,6 +388,7 @@ class ContinueInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
       'add-password': AddPasswordHandler,
+      'add-paper': AddPaperHandler,
       'writer-basic': WriterBasicHandler,
       'writer-paper-info': WriterPaperInfoHandler,
       'author-text': AuthorTextHandler,

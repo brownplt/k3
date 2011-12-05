@@ -63,7 +63,8 @@ function TabSet(currentRolesB,roleTabs,getCurrentTabB) {
 				return ctab == tab.id ? addClass(tab.className,'selected') : remClass(tab.className,'selected');}),tab,'className');
 	},this.allTabs);
 	this.displayOn = function(tab,tag) {
-		insertValueB(this.currentTabB.transform_b(function(ct){return (ct == tab) ? 'block' : 'none';}),tag,'style','display');
+		insertValueB(this.currentTabB.transform_b(function(ct){
+      return (ct == tab) ? 'block' : 'none';}),tag,'style','display');
 	};
 }
 function getBasicInfoE(onLoadTimeE) {
@@ -181,3 +182,7 @@ function launchCapFromKey(prefix, capServer) {
   return capServer.restore(prefix + hash.substr(1));
 }
 
+function truncate(str, len) {
+  if (str.length <= len) { return str; }
+  return str.substr(0, len-3) + "...";
+}

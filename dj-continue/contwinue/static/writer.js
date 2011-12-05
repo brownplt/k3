@@ -103,7 +103,15 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
                 accountContinue)))
 }
 
-function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo) {
+function paperFrame(paperInfo) {
+  return 'subtarget_' + paperInfo.id;
+}
+
+function paperContentId(paperInfo) {
+  return 'paper_details_' + paperInfo.id;
+}
+
+function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo,paperCaps) {
 	var deadlineExts = toObj(extensions,function(e) {return e.typeID;});
 	var getDeadline = function(compType) {
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].until; else return compType.deadline;
@@ -178,17 +186,17 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 	var titleWidget = new TextInputWidget(paperInfo.title,40)
 			.belayServerSaving(function(title) {
         return genRequest({fields:{title:title}});
-      }, true, launchInfo.setTitle)
+      }, true, paperCaps.setTitle)
 			.toTableRow('Paper Title:');
 	var authorWidget = new TextInputWidget(paperInfo.author,70)
 			.belayServerSaving(function(author) {
         return {fields:{author:author}};
-      }, true, launchInfo.setAuthor)
+      }, true, paperCaps.setAuthor)
 			.toTableRow('Author List:');
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
 			.belayServerSaving(function(pcpaper) {
 					return {fields:{pcpaper:(pcpaper ? 'yes' : 'no')}};
-      }, true, launchInfo.setPcPaper)
+      }, true, paperCaps.setPcPaper)
 			.toTableRow('PC Paper?');
 	var twDom = '';
 	if(targetables > 1) {
@@ -198,17 +206,16 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 							return DIV(tsdom,BR(),ocdom,'Yes, I/we would like the paper considered in other categories also.');
 							}).serverSaving(function(to) {
 								return {fields:{target:to[0],othercats:(to[1] ? 'yes' : 'no')}};
-							}, true, launchInfo.setTarget).toTableRow('Target Category:');
+							}, true, paperCaps.setTarget).toTableRow('Target Category:');
 		twDom = targetWidget.dom;
 	}
 	var topicsWidget = new CheckboxListWidget(map(function(t) {return {k:t.id,v:t.name};},basicInfo.topics),
 												map(function(t) {return t.id;},paperInfo.topics))
     .belayServerSaving(function(tids) {	return {fields:{topics:tids}}; },
-                true, launchInfo.setTopics)
+                true, paperCaps.setTopics)
     .toTableRow('Topic(s):');
 	var errorsDomB = errorsB.transform_b(function(e) {if(e.error) return P({className:'error'},e.error); else return SPAN();});
-	return DIVB(
-    launchInfo.newUser ? newUserWidget() : '',
+	return DIVB(launchInfo.newUser ? newUserWidget() : '',
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
 		TABLE({className:'key-value'},TBODY(
@@ -228,7 +235,7 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 			A({href:'login.html'},'create a new author account'),' for the new paper.') : 
 			P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
 		errorsDomB,
-		FORM({target:'subtarget',action:'Author/updateComponents',method:'post',encoding:'multipart/form-data'},
+		FORM({target:paperFrame(paperInfo),action:'Author/updateComponents',method:'post',encoding:'multipart/form-data'},
 		INPUT({type:'hidden',name:'cookie',value:authCookie}),
 		TABLE({className:'key-value'},TBODY(
 			map(function(component) {
@@ -262,35 +269,110 @@ function loader() {
 	getObj('logout_tab').href = 'login.html?logout='+authCookie;
 	var curUserE = getCurUserE(onLoadTimeE,authCookie);
 //	doLoginDivB(curUserE);
-  var detailsQueryE = launchE.transform_e(function(li) {
-    return li.getPaper;
-  });
-/*	var detailsQueryE = curUserE.transform_e(function(cu) {
-		return genRequest(
-			{url: 'Author/get',
-			fields: {cookie:authCookie}});
-		});*/
-	var perE = iframeLoad_e('subtarget');
-	var perB = perE.startsWith(true);
-	var allDetailsQuerysE = merge_e(snapshot_e(perE,detailsQueryE.startsWith(null)),detailsQueryE);
-	var detailsInfoE = getE(allDetailsQuerysE);
-	var deadextE = getE(launchE.transform_e(function(li) {
-		return li.getDeadlineExtensions;
-	}));
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
   }));
-	var detailsTabB = lift_b(function(cu,di,bi,at,de,li) {
-			if (!cu && di && bi && at && de && li)
-				return makeDetailsTab(cu,di,bi,at,de,perB,li); else return constant_b(getLoadingDiv());},
-			curUserE.startsWith(null),detailsInfoE.startsWith(null),basicInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null),launchE.startsWith(null)); 
+  var tabTitle = function(s) {
+     return truncate(s === '' ? 'Untitled paper' : s, 15);
+  }
+ 
+/*  insertValueB(detailsInfoE.transform_e(function(di) {
+    return tabTitle(di.title);
+  }).startsWith(''), getObj('main_tab'), 'innerText');
+*/
+/*  launchE.transform_e(function(di) {
+    map(function(op) {
+      insertDomB(LI({className:'left-tab'},
+        A({href:op.launch.launchbase + '#' + op.launch.launchcap,
+           className: di.title === op.title ? 'selected' : ''},
+           tabTitle(op.title, 15))), 'tab_list', 'end');
+    }, di.otherPapers);
+  });
+*/
+
+  papersE = launchE.transform_e(function(di) {
+    return di.papers;
+  });
+  launchE.transform_e(function(di) {
+    var newE = postE(extractEvent_e('new_submission', 'click').transform_e(function() {
+      return [di.addPaper, {}];
+    }));
+    newE.transform_e(function(newPaper) {
+      window.location.href = newPaper.launch.launchbase + '#' + 
+        newPaper.launch.launchcap;
+      window.location.reload();
+    });
+  });
 
   var accountTabB = lift_b(function(li, bi) {
     if(li && bi) return makeAccountInfoTab(li, bi, window.name);
     return SPAN();
   }, launchE.startsWith(null), basicInfoE.startsWith(null));
 
-  lift_e(function(cu, bi) {
+  function one_e(val) {
+    var r = receiver_e();
+    setTimeout(function() { r.sendEvent(val); }, 0);
+    return r;
+  }
+
+  lift_e(function(cu, bi, papers, le) {
+    if(!(le && bi && papers)) return;
+    var paperDomId = function(paper) { return 'paper_tab_' + paper.id; };
+    var paperDom = function(paper) {
+      var detailsQueryE = one_e(paper.getPaper);
+      var loadFrame = IFRAME({
+        id:paperFrame(paper),
+        name:paperFrame(paper),
+        style: {display:'none'},
+      });
+      insertDomB(loadFrame, getObj(document.body), 'end');
+      var deadextE = getE(one_e(paper.getDeadlineExtensions));
+      var perE = iframeLoad_e(paperFrame(paper));
+      var perB = perE.startsWith(true);
+      var allDetailsQuerysE = merge_e(snapshot_e(perE,detailsQueryE.startsWith(null)),detailsQueryE);
+      var detailsInfoE = getE(allDetailsQuerysE);
+      var detailsTabB = lift_b(function(di,at,de) {
+          if (di && at && de) {
+            var visibility = di.title === le.mainTitle ? 'block' : 'none';
+            return makeDetailsTab(cu,di,bi,at,de,perB,le,paper); 
+          }
+          else {
+            return constant_b(getLoadingDiv(paperContentId(paper)));
+          }
+        },
+        detailsInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null)); 
+
+
+      var tab = LI({className:'left-tab'},
+        A({
+            href:'javascript://Switch',
+            className: 'writer-tab',
+            id: paperDomId(paper)
+          },
+          tabTitle(paper.title, 15)));
+
+      var detailsContentB = DIVB({
+          id: paperContentId(paper)
+        },
+        switch_b(detailsTabB));
+      return {
+        tab: tab,
+        details: detailsContentB
+      };
+    };
+    var startPaper = filter(function(paper) {
+      return paper.title === le.mainTitle;
+    }, papers)[0];
+    var otherPapers = filter(function(paper) {
+      return paper !== startPaper;
+    }, papers);
+
+    map(function(paper) {
+      var pDom = paperDom(paper)
+      insertDomB(pDom.tab, 'tab_list', 'end');
+      insertDomB(pDom.details, 'content', 'end');
+    }, papers);
+
     var WriterTabs = new TabSet(
       constant_b(['user']),
       {admin:[],reviewer:[],user:$$('writer-tab'),logged_out:[]},
@@ -298,14 +380,16 @@ function loader() {
         var tabClicksE = map(function(tab) {
           return extractEvent_e(tab, 'click').constant_e(tab.id);
         }, that.allTabs);
-        return merge_e.apply(this, tabClicksE).startsWith('main_tab');
+        return merge_e.apply(this, tabClicksE).
+          startsWith(paperDomId(startPaper));
       }
     );
-    WriterTabs.displayOn('main_tab', 'details_content');
     WriterTabs.displayOn('account_tab', 'account_content');
-  }, curUserE, basicInfoE);
+    map(function(paper) {
+      WriterTabs.displayOn(paperDomId(paper), paperContentId(paper));
+    }, papers);
+  }, curUserE, basicInfoE, papersE, launchE);
 
-	insertDomB(switch_b(detailsTabB),'main_content');
 	insertDomB(accountTabB,'account_placeholder');
 	onLoadTimeE.sendEvent('loaded!');
 }
