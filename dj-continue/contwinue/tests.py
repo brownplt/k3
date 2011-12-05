@@ -1,4 +1,4 @@
-import time, datetime
+import time, datetime, os
 
 from django.test import TestCase
 
@@ -164,29 +164,50 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(afterpaper.other_cats, True)
 
   def test_update_components(self):
-    pass
-#    filedata = open('testfiles/testpdf.pdf', 'r').read()
+    f = open('testdata/testpdf.pdf', 'r')
 
-#    acomp = ComponentType.objects.filter(abbr='A')[0]
-#    pcomp = ComponentType.objects.filter(abbr='P')[0]
+    acomp = ComponentType.objects.filter(abbr='A')[0]
+    pcomp = ComponentType.objects.filter(abbr='P')[0]
 
-#    filesDict = {
-#      'P': filedata
-#    }
-#    textDict = {
-#      'A': 'This is the abstract'
-#    }
+    filesDict = {
+      'P': f
+    }
+    textDict = {
+      'A': 'This is the abstract'
+    }
 
-#    handler = PaperUpdateComponentsHandler()
-#    response = handler.post_files(self.paper, textDict, filesDict)
+    handler = PaperUpdateComponentsHandler()
+    response = handler.post_files(self.paper, textDict, filesDict)
 
-#    aftercomponent = Component.objects.filter(type=acomp, paper=self.paper)
+    self.assertEqual(bcap.dataPostProcess(response.content), True)
 
-#    component_path = os.path.join(settings.SAVEDFILES_DIR,
-#                                  '%d-%d-component' % (self.paper.id, pcomp.id))
+    aftercomponent = get_one(Component.objects.filter(type=acomp, paper=self.paper))
+    afterpaper = get_one(Component.objects.filter(type=pcomp, paper=self.paper))
 
-#    self.assertEqual(filedata, component_path.read())
-#    self.assertEqual(aftercomponent.value, 'This is the abstract')
+    component_path = os.path.join(settings.SAVEDFILES_DIR,
+                                  '%d-%d-component' % (self.paper.id, pcomp.id))
+
+    filedata = open('testdata/testpdf.pdf', 'r').read()
+    self.assertEqual(filedata, file(component_path).read())
+    self.assertEqual(afterpaper.value, 'testdata/testpdf.pdf')
+    # TODO(joe): Why charset=binary here?  Should it be utf-8?
+    self.assertEqual(afterpaper.mimetype, 'application/pdf; charset=binary')
+
+    self.assertEqual(aftercomponent.value, 'This is the abstract')
+    self.assertEqual(aftercomponent.mimetype, 'text/plain')
+
+  def test_update_non_pdf(self):
+    f = open('testdata/not-a-pdf.txt', 'r')
+
+    pcomp = ComponentType.objects.filter(abbr='P')[0]
+    filesDict = { 'P': f }
+
+    handler = PaperUpdateComponentsHandler()
+    response = handler.post_files(self.paper, {}, filesDict)
+
+    self.assertEqual(bcap.dataPostProcess(response.content),
+      {'error': 'The file you uploaded was not a PDF document.'})
+    
 
 class TestAdminPage(Generator):
   def setUp(self):
@@ -335,7 +356,7 @@ class TestAdminPage(Generator):
     abbr = '<'
     description = 'A new component type'
     format_ = 'Any'
-    deadline = 1000000000000
+    deadline = int(time.time())
     grace_hours = 10
     size_limit = 1000000000000
     response = add_cap.post({

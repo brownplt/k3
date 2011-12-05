@@ -1,6 +1,8 @@
 import logging
 import uuid
 import hashlib
+import os
+import subprocess
 
 from django.http import HttpResponseNotFound, HttpResponseNotAllowed
 
@@ -182,11 +184,12 @@ class PaperSetTopicsHandler(bcap.CapHandler):
 
 class PaperUpdateComponentsHandler(bcap.CapHandler):
   def post_arg_names(): []
-  def post_with_files(self, granted, args, files):
+  def post_files(self, granted, args, files):
     thetime = time.time()
     paper = granted.paper
     conf = paper.conference
     def check_deadlines_and_save(args, saver):
+      ret = False
       for key, val in args.iteritems():
         ct = conf.component_type_by_abbr(key)
         if ct is None: continue
@@ -194,29 +197,63 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
         de = DeadlineExtension.get_by_ct_and_paper(ct, paper)
         if not (de is None):
           deadline = de.until
-        if (thetime > deadline+(ct.gracehours*3600)):
+        if (thetime > deadline+(ct.grace_hours*3600)):
           # Differs from contwinue.py:  All the files are in the files dict
           excomp = get_one(Component.objects.filter(type=ct, paper=paper))
           if (not excomp) or (excomp.value != val):
             ret = {'error': 'You cannot upload a component after its deadline.'}
           continue
         excomp = get_one(Component.objects.filter(type=ct, paper=paper))
-        saver(ct, excomp)
+        ret = saver(ct, excomp, val)
+      if ret: return ret
+      return False
 
-    def saveText(ct, excomp):
+    def save_text(ct, excomp, val):
       if ct.fmt == 'Text':
         if excomp: excomp.delete() # TODO(joe): deleting the same as destroySelf()?
         newcomp = Component(
           conference=conf, type=ct, paper=paper,
-          lastSumbitted=int(thetime), # use thetime again---all submitted simultaneously
+          lastSubmitted=int(thetime), # use thetime again---all submitted simultaneously
           value=val, # TODO(joe): escaping?
           mimetype='text/plain'
         )
+        newcomp.save()
       else:
         raise Exception('Non-text component in args dictionary')
 
-    def saveFile(ct, comp):
-      pass
+    def save_files(ct, excomp, f):
+      val = f.read()
+      if ct.fmt == 'PDF' and val[0:4] != '%PDF':
+        return {'error': 'The file you uploaded was not a PDF document.'}
+      if ct.size_limit != 0 and len(val) > ct.size_limit * 1024 * 1024:
+        return {'error': 'The file you uploaded exceeds the size limit'}
+      if excomp: excomp.delete()
+      ofname = os.path.join(settings.SAVEDFILES_DIR, '%d-%d-component' %
+        (paper.id, ct.id))
+      outfile = open(ofname, 'w')
+      outfile.write(val)
+      outfile.close()
+      mimetype = subprocess.Popen(['file', '-bi', ofname],stdout=subprocess.PIPE).communicate()[0][:-1]
+      newcomp = Component(
+        conference=paper.conference,
+        type=ct,
+        paper=paper,
+        lastSubmitted=thetime,
+        value=f.name,
+        mimetype=mimetype
+      )
+      newcomp.save()
+
+    text_response = check_deadlines_and_save(args, save_text)
+    paper.conference.update_last_change(paper)
+    if text_response: return bcap.bcapResponse(text_response)
+
+    docs_response = check_deadlines_and_save(files, save_files)
+    paper.conference.update_last_change(paper)
+    if docs_response: return bcap.bcapResponse(docs_response)
+
+    return bcap.bcapResponse(True)
+
 
 class AssociateHandler(bcap.CapHandler):
   def post_arg_names(self): return ['key']
