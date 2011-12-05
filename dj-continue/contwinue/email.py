@@ -3,6 +3,7 @@ import settings
 import smtplib
 
 from django.core.validators import validate_email
+from django.core.mail import send_mail
 
 def notFoundResponse():
   message = 'We didn\'t recognize that email address.  Please check what you \

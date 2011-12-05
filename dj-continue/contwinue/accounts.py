@@ -76,8 +76,8 @@ You can revisit this link as often as you like to edit your submission.  The
 submission page has instructions for creating an optional password-based
 account at your convenience.
 
-If you run into any problems, or you received this message in error, please
-reply to this email.
+If you run into any problems, or you believe you received this message in
+error, please reply to this email.
 
 Thanks!
 %(confname)s
@@ -90,7 +90,7 @@ Thanks!
   }
 
   subject = 'Create an Account for %s' % conf.name
-  fromaddr = conf.admin_contact.email
+  fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
   
   resp = send_and_log_email(subject, filled_message, email, fromaddr, logger)
 

@@ -19,7 +19,7 @@ def generate(request):
   conferences = Conference.objects.all()
   if len(conferences) == 0:
     c = Conference.make_new('Sample Conference', 'SC', 'admin', 'admin',
-      'Joe Admin', 'joe@fake.com', False)
+      'Joe Gibbs Politz', 'joe@cs.brown.edu', False)
   else:
     c = conferences[0]
 
