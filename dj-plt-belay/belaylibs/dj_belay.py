@@ -223,6 +223,8 @@ class CapHandler(object):
     return self.notAllowedResponse()
   def post(self, grantable, args):
     return self.notAllowedResponse()
+  def post_files(self, grantable, args):
+    return self.notAllowedResponse()
   def delete(self, grantable):
     return self.notAllowedResponse()
 
@@ -334,8 +336,10 @@ def handle(cap_id, method, args, files):
         logger.error(handler_log)
         return maybe_error_response
       if using_files:
+        logger.error('Using files')
         response = handler.post_files(item, args, files_granted)
       else:
+        logger.error('Not using files')
         response = handler.post(item, args)
     elif method == 'DELETE':
       response = handler.delete(item)

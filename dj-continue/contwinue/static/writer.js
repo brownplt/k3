@@ -88,9 +88,9 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
                   DIV({style:{'text-align':'center', 'margin': '1em'}},
                       STRONG('paper submit request ' + basicInfo.info.name)))
   var accountGoogle = DIV(pad,H3('Associate with a Google account:'),
-                     googleDiv);
+                            googleDiv);
   var accountContinue = DIV(pad,H3('Create a password:'),
-                     continueDiv);
+                              continueDiv);
 
   // "login options for returning to your submissions"
   // "bookmark this link" --> "visit this link directly (don't share it)"
@@ -238,7 +238,7 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 			A({href:'login.html'},'create a new author account'),' for the new paper.') : 
 			P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
 		errorsDomB,
-		FORM({target:paperFrame(paperInfo),action:'Author/updateComponents',method:'post',encoding:'multipart/form-data'},
+		FORM({target:paperFrame(paperInfo),action:paperCaps.updateComponents.serialize(),method:'post',encoding:'multipart/form-data'},
 		INPUT({type:'hidden',name:'cookie',value:authCookie}),
 		TABLE({className:'key-value'},TBODY(
 			map(function(component) {

@@ -171,6 +171,7 @@ class PaperSetTargetsHandler(bcap.CapHandler):
 
 class PaperSetTopicsHandler(bcap.CapHandler):
   def post_arg_names(self): return ['topics']
+  def all_files(self): return True
   def post(self, granted, args):
     paper = granted.paper
     paper.topic_set.clear()
@@ -183,7 +184,7 @@ class PaperSetTopicsHandler(bcap.CapHandler):
     return bcap.bcapResponse(granted.paper.get_paper())
 
 class PaperUpdateComponentsHandler(bcap.CapHandler):
-  def post_arg_names(): []
+  def post_arg_names(self): return []
   def post_files(self, granted, args, files):
     thetime = time.time()
     paper = granted.paper
@@ -400,6 +401,7 @@ class LaunchPaperHandler(bcap.CapHandler):
         'setTarget': bcap.regrant('paper-set-target', p),
         'setTopics': bcap.regrant('paper-set-topics', p),
         'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', p),
+        'updateComponents': bcap.regrant('paper-update-components', p),
         'title': p.title,
         'id': p.id
       }
@@ -435,6 +437,7 @@ class ContinueInit():
       'paper-set-pcpaper': PaperSetPcPaperHandler,
       'paper-set-target': PaperSetTargetsHandler,
       'paper-set-topics': PaperSetTopicsHandler,
+      'paper-update-components': PaperUpdateComponentsHandler,
       'launch-paper': LaunchPaperHandler,
       'get-papers-of-dv': GetPapersOfDVHandler,
       # End LaunchPaper handlers
