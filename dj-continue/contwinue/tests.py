@@ -431,3 +431,33 @@ class TestAdminPage(Generator):
     self.assertEqual(0, len(User.objects.filter(email=old_email,\
       username=username, full_name=full_name, roles=roles,\
       conference=self.conference)))
+
+  def test_get_papers_of_dv(self):
+    new_dv = DecisionValue(targetable=True, abbr='?',\
+      description='Status Unknown', conference=self.conference)
+    new_dv.save()
+
+    grant_data = {'conference' : self.conference, 'decision_value' : new_dv}
+    get_cap = bcap.grant('get-papers-of-dv', grant_data)
+
+    response = get_cap.get()
+    self.assertEqual(len(response), 0)
+
+    paper = Paper.objects.filter(title=\
+      'An interactive logical language for a balanced functional network')[0]
+    paper.target = new_dv
+    paper.save()
+
+    response = get_cap.get()
+    self.assertEqual(len(response), 1)
+    self.assertEqual(paper.id, response[0])
+
+    other_paper = Paper.objects.filter(title=\
+      'An active digital work cluster related to an active real-time display')[0]
+    other_paper.target = new_dv
+    other_paper.save()
+
+    response = get_cap.get()
+    self.assertEqual(len(response), 2)
+    self.assertTrue(other_paper.id in response)
+    self.assertTrue(paper.id in response)

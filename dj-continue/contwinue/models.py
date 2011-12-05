@@ -270,6 +270,9 @@ class Conference(bcap.Grantable):
   def get_all(self):
     return [u.to_json() for u in self.my(User)]
 
+  def papers_of_dv(self, decision_value):
+    return [p.id for p in self.my(Paper).filter(target=decision_value)]
+
 class Role(bcap.Grantable):
   class Meta:
     unique_together = (('name', 'conference'))

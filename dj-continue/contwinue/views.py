@@ -344,6 +344,7 @@ class ContinueInit():
       'paper-set-target': PaperSetTargetsHandler,
       'paper-set-topics': PaperSetTopicsHandler,
       'launch-paper': LaunchPaperHandler,
+      'get-papers-of-dv': GetPapersOfDVHandler,
       # End LaunchPaper handlers
 
       
@@ -534,3 +535,13 @@ class ChangeUserEmailHandler(bcap.CapHandler):
         level='error')
 
     return bcap.bcapResponse('true')
+
+# In contwinue.py, this is handle_getIDsByDecision
+# Here, instead of passing the decision value ID, the decision value is part
+# of the grant
+class GetPapersOfDVHandler(bcap.CapHandler):
+  def get(self, granted):
+    conference = granted['conference'].conference
+    decision_value = granted['decision_value'].decisionvalue
+
+    return bcap.bcapResponse(conference.papers_of_dv(decision_value))
