@@ -1,7 +1,7 @@
 function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
   var makeEmptyGoogleDiv = function() {
     var btn = INPUT({
-      style: {'text-align': 'center'},
+      style: {'margin-left': '35%','text-align': 'center'},
       id:'google-attach',
       type:'button',
       value:'Attach to a Google Account'
@@ -81,10 +81,10 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
 
   var pad = {style:{margin:'1em'}};
   var launch = COMMON.urlPrefix + '/paper' + launchKey;
-  var link = DIV(pad,H3('Bookmark this link: '),
+  var link = DIV(pad,H3('Bookmark this link, and visit it directly: '),
                 DIV({style:{'margin':'1em'}},A({href:launch},launch)));
 
-  var search = DIV(pad,H3('Save the message with the link, or search your inbox for:'),
+  var search = DIV(pad,H3('Save the invitation message.  You can search your inbox for:'),
                   DIV({style:{'text-align':'center', 'margin': '1em'}},
                       STRONG('paper submit request ' + basicInfo.info.name)))
   var accountGoogle = DIV(pad,H3('Associate with a Google account:'),
@@ -92,9 +92,12 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
   var accountContinue = DIV(pad,H3('Create a password:'),
                      continueDiv);
 
+  // "login options for returning to your submissions"
+  // "bookmark this link" --> "visit this link directly (don't share it)"
+  // "save the INVITATION message"
   return DIV({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
-             P('You are managing the account for ', STRONG(launchInfo.email), '.  ' +
-               'You have several options available:',
+             P('Welcome, ', STRONG(launchInfo.email), '.  ' +
+               'You have several options for returning to your submissions:',
                P(),
                UL(
                 link,
