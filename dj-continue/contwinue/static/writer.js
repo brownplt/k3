@@ -234,9 +234,7 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 		DIV(paraString(authorText[0],'',80000)),
 		H3('Components'),
 		(missinginfo == 'Submission Complete' ? P(
-			'You have finished your submission. You may update any component until its deadline. If you wish to submit another paper, please ',
-			A({href:'login.html'},'create a new author account'),' for the new paper.') : 
-			P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
+			'You have finished your submission. You may update any component until its deadline.') : P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
 		errorsDomB,
 		FORM({target:paperFrame(paperInfo),action:paperCaps.updateComponents.serialize(),method:'post',encoding:'multipart/form-data'},
 		TABLE({className:'key-value'},TBODY(
