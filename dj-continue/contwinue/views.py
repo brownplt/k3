@@ -171,7 +171,6 @@ class PaperSetTargetsHandler(bcap.CapHandler):
 
 class PaperSetTopicsHandler(bcap.CapHandler):
   def post_arg_names(self): return ['topics']
-  def all_files(self): return True
   def post(self, granted, args):
     paper = granted.paper
     paper.topic_set.clear()
@@ -185,6 +184,7 @@ class PaperSetTopicsHandler(bcap.CapHandler):
 
 class PaperUpdateComponentsHandler(bcap.CapHandler):
   def post_arg_names(self): return []
+  def all_files(self): return True
   def post_files(self, granted, args, files):
     thetime = time.time()
     paper = granted.paper
@@ -220,7 +220,8 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
         )
         newcomp.save()
       else:
-        raise Exception('Non-text component in args dictionary')
+        if val != '':
+          raise Exception('Non-text component in args dictionary')
 
     def save_files(ct, excomp, f):
       val = f.read()

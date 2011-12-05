@@ -239,7 +239,6 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 			P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
 		errorsDomB,
 		FORM({target:paperFrame(paperInfo),action:paperCaps.updateComponents.serialize(),method:'post',encoding:'multipart/form-data'},
-		INPUT({type:'hidden',name:'cookie',value:authCookie}),
 		TABLE({className:'key-value'},TBODY(
 			map(function(component) {
 				return TR(TH(component.description),TD(makeComponentBox(component,componentValues[component.id])))
