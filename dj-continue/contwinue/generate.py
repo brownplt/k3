@@ -94,6 +94,8 @@ def generate(request):
     def odd_true(num):
       if num % 2 == 0: return False
       else: return True
+
+    targets = DecisionValue.objects.filter(targetable=True)
     for n in range(10):
       if n == 0:
         username = 'writer'
@@ -101,8 +103,7 @@ def generate(request):
         username = 'writer%s' % str(n+1)
       contacts = User.objects.filter(username=username)
       contact = contacts[0]
-      #TODO(joe): this randomness is bad:  there are untargetable DVs
-      target = DecisionValue.objects.all()[random.randint(0, 2)] 
+      target = targets[n % len(targets)]
       p = Paper(contact=contact, author=contact.full_name, target=target,
         other_cats=(not (odd_true(n))), pc_paper=odd_true(n), hidden=False,
         conference=c, title=titles[n])
@@ -110,7 +111,6 @@ def generate(request):
       component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
         value="This is actually pretty short", mimetype='text/plain', conference=c)
       component.save()
-      # Removed the loop because it was silly
       t = Topic.objects.all()[random.randint(0, 9)]
       t.papers.add(p)
       t.save()
