@@ -270,6 +270,36 @@ class AssociateHandler(bcap.CapHandler):
     user.save()
     return bcap.bcapResponse({'success': True})
 
+
+class AddGoogleAccountHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['key', 'new']
+  def post(self, granted, args):
+    user = granted.user
+
+    existing_accounts = user.accounts.all()
+
+    newaccount = get_one(Account.objects.filter(key=args['key']))
+    user.accounts.add(newaccount)
+    user.save()
+
+    if args['new']:
+      for l in Launchable.objects.filter(account=newaccount):
+        l.delete()
+
+    for a in existing_accounts:
+      for l in Launchable.objects.filter(account=a):
+        l2 = Launchable(
+          account=newaccount,
+          launchcap=l.launchcap,
+          launchbase=l.launchbase,
+          display=l.display
+        )
+        l2.save()
+
+    return bcap.bcapResponse(newaccount.get_credentials()['googleCreds'])
+          
+
+
 HASH_ITERATIONS = 20
 # TODO: non-ASCII characters can break this
 # need to sanitize raw password
@@ -367,6 +397,9 @@ class LaunchPaperHandler(bcap.CapHandler):
       account = Account(key=key, email=user.email)
       account.save()
 
+      user.accounts.add(account)
+      user.save()
+
       current = self.getCurrentCap()
       launch = Launchable(
         launchbase=bcap.this_server_url_prefix() + '/paper',
@@ -383,7 +416,7 @@ class LaunchPaperHandler(bcap.CapHandler):
     else:
       user = granted['writer'].user
       paper = granted['paper'].paper
-      account = get_one(Account.objects.filter(email=user.email))
+      account = user.accounts.all()[0]
       key = account.key
       newuser = False
 
@@ -415,6 +448,7 @@ class LaunchPaperHandler(bcap.CapHandler):
       'email': user.email,
       'accountkey': key,
       'addPassword': bcap.regrant('add-password', account),
+      'addGoogleAccount': bcap.regrant('add-google-account', user),
       'credentials': user.get_credentials(),
       'papers': paper_jsons,
       'mainTitle': paper.title,
@@ -428,6 +462,7 @@ class ContinueInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
       'add-password': AddPasswordHandler,
+      'add-google-account': AddGoogleAccountHandler,
       'add-paper': AddPaperHandler,
       'writer-basic': WriterBasicHandler,
       'writer-paper-info': WriterPaperInfoHandler,

@@ -14,7 +14,7 @@ from lib.py.common import logWith404
 import belaylibs.dj_belay as bcap
 
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
- ContinueCredentials, Account, Conference, UnverifiedUser
+ ContinueCredentials, Account, Conference, UnverifiedUser, User, get_one, Paper
 from contwinue.email import send_and_log_email
 
 logger = logging.getLogger('default')
@@ -46,7 +46,48 @@ class VerifyHandler(bcap.CapHandler):
   def get(self, grantable):
     return bcap.bcapResponse({ 'email': grantable.pending.email })
 
+
 def request_account(request):
+  def remind(user, conf):
+    launch = bcap.grant('launch-paper', {
+      'writer': user,
+      'paper': get_one(Paper.objects.filter(contact=user))
+    })
+
+    message=u"""
+We received a request to create an account for you to submit to %(confname)s,
+and we already have a submission on record for you.  This link will take you
+back to your submissions:
+
+%(base)s/paper#%(key)s
+
+You can revisit this link as often as you like to edit your submission.  The
+submission page has instructions for creating an optional password-based
+account at your convenience.
+
+If you run into any problems, or you believe you received this message in
+error, please reply to this email.
+
+Thanks!
+%(confname)s
+"""
+
+    filled_message = message % {
+      'confname': conf.name,
+      'base': bcap.this_server_url_prefix(),
+      'key': bcap.cap_for_hash(launch)
+    }
+
+    subject = 'Reminder: Your Account for %s' % conf.name
+    fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
+    
+    resp = send_and_log_email(subject, filled_message, email, fromaddr, logger)
+
+    if resp: return resp
+    return bcap.bcapResponse({'success': True})
+
+
+
   if request.method != 'POST':
     return HttpResponseNotAllowed(['POST'])
   (err, conf) = conf_from_path(request)
@@ -55,6 +96,11 @@ def request_account(request):
   args.update(request.POST)
 
   email = args['email']
+
+  maybe_user = get_one(User.objects.filter(email=email,conference=conf))
+
+  if maybe_user:
+    return remind(maybe_user, conf)
 
   user = UnverifiedUser(
     name=u'',

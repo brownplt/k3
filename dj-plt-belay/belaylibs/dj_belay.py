@@ -202,7 +202,7 @@ class CapHandler(object):
   def checkPostArgs(self, args):
     for k in self.post_arg_names():
       if not args.has_key(k):
-        return logWith404(logger, self.name_str() + ' error: post args missing ' + k)
+        return logWith404(logger, self.__class__.__name__ + ' error: post args missing %s, got %s' % (k, args))
     return 'OK'
 
   def setCurrentGrant(self, grant):

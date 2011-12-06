@@ -6,6 +6,10 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
       type:'button',
       value:'Attach to a Google Account'
     });
+    extractEvent_e(btn, 'click').transform_e(function(_) {
+      clientkey = newUUIDv4();
+      window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
+    });
     return DIV(btn);
   };
   var makeEmptyContinueDiv = function() {
@@ -62,14 +66,30 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
   var googleDiv;
   var continueDiv;
 
-  if(googles.length === 0) { googleDiv = makeEmptyGoogleDiv(); }
-  else {
-    googleDiv = DIV(
-      P('This account is associated with the Gmail account for ',
-STRONG(googles[0].email), '.  This means you can sign in with Google to get back to' +
-' your submissions.'));
+  var googleEventsE = receiver_e();
+  window.login = function(data) {
+    googleEventsE.sendEvent(data);
+  };
+  var googlePostE = postE(googleEventsE.transform_e(function(data) {
+    var jsonData = JSON.parse(data);
+    return [launchInfo.addGoogleAccount, {
+      'key': jsonData.key,
+      'new': jsonData.newaccount
+    }];
+  }));
 
-  }
+  var googlesB = googlePostE.startsWith(googles);
+  var googleDivB = lift_b(function(googles) {
+    if(googles.length === 0) { return makeEmptyGoogleDiv(); }
+    else {
+      return DIV(
+        P('This account is associated with the Gmail account for ',
+  STRONG(googles[0].email), '.  This means you can sign in with Google to get back to' +
+  ' your submissions.'));
+
+    }
+  }, googlesB);
+  
   if(continues.length === 0) { continueDiv = makeEmptyContinueDiv(); }
   else {
     continueDiv = 
@@ -87,22 +107,22 @@ STRONG(googles[0].email), '.  This means you can sign in with Google to get back
   var search = DIV(pad,H3('Save the invitation message.  You can search your inbox for:'),
                   DIV({style:{'text-align':'center', 'margin': '1em'}},
                       STRONG('paper submit request ' + basicInfo.info.name)))
-  var accountGoogle = DIV(pad,H3('Associate with a Google account:'),
-                            googleDiv);
+  var accountGoogle = DIVB(pad,H3('Associate with a Google account:'),
+                            googleDivB);
   var accountContinue = DIV(pad,H3('Create a password:'),
                               continueDiv);
 
   // "login options for returning to your submissions"
   // "bookmark this link" --> "visit this link directly (don't share it)"
   // "save the INVITATION message"
-  return DIV({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
-             P('Welcome, ', STRONG(launchInfo.email), '.  ' +
+  return DIVB({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
+             PB('Welcome, ', STRONG(launchInfo.email), '.  ' +
                'You have several options for returning to your submissions:',
                P(),
-               UL(
+               ULB(
                 link,
                 search,
-                accountGoogle,
+                switch_b(accountGoogle),
                 accountContinue)))
 }
 
@@ -306,7 +326,7 @@ function loader() {
 
   var accountTabB = lift_b(function(li, bi) {
     if(li && bi) return makeAccountInfoTab(li, bi, window.name);
-    return SPAN();
+    return SPANB();
   }, launchE.startsWith(null), basicInfoE.startsWith(null));
 
   function one_e(val) {
@@ -390,7 +410,8 @@ function loader() {
     }, papers);
   }, curUserE, basicInfoE, papersE, launchE);
 
-	insertDomB(accountTabB,'account_placeholder');
+	insertDomB(switch_b(accountTabB),'account_placeholder');
 	onLoadTimeE.sendEvent('loaded!');
+
 }
 
