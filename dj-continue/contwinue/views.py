@@ -329,14 +329,14 @@ class AddPasswordHandler(bcap.CapHandler):
     return bcap.bcapResponse(account.get_credentials())
 
 class AddPaperHandler(bcap.CapHandler):
-  def post_arg_names(self): return []
+  def post_arg_names(self): return ['title']
   def post(self, granted, args):
     user = granted.user
     conf = user.conference
     paper = Paper(
         contact=user,
         author=user.full_name,
-        title=u'',
+        title=args['title'],
         target=conf.default_target,
         conference=conf
       )

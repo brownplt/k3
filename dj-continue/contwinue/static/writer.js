@@ -325,9 +325,41 @@ function loader() {
     return di.papers;
   });
   launchE.transform_e(function(di) {
-    var newE = postE(extractEvent_e('new_submission', 'click').transform_e(function() {
-      return [di.addPaper, {}];
-    }));
+    var newPaperDiv = DIV({
+        style: {
+          'max-width': '30em',
+          'float': 'right',
+          'position': 'absolute',
+          'right': '5em',
+          'border': '2px solid black',
+          'background-color': 'white',
+          'padding': '1em'
+        }
+      },
+      A({id:'closenew',style:{float:'right',width:'1em','text-align':'center'},href:'javascript://Close'}, 'X'),
+      P(STRONG({'padding-right': '1em'}, 'Enter the title of your paper:')),
+      INPUT({id:'newtitle', 'height': '3em', size: '50', type:'text'}),
+      BR(),
+      INPUT({id: 'submitnew', 'height': '3em', size: '50', type:'button', value:'Submit'})
+    );
+    insertDomB(newPaperDiv, 'tab_list', 'after');
+    var subClicksE = extractEvent_e('new_submission', 'click').transform_e(function() {
+      return 'block';
+    });
+    var closeClicksE = extractEvent_e('closenew', 'click').transform_e(function() {
+      return 'none';
+    });
+    insertValueB(merge_e(subClicksE, closeClicksE).startsWith('none'),
+                  newPaperDiv, 'style', 'display')
+
+    var submitPaperE = extractEvent_e('submitnew', 'click').merge_e(
+      extractEvent_e('newtitle', 'keypress').filter_e(function(v) {
+        return v.keyCode === 13;
+      }));
+    var postDataE = submitPaperE.transform_e(function(_) {
+      return [di.addPaper, {title: getObj('newtitle').value}];
+    });
+    var newE = postE(postDataE);
     newE.transform_e(function(newPaper) {
       window.location.href = newPaper.launch.launchbase + '#' + 
         newPaper.launch.launchcap;
