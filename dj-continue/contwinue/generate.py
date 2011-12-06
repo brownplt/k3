@@ -10,6 +10,21 @@ logger = logging.getLogger('default')
 def check_size(cls, num):
   return len(cls.objects.all()) == num
 
+def simple_generate():
+  conferences = Conference.objects.all()
+  if len(conferences) == 0:
+    c = Conference.make_new('Sample Conference', 'SC', 'admin', 'admin',
+      'Joe Gibbs Politz', 'joe@cs.brown.edu', False)
+  else:
+    c = conferences[0]
+
+  topics = ['Compilers', 'Type Systems', 'Contracts', 'Macros']
+  if not check_size(Topic, len(topics)):
+    for topic in topics:
+      t = Topic(name=topic, conference=c)
+      t.save()
+  
+
 def generate(request):
   """
   Generates sample data.
@@ -30,19 +45,6 @@ def generate(request):
   else:
     writer_role = writer_roles[0]
 
-  writer_bios = ComponentType.objects.filter(abbr='B')
-  if len(writer_bios) == 0:
-    writer_bio = ComponentType(abbr='B', description='Writer Bio', fmt='Any',
-      size_limit=20000, deadline=int(time.time())+(86400*15), mandatory=False,
-      grace_hours=48, conference=c)
-    writer_bio.save()
-
-  extended_abstracts = ComponentType.objects.filter(abbr='C')
-  if len(extended_abstracts) == 0:
-    extended_abstract = ComponentType(abbr='C', description='Extended Abstract',
-      fmt='Text', size_limit=1000, deadline=int(time.time())+1, mandatory=False,
-      grace_hours=96, conference=c)
-    extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != 10:
@@ -178,3 +180,4 @@ def generate(request):
   """
 
   return HttpResponse('OK')
+

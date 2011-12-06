@@ -67,7 +67,7 @@ def create_user(request):
 
   paper = Paper(contact=user,
                 author=args['email'],
-                title=u'No Title Given',
+                title=u'',
                 target=conf.default_target,
                 conference=conf)
   paper.save()
