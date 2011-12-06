@@ -133,6 +133,12 @@ function paperFrame(paperInfo) {
 function paperContentId(paperInfo) {
   return 'paper_details_' + paperInfo.id;
 }
+function paperDomId(paper) {
+  return 'paper_tab_' + paper.id;
+}
+function tabTitle(s) {
+   return truncate(s === '' ? 'Untitled paper' : s, 15);
+}
 
 function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo,paperCaps) {
 	var deadlineExts = toObj(extensions,function(e) {return e.typeID;});
@@ -211,6 +217,14 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
         return genRequest({fields:{title:title}});
       }, true, paperCaps.setTitle)
 			.toTableRow('Paper Title:');
+
+  insertValueB(lift_b(function(value) {
+    var ret;
+    if(typeof value === 'string') ret = value;
+    else if(typeof value === 'object') ret = value.title;
+    return tabTitle(ret);
+  }, titleWidget.behaviors.value), paperDomId(paperInfo), 'innerText');
+
 	var authorWidget = new TextInputWidget(paperInfo.author,70)
 			.belayServerSaving(function(author) {
         return {fields:{author:author}};
@@ -292,9 +306,6 @@ function loader() {
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
   }));
-  var tabTitle = function(s) {
-     return truncate(s === '' ? 'Untitled paper' : s, 15);
-  }
  
 /*  insertValueB(detailsInfoE.transform_e(function(di) {
     return tabTitle(di.title);
@@ -337,7 +348,6 @@ function loader() {
 
   lift_e(function(cu, bi, papers, le) {
     if(!(le && bi && papers)) return;
-    var paperDomId = function(paper) { return 'paper_tab_' + paper.id; };
     var paperDom = function(paper) {
       var detailsQueryE = one_e(paper.getPaper);
       var loadFrame = IFRAME({
@@ -361,7 +371,6 @@ function loader() {
           }
         },
         detailsInfoE.startsWith(null),authorTextE.startsWith(null),deadextE.startsWith(null)); 
-
 
       var tab = LI({className:'left-tab'},
         A({
