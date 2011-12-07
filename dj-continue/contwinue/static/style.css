@@ -38,7 +38,7 @@ pre {
 }
 
 a {
-    color:blue;
+    color:#4775A3;
 }
 
 a:visited {
@@ -145,7 +145,7 @@ p.action-link {
 }
 
 .tabs {
-    margin-top: 20px;
+    padding-top: 20px;
     clear:both;
 }
 
@@ -168,7 +168,7 @@ p.action-link {
 
         
 .tabs a:link, .tabs a:visited {
-    background: #33f;
+    background: #4775A3;
     border: 3px solid black;
     display:block;
     color: white;
@@ -181,16 +181,16 @@ p.action-link {
 
 
 .tabs a:hover, .tabs a:focus   {
-    color: #00f;
+    color: #4775A3;
     background-color:#fff;
 }
 
 .red a:link, .red a:visited {
-  background: red;
+  background: #D63333;
 }
 
 .red a:focus, .red a:hover {
-  color: red;
+  color: #D63333;
   background: white;
 }
 
