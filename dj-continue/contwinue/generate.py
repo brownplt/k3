@@ -25,7 +25,7 @@ def simple_generate():
       t.save()
   
 
-def generate(request):
+def generate():
   """
   Generates sample data.
   Creates an admin/reviewer user (username: admin, pw: admin) and several 
