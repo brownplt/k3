@@ -178,6 +178,9 @@ function launchCapFromKey(prefix, capServer) {
   var hash = window.location.hash;
   if(hash === '' || hash === '#') { hash = window.name; }
   else { window.name = hash; }
+  window.location.hash = '#';
+
+  if(hash === '' || hash === '#') { return false; }
 
   return capServer.restore(prefix + hash.substr(1));
 }

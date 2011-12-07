@@ -342,7 +342,7 @@ function loader() {
         }
       },
       A({id:'closenew',style:{float:'right',width:'1em','text-align':'center'},href:'javascript://Close'}, 'X'),
-      P(STRONG({'padding-right': '1em'}, 'Enter the title of your paper:')),
+      P(STRONG({'padding-right': '1em'}, 'Enter your paper\'s title (you can change it later):')),
       INPUT({id:'newtitle', 'height': '3em', size: '50', type:'text'}),
       BR(),
       INPUT({id: 'submitnew', 'height': '3em', size: '50', type:'button', value:'Submit'})

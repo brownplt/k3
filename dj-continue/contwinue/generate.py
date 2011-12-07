@@ -34,7 +34,7 @@ def generate(request):
   conferences = Conference.objects.all()
   if len(conferences) == 0:
     c = Conference.make_new('Sample Conference', 'SC', 'admin', 'admin',
-      'Joe Gibbs Politz', 'joe@cs.brown.edu', False)
+      'Joe Admin', 'joe@fake.com', False)
   else:
     c = conferences[0]
 
@@ -45,6 +45,20 @@ def generate(request):
   else:
     writer_role = writer_roles[0]
 
+
+  writer_bios = ComponentType.objects.filter(abbr='B')
+  if len(writer_bios) == 0:
+    writer_bio = ComponentType(abbr='B', description='Writer Bio', fmt='Any',
+      size_limit=20000, deadline=int(time.time())+(86400*15), mandatory=False,
+      grace_hours=48, conference=c)
+    writer_bio.save()
+
+  extended_abstracts = ComponentType.objects.filter(abbr='C')
+  if len(extended_abstracts) == 0:
+    extended_abstract = ComponentType(abbr='C', description='Extended Abstract',
+      fmt='Text', size_limit=1000, deadline=int(time.time())+1, mandatory=False,
+      grace_hours=96, conference=c)
+    extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != 10:
