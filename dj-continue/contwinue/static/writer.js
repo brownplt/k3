@@ -300,7 +300,12 @@ function loader() {
   });
 	doConfHead(basicInfoE);
 	authCookie = $URL('cookie');
-	getObj('logout_tab').href = 'login.html?logout='+authCookie;
+	extractEvent_e('logout_tab', 'click').transform_e(function(_) {
+    window.name = "";
+  });
+  insertValueE(basicInfoE.transform_e(function(bi) {
+    return bi.info.shortname + '/home';
+  }),'logout_tab', 'href');
 	var curUserE = getCurUserE(onLoadTimeE,authCookie);
 //	doLoginDivB(curUserE);
 	var authorTextE = getE(launchE.transform_e(function(li) {
