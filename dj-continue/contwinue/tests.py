@@ -1,10 +1,12 @@
 import time, datetime, os
 
+from django.core import mail
 from django.test import TestCase
 
 import contwinue.generate as generate
 from contwinue.models import *
 from contwinue.views import *
+import contwinue.email_strings as strings
 
 import belaylibs.dj_belay as bcap
 
@@ -21,7 +23,7 @@ class FakeHttp(object):
 
 class Generator(TestCase):
   def setUp(self):
-    generate.generate(None)
+    generate.generate()
     init = ContinueInit()
     init.process_request(None)
 
@@ -113,7 +115,7 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(response['author'], 'Brand new author!')
     self.assertEqual(afterpaper.author, 'Brand new author!')
 
-  def test_set_author(self):
+  def test_set_pcpaper(self):
     response = bcap.grant('paper-set-pcpaper', self.paper).post({
       'pcpaper': 'yes'
     })
@@ -207,7 +209,52 @@ class TestAuthorLaunch(Generator):
 
     self.assertEqual(bcap.dataPostProcess(response.content),
       {'error': 'The file you uploaded was not a PDF document.'})
-    
+
+  def test_add_author(self):
+    settings.DEBUG=False
+    author = get_one(User.objects.filter(email='joe@writer.com'))
+    paper = get_one(Paper.objects.filter(contact=author))
+
+    addauthor = bcap.grant('add-author', {'paper': paper, 'user': author})
+    response = addauthor.post({'email': 'sk@cs.fake', 'name': 'Shriram Krishnamurthi'})
+
+    self.assertEqual(response, {'success': True})
+
+    uu = get_one(UnverifiedUser.objects.filter(email='sk@cs.fake'))
+    self.assertTrue(not (uu is None))
+    self.assertEqual(uu.name, 'Shriram Krishnamurthi')
+
+    self.assertEqual(len(mail.outbox), 1)
+    self.assertEqual(
+      mail.outbox[0].subject,
+      strings.add_author_subject % {
+        'confname': author.conference.name,
+        'paper_title': paper.title
+      }
+    )
+    settings.DEBUG=True
+
+  def test_add_author_existing(self):
+    settings.DEBUG=False
+    author = get_one(User.objects.filter(email='joe@writer.com'))
+    paper = get_one(Paper.objects.filter(contact=author))
+
+    addauthor = bcap.grant('add-author', {'paper': paper, 'user': author})
+    response = addauthor.post({'email': 'joe@writer2.com', 'name': 'Joe the Writer'})
+
+    self.assertEqual(response, {'success': True})
+    uu = get_one(UnverifiedUser.objects.filter(email='joe@writer1.com'))
+    self.assertTrue(uu is None)
+
+    self.assertEqual(len(mail.outbox), 1)
+    self.assertEqual(
+      mail.outbox[0].subject,
+      strings.add_author_subject % {
+        'confname': author.conference.name,
+        'paper_title': paper.title
+      }
+    )
+    settings.DEBUG=True
 
 class TestAdminPage(Generator):
   def setUp(self):

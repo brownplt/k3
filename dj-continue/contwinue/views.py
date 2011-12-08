@@ -4,11 +4,14 @@ import hashlib
 import os
 import subprocess
 
+from django.core.validators import validate_email
 from django.http import HttpResponseNotFound, HttpResponseNotAllowed
 
 import settings
 
 from contwinue.models import *
+from contwinue.email import send_and_log_email, notFoundResponse
+import contwinue.email_strings as strings
 
 import belaylibs.dj_belay as bcap
 from belaylibs.models import Grant
@@ -328,6 +331,83 @@ class AddPasswordHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(account.get_credentials())
 
+# AddAuthorHandler
+# granted: {'paper':|paper:Paper|, 'user':|user:User|}
+# -> {email: string, name: string}
+# <- {'success': True} U emailError
+class AddAuthorHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['email', 'name']
+  def post(self, granted, args):
+    paper = granted['paper'].paper
+    user = granted['user'].user
+    conf = user.conference
+    email = args['email']
+    name = args['name']
+
+    try:
+      validate_email(email)
+    except Exception as e:
+      return notFoundResponse()
+
+    existing_user = get_one(User.objects.filter(
+      email=email,
+      conference=conf
+    ))
+
+    if existing_user is None:
+      uu = UnverifiedUser(
+        name=name,
+        email=email,
+        conference=conf,
+        roletext=u'User'
+      )
+      uu.save()
+
+      launch = bcap.grant('launch-paper', {
+        'unverified': user,
+        'paper': paper
+      })
+      launchurl = '%s/paper#%s' %\
+        (bcap.this_server_url_prefix(), bcap.cap_for_hash(launch))
+      subject = strings.add_author_subject % {
+        'confname': conf.name,
+        'paper_title': paper.title
+      }
+      body = strings.add_author_body % {
+        'authorname': name,
+        'paper_title': paper.title,
+        'confname': conf.name,
+        'launchurl': launchurl
+      }
+      fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
+      e_response = send_and_log_email(subject, body, email, fromaddr, logger)
+      if e_response: return e_response
+
+      return bcap.bcapResponse({'success': True})
+    else:
+      launch = bcap.grant('launch-paper', {
+        'user': user,
+        'paper': paper
+      })
+      launchurl = '%s/paper#%s' %\
+        (bcap.this_server_url_prefix(), bcap.cap_for_hash(launch))
+      subject = strings.add_author_subject % {
+        'confname': conf.name,
+        'paper_title': paper.title
+      }
+      body = strings.add_author_body % {
+        'authorname': name,
+        'paper_title': paper.title,
+        'confname': conf.name,
+        'launchurl': launchurl
+      }
+      fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
+      e_response = send_and_log_email(subject, body, email, fromaddr, logger)
+      if e_response: return e_response
+
+      return bcap.bcapResponse({'success': True})
+
+
 class AddPaperHandler(bcap.CapHandler):
   def post_arg_names(self): return ['title']
   def post(self, granted, args):
@@ -383,31 +463,33 @@ class LaunchPaperHandler(bcap.CapHandler):
         user.save()
         user.roles.add(get_one(Role.objects.filter(name='user')))
 
-      logger.error('Trying to create paper')
-      paper = Paper(
-        contact=user,
-        author=user.full_name,
-        title=u'',
-        target=conf.default_target,
-        conference=conf
-      )
-      paper.save()
+      if not 'paper' in granted:
+        paper = Paper(
+          contact=user,
+          author=user.full_name,
+          title=u'',
+          target=conf.default_target,
+          conference=conf
+        )
+        paper.save()
 
-      key = str(uuid.uuid4())
-      account = Account(key=key, email=user.email)
-      account.save()
+        key = str(uuid.uuid4())
+        account = Account(key=key, email=user.email)
+        account.save()
 
-      user.accounts.add(account)
-      user.save()
+        user.accounts.add(account)
+        user.save()
 
-      current = self.getCurrentCap()
-      launch = Launchable(
-        launchbase=bcap.this_server_url_prefix() + '/paper',
-        launchcap=bcap.cap_for_hash(current),
-        display=u'',
-        account=account
-      )
-      launch.save()
+        current = self.getCurrentCap()
+        launch = Launchable(
+          launchbase=bcap.this_server_url_prefix() + '/paper',
+          launchcap=bcap.cap_for_hash(current),
+          display=u'',
+          account=account
+        )
+        launch.save()
+      else:
+        paper = granted.paper
 
       logger.error('Trying to update grant')
       granted = {'writer': user, 'paper': paper}
@@ -458,46 +540,6 @@ class LaunchPaperHandler(bcap.CapHandler):
     })
 
 
-class ContinueInit():
-  def process_request(self, request):
-    bcap.set_handlers(bcap.default_prefix, {
-      'add-password': AddPasswordHandler,
-      'add-google-account': AddGoogleAccountHandler,
-      'add-paper': AddPaperHandler,
-      'writer-basic': WriterBasicHandler,
-      'writer-paper-info': WriterPaperInfoHandler,
-      'author-text': AuthorTextHandler,
-      'paper-deadline-extensions': PaperDeadlineExtensionsHandler,
-      'paper-set-title': PaperSetTitleHandler,
-      'paper-set-author': PaperSetAuthorHandler,
-      'paper-set-pcpaper': PaperSetPcPaperHandler,
-      'paper-set-target': PaperSetTargetsHandler,
-      'paper-set-topics': PaperSetTopicsHandler,
-      'paper-update-components': PaperUpdateComponentsHandler,
-      'launch-paper': LaunchPaperHandler,
-      'get-papers-of-dv': GetPapersOfDVHandler,
-      # End LaunchPaper handlers
-
-      
-      # End LaunchAdmin handlers
-      'get-admin': GetAdminHandler,
-      'get-all': GetAllHandler,
-      'add-topic': AddTopicHandler,
-      'delete-topic': DeleteTopicHandler,
-      'add-decision-value': AddDecisionValueHandler,
-      'delete-decision-value': DeleteDecisionValueHandler,
-      'add-review-component-type': AddReviewComponentTypeHandler, 
-      'add-component-type': AddComponentTypeHandler,
-      'delete-component-type': DeleteComponentTypeHandler,
-      'change-component-type': ChangeComponentTypeHandler,
-      'change-user-email': ChangeUserEmailHandler,
-      # End LaunchContinue handlers
-
-      # End LaunchMeeting handlers
-
-      # End LaunchPaperView handlers
-    })
-    return None
 
 class GetAdminHandler(bcap.CapHandler):
   def get(self, granted):
@@ -676,3 +718,45 @@ class GetPapersOfDVHandler(bcap.CapHandler):
     decision_value = granted['decision_value'].decisionvalue
 
     return bcap.bcapResponse(conference.papers_of_dv(decision_value))
+
+class ContinueInit():
+  def process_request(self, request):
+    bcap.set_handlers(bcap.default_prefix, {
+      'add-password': AddPasswordHandler,
+      'add-google-account': AddGoogleAccountHandler,
+      'add-paper': AddPaperHandler,
+      'add-author': AddAuthorHandler,
+      'writer-basic': WriterBasicHandler,
+      'writer-paper-info': WriterPaperInfoHandler,
+      'author-text': AuthorTextHandler,
+      'paper-deadline-extensions': PaperDeadlineExtensionsHandler,
+      'paper-set-title': PaperSetTitleHandler,
+      'paper-set-author': PaperSetAuthorHandler,
+      'paper-set-pcpaper': PaperSetPcPaperHandler,
+      'paper-set-target': PaperSetTargetsHandler,
+      'paper-set-topics': PaperSetTopicsHandler,
+      'paper-update-components': PaperUpdateComponentsHandler,
+      'launch-paper': LaunchPaperHandler,
+      'get-papers-of-dv': GetPapersOfDVHandler,
+      # End LaunchPaper handlers
+
+      'get-admin': GetAdminHandler,
+      'get-all': GetAllHandler,
+      'add-topic': AddTopicHandler,
+      'delete-topic': DeleteTopicHandler,
+      'add-decision-value': AddDecisionValueHandler,
+      'delete-decision-value': DeleteDecisionValueHandler,
+      'add-review-component-type': AddReviewComponentTypeHandler, 
+      'add-component-type': AddComponentTypeHandler,
+      'delete-component-type': DeleteComponentTypeHandler,
+      'change-component-type': ChangeComponentTypeHandler,
+      'change-user-email': ChangeUserEmailHandler,
+      # End LaunchAdmin handlers
+
+      # End LaunchContinue handlers
+
+      # End LaunchMeeting handlers
+
+      # End LaunchPaperView handlers
+    })
+    return None

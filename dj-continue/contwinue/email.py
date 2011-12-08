@@ -45,3 +45,4 @@ def send_and_log_email(subject, msg, address, fromaddr, logger):
     return emailErrorResponse()
   logger.error('Sent real email:\n %s \n%s' % (address, msg))
   return False
+

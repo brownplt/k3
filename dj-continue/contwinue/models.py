@@ -443,6 +443,7 @@ class Topic(bcap.Grantable):
 
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
+  authors = models.ManyToManyField(User, related_name='authors')
   author = models.TextField()
   title = models.TextField(default='No Paper Title Given')
   target = models.ForeignKey(DecisionValue)
