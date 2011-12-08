@@ -364,7 +364,7 @@ class AddAuthorHandler(bcap.CapHandler):
       uu.save()
 
       launch = bcap.grant('launch-paper', {
-        'unverified': user,
+        'unverified': uu,
         'paper': paper
       })
       launchurl = '%s/paper#%s' %\
@@ -386,7 +386,7 @@ class AddAuthorHandler(bcap.CapHandler):
       return bcap.bcapResponse({'success': True})
     else:
       launch = bcap.grant('launch-paper', {
-        'user': user,
+        'user': existing_user,
         'paper': paper
       })
       launchurl = '%s/paper#%s' %\
@@ -396,7 +396,7 @@ class AddAuthorHandler(bcap.CapHandler):
         'paper_title': paper.title
       }
       body = strings.add_author_body % {
-        'authorname': name,
+        'authorname': existing_user.full_name,
         'paper_title': paper.title,
         'confname': conf.name,
         'launchurl': launchurl

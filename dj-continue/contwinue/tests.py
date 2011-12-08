@@ -232,6 +232,16 @@ class TestAuthorLaunch(Generator):
         'paper_title': paper.title
       }
     )
+
+    granted_cap = get_one(Grant.objects.filter(
+      internal_path='launch-paper',
+      db_data=bcap.dbPreProcess({'unverified': uu, 'paper': paper})
+    ))
+    
+    self.assertTrue(granted_cap is not None)
+
+    # Make sure the cap id shows up in the email
+    self.assertTrue(mail.outbox[0].body.find(granted_cap.cap_id) != -1)
     settings.DEBUG=True
 
   def test_add_author_existing(self):
@@ -239,11 +249,13 @@ class TestAuthorLaunch(Generator):
     author = get_one(User.objects.filter(email='joe@writer.com'))
     paper = get_one(Paper.objects.filter(contact=author))
 
+    user_email = 'joe@writer2.com'
     addauthor = bcap.grant('add-author', {'paper': paper, 'user': author})
-    response = addauthor.post({'email': 'joe@writer2.com', 'name': 'Joe the Writer'})
+    response = addauthor.post({'email': user_email, 'name': 'Joe the Writer'})
+    existing_user = get_one(User.objects.filter(email=user_email, conference=paper.conference))
 
     self.assertEqual(response, {'success': True})
-    uu = get_one(UnverifiedUser.objects.filter(email='joe@writer1.com'))
+    uu = get_one(UnverifiedUser.objects.filter(email=user_email))
     self.assertTrue(uu is None)
 
     self.assertEqual(len(mail.outbox), 1)
@@ -254,6 +266,16 @@ class TestAuthorLaunch(Generator):
         'paper_title': paper.title
       }
     )
+
+    granted_cap = get_one(Grant.objects.filter(
+      internal_path='launch-paper',
+      db_data=bcap.dbPreProcess({'user': existing_user, 'paper': paper})
+    ))
+    
+    self.assertTrue(granted_cap is not None)
+
+    # Make sure the cap id shows up in the email
+    self.assertTrue(mail.outbox[0].body.find(granted_cap.cap_id) != -1)
     settings.DEBUG=True
 
 class TestAdminPage(Generator):
