@@ -75,6 +75,8 @@ class TestAuthorLaunch(Generator):
     self.assertTrue(type(response['target']['id']), int)
     self.assertEqual(len(response['topics']), 1)
 
+    self.assertEqual(response['authors'][0]['email'], self.writer.email)
+
   def test_extension(self):
     paperc = ComponentType.objects.filter(description='Paper')[0]
 
@@ -215,14 +217,17 @@ class TestAuthorLaunch(Generator):
     author = get_one(User.objects.filter(email='joe@writer.com'))
     paper = get_one(Paper.objects.filter(contact=author))
 
-    addauthor = bcap.grant('add-author', {'paper': paper, 'user': author})
+    addauthor = bcap.grant('paper-add-author', {'paper': paper, 'user': author})
     response = addauthor.post({'email': 'sk@cs.fake', 'name': 'Shriram Krishnamurthi'})
 
-    self.assertEqual(response, {'success': True})
+    self.assertEqual(response, {'name': 'Shriram Krishnamurthi',
+                                'email': 'sk@cs.fake'})
 
     uu = get_one(UnverifiedUser.objects.filter(email='sk@cs.fake'))
     self.assertTrue(not (uu is None))
     self.assertEqual(uu.name, 'Shriram Krishnamurthi')
+
+    self.assertTrue(uu in paper.unverified_authors.all())
 
     self.assertEqual(len(mail.outbox), 1)
     self.assertEqual(
@@ -250,13 +255,15 @@ class TestAuthorLaunch(Generator):
     paper = get_one(Paper.objects.filter(contact=author))
 
     user_email = 'joe@writer2.com'
-    addauthor = bcap.grant('add-author', {'paper': paper, 'user': author})
+    addauthor = bcap.grant('paper-add-author', {'paper': paper, 'user': author})
     response = addauthor.post({'email': user_email, 'name': 'Joe the Writer'})
     existing_user = get_one(User.objects.filter(email=user_email, conference=paper.conference))
 
-    self.assertEqual(response, {'success': True})
+    self.assertEqual(response, {'email': user_email, 'name':existing_user.full_name})
     uu = get_one(UnverifiedUser.objects.filter(email=user_email))
     self.assertTrue(uu is None)
+
+    self.assertTrue(existing_user in paper.authors.all())
 
     self.assertEqual(len(mail.outbox), 1)
     self.assertEqual(

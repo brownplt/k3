@@ -125,7 +125,33 @@ class WriterBasicHandler(bcap.CapHandler):
 class WriterPaperInfoHandler(bcap.CapHandler):
   def get(self, granted):
     paper = granted['paper'].paper
-    return bcap.bcapResponse(paper.get_paper())
+    caller = granted['writer'].user
+    author_json = []
+    for author in paper.authors.all():
+      if author == caller:
+        remove = None
+      if author == paper.contact:
+        remove = {}
+      else: 
+        remove = None
+      author_json.append({
+        'email': author.email,
+        'name': author.full_name,
+        'added': True,
+        'remove': remove # Add the removal cap
+      }) 
+    unverified_author_json = []
+    for author in paper.unverified_authors.all():
+      unverified_author_json.append({
+        'email': author.email,
+        'name': author.name,
+        'added': False,
+        'remove': {} # Add the removal cap
+      }) 
+    paper_json = paper.get_paper()
+    paper_json['authors'] = author_json
+    paper_json['unverifiedAuthors'] = unverified_author_json
+    return bcap.bcapResponse(paper_json)
 
 class AuthorTextHandler(bcap.CapHandler):
   def get(self, granted):
@@ -334,7 +360,7 @@ class AddPasswordHandler(bcap.CapHandler):
 # AddAuthorHandler
 # granted: {'paper':|paper:Paper|, 'user':|user:User|}
 # -> {email: string, name: string}
-# <- {'success': True} U emailError
+# <- {email: string, name: string} U emailError
 class AddAuthorHandler(bcap.CapHandler):
   def post_arg_names(self): return ['email', 'name']
   def post(self, granted, args):
@@ -355,13 +381,23 @@ class AddAuthorHandler(bcap.CapHandler):
     ))
 
     if existing_user is None:
-      uu = UnverifiedUser(
-        name=name,
+      existing_uu = get_one(UnverifiedUser.objects.filter(
         email=email,
-        conference=conf,
-        roletext=u'User'
-      )
-      uu.save()
+        conference=conf
+      ))
+      if existing_uu is None:
+        uu = UnverifiedUser(
+          name=name,
+          email=email,
+          conference=conf,
+          roletext=u'User'
+        )
+        uu.save()
+      else:
+        uu = existing_uu
+
+      paper.unverified_authors.add(uu)
+      paper.save()
 
       launch = bcap.grant('launch-paper', {
         'unverified': uu,
@@ -383,10 +419,12 @@ class AddAuthorHandler(bcap.CapHandler):
       e_response = send_and_log_email(subject, body, email, fromaddr, logger)
       if e_response: return e_response
 
-      return bcap.bcapResponse({'success': True})
+      return bcap.bcapResponse({'name': name, 'email': email})
     else:
+      paper.authors.add(existing_user)
+      paper.save()
       launch = bcap.grant('launch-paper', {
-        'user': existing_user,
+        'writer': existing_user,
         'paper': paper
       })
       launchurl = '%s/paper#%s' %\
@@ -405,7 +443,7 @@ class AddAuthorHandler(bcap.CapHandler):
       e_response = send_and_log_email(subject, body, email, fromaddr, logger)
       if e_response: return e_response
 
-      return bcap.bcapResponse({'success': True})
+      return bcap.bcapResponse({'name': existing_user.full_name, 'email': email})
 
 
 class AddPaperHandler(bcap.CapHandler):
@@ -420,6 +458,9 @@ class AddPaperHandler(bcap.CapHandler):
         target=conf.default_target,
         conference=conf
       )
+    paper.save()
+
+    paper.authors.add(user)
     paper.save()
 
     paper_json = {
@@ -463,7 +504,7 @@ class LaunchPaperHandler(bcap.CapHandler):
         user.save()
         user.roles.add(get_one(Role.objects.filter(name='user')))
 
-      if not 'paper' in granted:
+      if not granted.has_key('paper'):
         paper = Paper(
           contact=user,
           author=user.full_name,
@@ -473,23 +514,28 @@ class LaunchPaperHandler(bcap.CapHandler):
         )
         paper.save()
 
-        key = str(uuid.uuid4())
-        account = Account(key=key, email=user.email)
-        account.save()
-
-        user.accounts.add(account)
-        user.save()
-
-        current = self.getCurrentCap()
-        launch = Launchable(
-          launchbase=bcap.this_server_url_prefix() + '/paper',
-          launchcap=bcap.cap_for_hash(current),
-          display=u'',
-          account=account
-        )
-        launch.save()
       else:
-        paper = granted.paper
+        paper = granted['paper'].paper
+
+      paper.authors.add(user)
+      paper.save()
+      # Copy other papers?
+
+      key = str(uuid.uuid4())
+      account = Account(key=key, email=user.email)
+      account.save()
+
+      user.accounts.add(account)
+      user.save()
+
+      current = self.getCurrentCap()
+      launch = Launchable(
+        launchbase=bcap.this_server_url_prefix() + '/paper',
+        launchcap=bcap.cap_for_hash(current),
+        display=u'',
+        account=account
+      )
+      launch.save()
 
       logger.error('Trying to update grant')
       granted = {'writer': user, 'paper': paper}
@@ -498,7 +544,7 @@ class LaunchPaperHandler(bcap.CapHandler):
     else:
       user = granted['writer'].user
       paper = granted['paper'].paper
-      account = user.accounts.all()[0]
+      account = get_one(user.accounts.all())
       key = account.key
       newuser = False
 
@@ -513,6 +559,10 @@ class LaunchPaperHandler(bcap.CapHandler):
         }),
         'setTitle': bcap.regrant('paper-set-title', p),
         'setAuthor': bcap.regrant('paper-set-author', p),
+        'addAuthor': bcap.regrant('paper-add-author', {
+          'user': user,
+          'paper': paper
+        }),
         'setPcPaper': bcap.regrant('paper-set-pcpaper', p),
         'setTarget': bcap.regrant('paper-set-target', p),
         'setTopics': bcap.regrant('paper-set-topics', p),
@@ -725,12 +775,12 @@ class ContinueInit():
       'add-password': AddPasswordHandler,
       'add-google-account': AddGoogleAccountHandler,
       'add-paper': AddPaperHandler,
-      'add-author': AddAuthorHandler,
       'writer-basic': WriterBasicHandler,
       'writer-paper-info': WriterPaperInfoHandler,
       'author-text': AuthorTextHandler,
       'paper-deadline-extensions': PaperDeadlineExtensionsHandler,
       'paper-set-title': PaperSetTitleHandler,
+      'paper-add-author': AddAuthorHandler,
       'paper-set-author': PaperSetAuthorHandler,
       'paper-set-pcpaper': PaperSetPcPaperHandler,
       'paper-set-target': PaperSetTargetsHandler,

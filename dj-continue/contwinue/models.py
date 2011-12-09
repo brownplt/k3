@@ -413,7 +413,7 @@ class User(bcap.Grantable):
     }
 
   def get_papers(self):
-    return sorted(Paper.objects.filter(contact=self), key=lambda p: p.id)
+    return sorted(self.paper_set.all(), key=lambda p: p.id)
 
 class UnverifiedUser(bcap.Grantable):
   name = models.TextField()
@@ -444,6 +444,7 @@ class Topic(bcap.Grantable):
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
   authors = models.ManyToManyField(User, related_name='authors')
+  unverified_authors = models.ManyToManyField(UnverifiedUser)
   author = models.TextField()
   title = models.TextField(default='No Paper Title Given')
   target = models.ForeignKey(DecisionValue)

@@ -225,11 +225,39 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
     return tabTitle(ret);
   }, titleWidget.behaviors.value), paperDomId(paperInfo), 'innerText');
 
-	var authorWidget = new TextInputWidget(paperInfo.author,70)
-			.belayServerSaving(function(author) {
-        return {fields:{author:author}};
-      }, true, paperCaps.setAuthor)
-			.toTableRow('Author List:');
+  var authorsWidget = new ModListWidget(
+    paperInfo.unverifiedAuthors.concat(paperInfo.authors),
+    TR(TH('Name'), TH('Email')),
+    function(unverified) {
+      var ret = new ButtonInputWidget([],
+        {del: unverified.remove === null ? new ClickWidget(SPAN(),null) : new LinkWidget('Remove')},
+        function() { return unverified; },
+        function(_,delobj) {
+          return TR(TD(unverified.name), TD(unverified.email), delobj.del);
+        });
+      ret.events.del = postE(ret.events.del.transform_e(function() {
+        return [unverified.remove, {}]
+      }));
+      return ret
+    },
+    function() {
+      return new ButtonInputWidget(
+        [new TextInputWidget('',30),
+         new TextInputWidget('',30)],
+        {value: new ButtonWidget('Add')},
+        function(name, email) {
+          return {name: name, email: email};
+        },
+        function(inputs, attrs) {
+          return TR(TD(inputs[0]), TD(inputs[1]), TD(attrs.value));
+        }).
+        belayServerSaving(function(author) {
+          return {fields:{name:author.name, email:author.email}}; 
+        }, true, paperCaps.addAuthor);
+    });
+
+  var authorsRow = TRB(TH('Authors'), TDB(authorsWidget.dom));
+    
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
 			.belayServerSaving(function(pcpaper) {
 					return {fields:{pcpaper:(pcpaper ? 'yes' : 'no')}};
@@ -255,12 +283,12 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 	return DIVB(launchInfo.newUser ? newUserWidget() : '',
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
-		TABLE({className:'key-value'},TBODY(
+		TABLEB({className:'key-value'},TBODYB(
 			TR(TH('Contact:'),TD(userInfo.fullname,' <',launchInfo.email,'>')),
 			basicInfo.info.showNum ? TR(TH('Paper #:'),TD(paperInfo.id)) : '',
 			TR(TH('Remaining Components:'),TD({className:(missinginfo == 'Submission Complete' ? 'yes-submitted' : 'normal')},missinginfo)),
 				titleWidget.dom,
-				authorWidget.dom,
+        authorsRow,
 				twDom,
 				pcpWidget.dom,
 				topicsWidget.dom
@@ -306,8 +334,6 @@ function loader() {
   insertValueE(basicInfoE.transform_e(function(bi) {
     return bi.info.shortname + '/home';
   }),'logout_tab', 'href');
-	var curUserE = getCurUserE(onLoadTimeE,authCookie);
-//	doLoginDivB(curUserE);
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
   }));

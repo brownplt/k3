@@ -124,6 +124,8 @@ def generate():
         other_cats=(not (odd_true(n))), pc_paper=odd_true(n), hidden=False,
         conference=c, title=titles[n])
       p.save()
+      p.authors.add(contact)
+      p.save()
       component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
         value="This is actually pretty short", mimetype='text/plain', conference=c)
       component.save()
