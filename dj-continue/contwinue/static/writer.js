@@ -140,7 +140,7 @@ function tabTitle(s) {
    return truncate(s === '' ? 'Untitled paper' : s, 15);
 }
 
-function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo,paperCaps) {
+function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launchInfo,paperCaps) {
 	var deadlineExts = toObj(extensions,function(e) {return e.typeID;});
 	var getDeadline = function(compType) {
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].until; else return compType.deadline;
@@ -284,7 +284,7 @@ function makeDetailsTab(userInfo,paperInfo,basicInfo,authorText,extensions,error
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
 		TABLEB({className:'key-value'},TBODYB(
-			TR(TH('Contact:'),TD(userInfo.fullname,' <',launchInfo.email,'>')),
+			TR(TH('Contact:'),TD(launchInfo.fullName,'<',launchInfo.email,'>')),
 			basicInfo.info.showNum ? TR(TH('Paper #:'),TD(paperInfo.id)) : '',
 			TR(TH('Remaining Components:'),TD({className:(missinginfo == 'Submission Complete' ? 'yes-submitted' : 'normal')},missinginfo)),
 				titleWidget.dom,
@@ -409,7 +409,7 @@ function loader() {
     return r;
   }
 
-  lift_e(function(cu, bi, papers, le) {
+  lift_e(function(bi, papers, le) {
     if(!(le && bi && papers)) return;
     var paperDom = function(paper) {
       var detailsQueryE = one_e(paper.getPaper);
@@ -427,7 +427,7 @@ function loader() {
       var detailsTabB = lift_b(function(di,at,de) {
           if (di && at && de) {
             var visibility = di.title === le.mainTitle ? 'block' : 'none';
-            return makeDetailsTab(cu,di,bi,at,de,perB,le,paper); 
+            return makeDetailsTab(di,bi,at,de,perB,le,paper); 
           }
           else {
             return constant_b(getLoadingDiv(paperContentId(paper)));
@@ -480,7 +480,7 @@ function loader() {
     map(function(paper) {
       WriterTabs.displayOn(paperDomId(paper), paperContentId(paper));
     }, papers);
-  }, curUserE, basicInfoE, papersE, launchE);
+  }, basicInfoE, papersE, launchE);
 
 	insertDomB(switch_b(accountTabB),'account_placeholder');
 	onLoadTimeE.sendEvent('loaded!');

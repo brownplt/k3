@@ -62,9 +62,12 @@ def generate():
 
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != 10:
+    account = Account(key=str(uuid.uuid4()))
+    account.save()
     writer_user = User(username='writer', full_name='Joe Writer',
       email='joe@writer.com',
-      conference=c)
+      conference=c,
+      account=account)
     # 2 saves because you can't add ManyToMany relationships until the instance
     # is saved
     writer_user.save()
@@ -72,10 +75,13 @@ def generate():
     writer_user.save()
     
     for n in range(2, 11):
+      account = Account(key=str(uuid.uuid4()))
+      account.save()
       nstr = str(n)
       writer_user = User(username='writer%s' % nstr, 
         full_name='Joe Writer%s' % nstr, email='joe@writer%s.com' % nstr, 
-        conference=c)
+        conference=c,
+        account=account)
       writer_user.save()
       writer_user.roles.add(writer_role)
       writer_user.save()

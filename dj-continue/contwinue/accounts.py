@@ -50,7 +50,7 @@ class VerifyHandler(bcap.CapHandler):
 def request_account(request):
   def remind(user, conf):
     launch = bcap.grant('launch-paper', {
-      'writer': user,
+      'user': user,
       'paper': get_one(Paper.objects.filter(contact=user))
     })
 
@@ -110,7 +110,7 @@ Thanks!
   )
   user.save()
 
-  launch = bcap.grant('launch-paper', {'unverified': user})
+  launch = bcap.grant('launch-new-paper', {'create': True, 'unverified': user})
 
   message=u"""
 You've made a request to submit a paper for %(confname)s.  This link will take
@@ -241,11 +241,11 @@ def glogin_landing(request):
   if len(q) == 0:
     logger.error('Creating an account: %s' % email)
     account_key = str(uuid.uuid4())
-    account = Account(email=email, key=account_key)
+    account = Account(key=account_key)
     account.save()
     newaccount = 'true'
 
-    gc = GoogleCredentials(account=account, identity=identity)
+    gc = GoogleCredentials(account=account, identity=identity, email=email)
     gc.save()
   else:
     account = q[0].account

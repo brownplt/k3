@@ -56,17 +56,18 @@ def create_user(request):
   key = args['key']
   account = get_one(Account.objects.filter(key=key))
   if key is None: return logWith404('Bad account: %s' % key)
-  
-  if get_one(User.objects.filter(email=account.email)):
+
+  gcreds = get_one(GoogleCredentials.objects.filter(account=account))
+
+  if get_one(User.objects.filter(email=gcreds.email)):
     return bcap.bcapResponse({'error': True, 'message': 'Account exists'})
-  user = User(username=account.email,
-              email=account.email,
-              full_name=account.email,
-              conference=conf)
+  user = User(username=gcreds.email,
+              email=gcreds.email,
+              full_name=u'',
+              conference=conf,
+              account=account)
   user.save()
   user.roles.add(get_one(Role.objects.filter(name='user')))
-  user.accounts.add(account)
-  user.save()
 
   paper = Paper(contact=user,
                 author=args['email'],
@@ -75,7 +76,10 @@ def create_user(request):
                 conference=conf)
   paper.save()
 
-  launchcap = bcap.grant('launch-paper', {'writer': user, 'paper': paper})
+  paper.authors.add(user)
+  paper.save()
+
+  launchcap = bcap.grant('launch-paper', {'user': user, 'paper': paper})
   launchbase = '%s/paper' % bcap.this_server_url_prefix()
 
   launchable = Launchable(account=account,
@@ -358,6 +362,7 @@ class AddPasswordHandler(bcap.CapHandler):
     return bcap.bcapResponse(account.get_credentials())
 
 # AddAuthorHandler
+# Adds an author to a paper, and sends email notification
 # granted: {'paper':|paper:Paper|, 'user':|user:User|}
 # -> {email: string, name: string}
 # <- {email: string, name: string} U emailError
@@ -390,7 +395,7 @@ class AddAuthorHandler(bcap.CapHandler):
           name=name,
           email=email,
           conference=conf,
-          roletext=u'User'
+          roletext=u'user'
         )
         uu.save()
       else:
@@ -399,7 +404,8 @@ class AddAuthorHandler(bcap.CapHandler):
       paper.unverified_authors.add(uu)
       paper.save()
 
-      launch = bcap.grant('launch-paper', {
+      launch = bcap.grant('launch-attach-to-paper', {
+        'newuser': True,
         'unverified': uu,
         'paper': paper
       })
@@ -424,7 +430,7 @@ class AddAuthorHandler(bcap.CapHandler):
       paper.authors.add(existing_user)
       paper.save()
       launch = bcap.grant('launch-paper', {
-        'writer': existing_user,
+        'user': existing_user,
         'paper': paper
       })
       launchurl = '%s/paper#%s' %\
@@ -477,7 +483,7 @@ class AddPaperHandler(bcap.CapHandler):
       'title': paper.title,
       'id': paper.id
     }
-    launchcap = bcap.regrant('launch-paper', {'writer': user, 'paper': paper})
+    launchcap = bcap.regrant('launch-paper', {'user': user, 'paper': paper})
     launchbase = '%s/paper' % bcap.this_server_url_prefix()
     return bcap.bcapResponse({
       'success': True,
@@ -487,109 +493,179 @@ class AddPaperHandler(bcap.CapHandler):
       }
     })
 
+# paper_launch_info : User, Paper, boolean -> launch-dict
+# Gets the information the paper# page needs to get started, for this
+# user and the given paper as the default to show
+# |newuser| controls whether to show the 'welcome' dialog or not
+def paper_launch_info(user, paper, newuser):
+
+  account = get_one(Account.objects.filter(user=user))
+
+  papers = user.get_papers()
+  paper_jsons = []
+  
+  for p in papers:
+    paper_json = {
+      'getPaper': bcap.regrant('writer-paper-info', {
+        'writer': user,
+        'paper': p
+      }),
+      'setTitle': bcap.regrant('paper-set-title', p),
+      'setAuthor': bcap.regrant('paper-set-author', p),
+      'addAuthor': bcap.regrant('paper-add-author', {
+        'user': user,
+        'paper': paper
+      }),
+      'setPcPaper': bcap.regrant('paper-set-pcpaper', p),
+      'setTarget': bcap.regrant('paper-set-target', p),
+      'setTopics': bcap.regrant('paper-set-topics', p),
+      'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', p),
+      'updateComponents': bcap.regrant('paper-update-components', p),
+      'title': p.title,
+      'id': p.id
+    }
+    paper_jsons.append(paper_json)
+
+  return bcap.bcapResponse({
+    'newUser': newuser,
+    'email': user.email,
+    'accountkey': account.key,
+    'addPassword': bcap.regrant('add-password', account),
+    'addGoogleAccount': bcap.regrant('add-google-account', user),
+    'credentials': user.get_credentials(),
+    'papers': paper_jsons,
+    'mainTitle': paper.title,
+    'addPaper': bcap.regrant('add-paper', user),
+    'getBasic': bcap.regrant('writer-basic', paper.conference),
+    'getAuthorText': bcap.regrant('author-text', paper.conference),
+  })
+
+# make_user: UnverifiedUser -> (Account, User)
+# Creates a user object and an account object from this unverified user
+# Move any paper associations over
+# Exceptions not handled:
+#  - A user with this email already exists.  Will throw a DB exception.
+def make_user(uu):
+  key = str(uuid.uuid4())
+  account = Account(
+    key=key
+  )
+  account.save()
+
+  user = User(
+    full_name=uu.name,
+    email=uu.email,
+    conference=uu.conference,
+    account=account
+  )
+  user.save()
+  role = get_one(Role.objects.filter(name=uu.roletext))
+  user.roles.add(role)
+
+  for paper in uu.paper_set.all():
+    paper.unverified_authors.remove(uu)
+    user.paper_set.add(paper)
+
+  user.save()
+
+  return (account, user)
+
+def new_paper(contact):
+  paper = Paper(
+    contact=contact,
+    conference=contact.conference,
+    title=u'',
+    target=contact.conference.default_target
+  )
+  paper.save()
+  paper.authors.add(contact)
+  paper.save()
+
+  return paper
+
+# LaunchNewPaperHandler
+
+# Creates a new paper for this unverified user (if the handler hasn't already),
+# and then returns the launch info for that paper and user.
+
+# If the unverified_user exists as a user (the email is taken), create a paper
+# for that user if they have none, and then launch.
+
+# granted:  {'create':True,  'unverified':|unverified_user:UnverifiedUser|}
+#         U {'create':False, 'user':|user:User|, 'paper':|paper:Paper|}
+# <- { <paper-launch-dict> }
+class LaunchNewPaperHandler(bcap.CapHandler):
+  def get(self, granted):
+    if not granted['create']:
+      return paper_launch_info(granted['user'].user, granted['paper'].paper, False)
+
+    uu = granted['unverified'].unverifieduser
+    existing_user = get_one(User.objects.filter(email=uu.email))
+    if not (existing_user is None):
+      papers = existing_user.get_papers()
+      if len(papers) == 0:
+        paper = new_paper(existing_user)
+      else:
+        paper = papers[0]
+      self.updateGrant({
+        'create': False,
+        'user': existing_user,
+        'paper': paper
+      })
+      return paper_launch_info(existing_user, paper, True)
+
+    (account, user) = make_user(uu)
+
+    paper = new_paper(user)
+    self.updateGrant({
+      'create': False,
+      'user': user,
+      'paper': paper
+    })
+    return paper_launch_info(user, paper, True)
+
+# LaunchAttachToPaperHandler
+
+# Changes the granted UnverifiedUser to a User, and after acts like a 
+# LaunchPaperHandler on that User and Paper.  If the user already exists
+# (via overlapping email), immedately turn into a LaunchPaperHandler
+
+# granted:  {'newuser': True, 'unverified':|unverifieduser:UnverifiedUser|,
+#            'paper':|paper:Paper|}
+#         U {'newuser': False, 'user':|user:User|, 'paper':|paper:Paper|}
+class LaunchAttachToPaperHandler(bcap.CapHandler):
+  def get(self, granted):
+    if granted['newuser'] == False:
+      return paper_launch_info(granted['user'].user, granted['paper'].paper, False)
+
+    uu = granted['unverified'].unverifieduser
+    paper = granted['paper'].paper
+    existing_user = get_one(User.objects.filter(email=uu.email))
+    if not (existing_user is None):
+      if not (paper in existing_user.paper_set.all()):
+        paper.authors.add(existing_user)
+        existing_user.paper_set.add(paper)
+        paper.unverified_authors.remove(uu)
+        paper.save()
+      self.updateGrant({
+        'newuser': False,
+        'user': existing_user,
+        'paper': paper
+      })
+      return paper_launch_info(existing_user, paper, False)
+
+    (account, user) = make_user(uu)
+    return paper_launch_info(user, granted['paper'].paper, True)
+
+# LaunchPaperHandler
+
+# Launches the paper page for a user and a paper
+
+# granted: {'user':|user:User|, 'paper':|paper:Paper|}
+# <- { <launch-paper-dict> }
 class LaunchPaperHandler(bcap.CapHandler):
   def get(self, granted):
-    if 'unverified' in granted:
-      uu = granted['unverified'].unverifieduser
-      conf = uu.conference
-      user = get_one(User.objects.filter(email=uu.email))
-      logger.error('Trying to create paper')
-      if user is None:
-        user = User(
-          email=uu.email,
-          full_name=uu.name,
-          conference=conf,
-          username=uu.email
-        )
-        user.save()
-        user.roles.add(get_one(Role.objects.filter(name='user')))
-
-      if not granted.has_key('paper'):
-        paper = Paper(
-          contact=user,
-          author=user.full_name,
-          title=u'',
-          target=conf.default_target,
-          conference=conf
-        )
-        paper.save()
-
-      else:
-        paper = granted['paper'].paper
-
-      paper.authors.add(user)
-      paper.save()
-      # Copy other papers?
-
-      key = str(uuid.uuid4())
-      account = Account(key=key, email=user.email)
-      account.save()
-
-      user.accounts.add(account)
-      user.save()
-
-      current = self.getCurrentCap()
-      launch = Launchable(
-        launchbase=bcap.this_server_url_prefix() + '/paper',
-        launchcap=bcap.cap_for_hash(current),
-        display=u'',
-        account=account
-      )
-      launch.save()
-
-      logger.error('Trying to update grant')
-      granted = {'writer': user, 'paper': paper}
-      self.updateGrant(granted)
-      newuser = True
-    else:
-      user = granted['writer'].user
-      paper = granted['paper'].paper
-      account = get_one(user.accounts.all())
-      key = account.key
-      newuser = False
-
-    papers = user.get_papers()
-    paper_jsons = []
-    
-    for p in papers:
-      paper_json = {
-        'getPaper': bcap.regrant('writer-paper-info', {
-          'writer': user,
-          'paper': p
-        }),
-        'setTitle': bcap.regrant('paper-set-title', p),
-        'setAuthor': bcap.regrant('paper-set-author', p),
-        'addAuthor': bcap.regrant('paper-add-author', {
-          'user': user,
-          'paper': paper
-        }),
-        'setPcPaper': bcap.regrant('paper-set-pcpaper', p),
-        'setTarget': bcap.regrant('paper-set-target', p),
-        'setTopics': bcap.regrant('paper-set-topics', p),
-        'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', p),
-        'updateComponents': bcap.regrant('paper-update-components', p),
-        'title': p.title,
-        'id': p.id
-      }
-      paper_jsons.append(paper_json)
-
-    logger.error('Trying to respond')
-    #TODO(joe): Add an option to attach an account to the paper
-    return bcap.bcapResponse({
-      'newUser': newuser,
-      'email': user.email,
-      'accountkey': key,
-      'addPassword': bcap.regrant('add-password', account),
-      'addGoogleAccount': bcap.regrant('add-google-account', user),
-      'credentials': user.get_credentials(),
-      'papers': paper_jsons,
-      'mainTitle': paper.title,
-      'addPaper': bcap.regrant('add-paper', user),
-      'getBasic': bcap.regrant('writer-basic', paper.conference),
-      'getAuthorText': bcap.regrant('author-text', paper.conference),
-    })
-
-
+    return paper_launch_info(granted['user'].user, granted['paper'].paper, False)
 
 class GetAdminHandler(bcap.CapHandler):
   def get(self, granted):
@@ -787,6 +863,8 @@ class ContinueInit():
       'paper-set-topics': PaperSetTopicsHandler,
       'paper-update-components': PaperUpdateComponentsHandler,
       'launch-paper': LaunchPaperHandler,
+      'launch-new-paper': LaunchNewPaperHandler,
+      'launch-attach-to-paper': LaunchAttachToPaperHandler,
       'get-papers-of-dv': GetPapersOfDVHandler,
       # End LaunchPaper handlers
 

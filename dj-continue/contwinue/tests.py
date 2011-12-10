@@ -1,5 +1,7 @@
 import time, datetime, os
 
+import json
+
 from django.core import mail
 from django.test import TestCase
 
@@ -12,6 +14,19 @@ import belaylibs.dj_belay as bcap
 
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.
+
+def make_author(full_name, email, conference):
+  account = Account(key=str(uuid.uuid4()))
+  account.save()
+  user = User(
+    full_name=full_name,
+    email=email,
+    conference=conference,
+    account=account
+  )
+  user.save()
+  return user
+  
 
 def has_keys(d, keys):
   return all([d.has_key(k) for k in keys])
@@ -61,6 +76,31 @@ class TestAuthorLaunch(Generator):
     super(TestAuthorLaunch, self).setUp()
     self.writer = User.objects.filter(username='writer')[0]
     self.paper = Paper.objects.filter(contact=self.writer)[0]
+    self.conference = self.writer.conference
+
+  def test_make_user(self):
+    email = 'harry@hogwarts.edu'
+    name = 'Harry Potter'
+    uu = UnverifiedUser(
+      email=email,
+      name=name,
+      conference=self.conference
+    )
+    uu.save()
+
+    self.paper.unverified_authors.add(uu)
+    self.paper.save()
+
+    (account, user) = make_user(uu)
+
+    newuser = get_one(User.objects.filter(email=user.email))
+
+    self.assertEqual(user.full_name, name)
+    self.assertEqual(user.email, email)
+    self.assertEqual(user.conference, self.conference)
+
+    self.assertFalse(self.paper in uu.paper_set.all())
+    self.assertTrue(self.paper in newuser.paper_set.all())
 
   def test_author_get(self):
     cap = bcap.grant('writer-paper-info', {'writer': self.writer, 'paper': self.paper})
@@ -76,6 +116,7 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(len(response['topics']), 1)
 
     self.assertEqual(response['authors'][0]['email'], self.writer.email)
+    self.assertEqual(len(response['authors']), 1)
 
   def test_extension(self):
     paperc = ComponentType.objects.filter(description='Paper')[0]
@@ -239,8 +280,8 @@ class TestAuthorLaunch(Generator):
     )
 
     granted_cap = get_one(Grant.objects.filter(
-      internal_path='launch-paper',
-      db_data=bcap.dbPreProcess({'unverified': uu, 'paper': paper})
+      internal_path='launch-attach-to-paper',
+      db_data=bcap.dbPreProcess({'newuser': True, 'unverified': uu, 'paper': paper})
     ))
     
     self.assertTrue(granted_cap is not None)
@@ -284,6 +325,170 @@ class TestAuthorLaunch(Generator):
     # Make sure the cap id shows up in the email
     self.assertTrue(mail.outbox[0].body.find(granted_cap.cap_id) != -1)
     settings.DEBUG=True
+
+  def test_launch_new_paper(self):
+    uu = UnverifiedUser(
+      name='Hermione Granger',
+      email='hermione@hogwarts.edu',
+      conference=self.writer.conference,
+      roletext='user'
+    )
+    uu.save()
+
+    launch_new_cap = bcap.grant('launch-new-paper', {
+      'create': True,
+      'unverified': uu
+    })
+
+    response = launch_new_cap.get()
+
+    newuser = get_one(User.objects.filter(email='hermione@hogwarts.edu'))
+    newpaper = get_one(Paper.objects.filter(contact=newuser))
+
+    self.assertTrue(response['newUser'])
+    self.assertEqual(newuser.full_name, uu.name)
+    self.assertEqual(newuser.email, uu.email)
+    self.assertEqual(newuser.conference, uu.conference)
+    self.assertEqual(newpaper.contact, newuser)
+    self.assertEqual(len(newpaper.authors.all()), 1)
+    self.assertEqual(len(response['papers']), 1)
+    self.assertEqual(response['papers'][0]['id'], newpaper.id)
+    self.assertEqual(len(newpaper.unverified_authors.all()), 0)
+    self.assertEqual(len(newpaper.authors.all()), 1)
+
+    the_grant = get_one(Grant.objects.filter(cap_id=bcap.cap_id_from_url(launch_new_cap.serialize())))
+    self.assertEqual(
+      the_grant.db_data,
+      bcap.dbPreProcess({'create': False, 'user': newuser, 'paper': newpaper})
+    )
+
+    # Now, when you invoke again immediately, the *only* difference should be
+    # the newUser flag
+    response2 = launch_new_cap.get()
+    self.assertFalse(response2['newUser'])
+
+    del response['newUser']
+    del response2['newUser']
+    
+    self.assertEqual(bcap.dataPreProcess(response), bcap.dataPreProcess(response2))
+
+
+  # If we try to launch with an unverified user who already has a user with
+  # that email verified, we simply launch with that account
+  def test_launch_new_paper_existing_uu(self):
+    user = make_author(
+      full_name='Ron Weasley',
+      email='ronald@hogwarts.edu',
+      conference=self.conference
+    )
+
+    uu = UnverifiedUser(
+      name='Ron Different',
+      email='ron@hogwarts.edu',
+      roletext='user',
+      conference=self.conference
+    )
+    uu.save()
+
+    users_before = User.objects.all()
+
+    launch_new_cap = bcap.grant('launch-new-paper', {
+      'create': True,
+      'unverified': uu
+    })
+    response = launch_new_cap.get()
+
+    users_after = User.objects.all()
+
+    self.assertEqual(len(response['papers']), 1)
+    self.assertEqual(set(users_before), set(users_after))
+    self.assertEqual(response['mainTitle'], u'')
+
+  def test_launch_attach_to_paper(self):
+    uu = UnverifiedUser(
+      name='Hermione Granger',
+      email='hermione@hogwarts.edu',
+      conference=self.writer.conference,
+      roletext='user'
+    )
+    uu.save()
+
+    paper = self.paper
+    paper.unverified_authors.add(uu)
+
+    launch_new_cap = bcap.grant('launch-attach-to-paper', {
+      'newuser': True,
+      'unverified': uu,
+      'paper': paper
+    })
+
+    response = launch_new_cap.get()
+
+    self.assertEqual(response['mainTitle'], paper.title)
+    self.assertTrue(response['newUser'])
+
+    newuser = get_one(User.objects.filter(email='hermione@hogwarts.edu'))
+    self.assertTrue(paper in newuser.paper_set.all())
+    self.assertEqual(len(uu.paper_set.all()), 0)
+    self.assertEqual(len(newuser.paper_set.all()), 1)
+
+  def test_launch_attach_to_paper_existing(self):
+    user = make_author(
+      full_name='Luna Lovegood',
+      email='luna@hogwarts.edu',
+      conference=self.conference
+    )
+
+    uu = UnverifiedUser(
+      name='Luna Lovebad',
+      email='luna@hogwarts.edu',
+      roletext='user',
+      conference=self.conference
+    )
+    uu.save()
+
+    paper = Paper(
+      contact=self.writer,
+      title=u'Multicore Polyjuice Potion',
+      conference=self.conference,
+      target=self.conference.default_target
+    )
+    paper.save()
+
+    authors_before = list(paper.authors.all())
+    
+    launch_cap = bcap.grant('launch-attach-to-paper', {
+      'newuser': True,
+      'unverified': uu,
+      'paper': paper
+    })
+
+    response = launch_cap.get()
+
+    newuser = get_one(User.objects.filter(email='luna@hogwarts.edu'))
+    newpaper = get_one(Paper.objects.filter(title=u'Multicore Polyjuice Potion'))
+
+    authors_after = newpaper.authors.all()
+    papers_after = newuser.paper_set.all()
+
+    self.assertEqual(len(authors_before), 0)
+    self.assertEqual(len(authors_after), 1)
+    self.assertEqual(len(papers_after), 1)
+
+    self.assertEqual(user, newuser)
+    self.assertEqual(authors_after[0], newuser)
+
+    the_grant = get_one(Grant.objects.filter(cap_id=bcap.cap_id_from_url(launch_cap.serialize())))
+    self.assertEqual(
+      json.loads(the_grant.db_data),
+      json.loads(bcap.dbPreProcess({
+        'newuser': False,
+        'user': newuser,
+        'paper': paper
+      }))
+    )
+    
+    
 
 class TestAdminPage(Generator):
   def setUp(self):

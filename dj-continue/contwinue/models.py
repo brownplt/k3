@@ -3,6 +3,7 @@ from django.db import models
 import time
 import logging
 import sha
+import uuid
 
 logger = logging.getLogger('default')
 
@@ -136,9 +137,12 @@ class Conference(bcap.Grantable):
       grace_hours=0, size_limit=0)
     paper.save()
 
+    account_adm = Account(key=str(uuid.uuid4()))
+    account_adm.save()
     adm = User(conference=c, username=admin_user, 
       full_name=admin_name,
-      email=admin_email)
+      email=admin_email,
+      account=account_adm)
     # 2 saves because you can't add ManyToMany relationships until the instance
     # is saved
     adm.save()
@@ -354,9 +358,8 @@ class ReviewComponentType(bcap.Grantable):
       'pcOnly' : self.pc_only
     }
 
-class Launchable(): pass
+
 class Account(bcap.Grantable):
-  email = models.TextField(max_length=100)
   key = models.TextField(max_length=36)
 
   def get_launchables(self):
@@ -376,12 +379,12 @@ class Account(bcap.Grantable):
     }
 
 class User(bcap.Grantable):
-  username = models.CharField(max_length=30)
+  username = models.TextField()
   full_name = models.TextField()
   email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
-  accounts = models.ManyToManyField(Account)
+  account = models.ForeignKey(Account)
 
   def role_names(self):
     return [r.name for r in self.roles.all()]
@@ -402,7 +405,7 @@ class User(bcap.Grantable):
   def get_credentials(self):
     googles = []
     contwinues = []
-    for account in self.accounts.all():
+    for account in Account.objects.filter(user=self).all():
       google = get_one(GoogleCredentials.objects.filter(account=account))
       if not (google is None): googles.append(google)
       contwinue = get_one(ContinueCredentials.objects.filter(account=account))
@@ -539,8 +542,6 @@ class Review(bcap.Grantable):
   last_saved = models.IntegerField()
   conference = models.ForeignKey(Conference)
 
-# For accounts...
-
 class Launchable(bcap.Grantable):
   account = models.ForeignKey(Account)
   launchbase = models.TextField(max_length=500)
@@ -567,10 +568,11 @@ class PendingLogin(bcap.Grantable):
 class GoogleCredentials(bcap.Grantable):
   identity = models.CharField(max_length=200)
   account = models.ForeignKey(Account)
+  email = models.EmailField()
 
   def to_json(self):
     return {
-      'email': self.account.email
+      'email': self.email
     }
 
 class ContinueCredentials(bcap.Grantable):
