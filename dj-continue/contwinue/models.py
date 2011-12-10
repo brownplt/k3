@@ -416,7 +416,7 @@ class User(bcap.Grantable):
     }
 
   def get_papers(self):
-    return sorted(self.paper_set.all(), key=lambda p: p.id)
+    return sorted(self.papers.all(), key=lambda p: p.id)
 
 class UnverifiedUser(bcap.Grantable):
   name = models.TextField()

@@ -641,9 +641,8 @@ class LaunchAttachToPaperHandler(bcap.CapHandler):
 
     existing_user = get_one(User.objects.filter(email=uu.email))
     if not (existing_user is None):
-      if not (paper in existing_user.paper_set.all()):
-        paper.authors.add(existing_user)
-        existing_user.paper_set.add(paper)
+      if not (paper in existing_user.papers.all()):
+        existing_user.papers.add(paper)
         paper.unverified_authors.remove(uu)
         paper.save()
         existing_user.save()
