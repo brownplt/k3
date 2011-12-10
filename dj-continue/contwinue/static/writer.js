@@ -302,8 +302,9 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
 		)),
 		DIV(paraString(authorText[0],'',80000)),
 		H3('Components'),
-		(missinginfo == 'Submission Complete' ? P(
-			'You have finished your submission. You may update any component until its deadline.') : P('You have not yet completed your submission. You may submit or update any component until its deadline.')),
+		(missinginfo == 'Submission Complete' ?
+       P('You have finished your submission. You may update any component until its deadline.')
+     : P('You have not yet completed your submission. You may submit or update any component until its deadline.  Note that to submit, you must click the Submit button at the bottom of the page.')),
 		errorsDomB,
 		FORM({target:paperFrame(paperInfo),action:paperCaps.updateComponents.serialize(),method:'post',encoding:'multipart/form-data'},
 		TABLE({className:'key-value'},TBODY(
