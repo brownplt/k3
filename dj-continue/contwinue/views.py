@@ -121,6 +121,21 @@ def get_basic(request):
 
 paper = make_get_handler('writer.html', {})
 
+# UserUpdateNameHandler
+
+# Change a user's full_name.  Returns the name after updating it
+
+# granted: |user:User|
+# -> {'name' : uString}
+# <- {'name' : uString}
+class UserUpdateNameHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['name']
+  def post(self, granted, args):
+    user = granted.user
+    user.full_name = args['name']
+    user.save()
+    return bcap.bcapResponse({'name': user.full_name})
+
 class WriterBasicHandler(bcap.CapHandler):
   def get(self, granted):
     basic = granted.conference.get_writer_basic()
@@ -508,6 +523,8 @@ def paper_launch_info(user, paper, newuser):
   
   for p in papers:
     paper_json = {
+      'paperContactName': paper.contact.full_name,
+      'paperContactEmail': paper.contact.email,
       'getPaper': bcap.regrant('writer-paper-info', {
         'writer': user,
         'paper': p
@@ -530,7 +547,9 @@ def paper_launch_info(user, paper, newuser):
 
   return bcap.bcapResponse({
     'newUser': newuser,
+    'name': user.full_name,
     'email': user.email,
+    'updateName': bcap.regrant('user-update-name', user),
     'accountkey': account.key,
     'addPassword': bcap.regrant('add-password', account),
     'addGoogleAccount': bcap.regrant('add-google-account', user),
@@ -849,6 +868,8 @@ class GetPapersOfDVHandler(bcap.CapHandler):
 class ContinueInit():
   def process_request(self, request):
     bcap.set_handlers(bcap.default_prefix, {
+      'user-update-name': UserUpdateNameHandler,
+
       'add-password': AddPasswordHandler,
       'add-google-account': AddGoogleAccountHandler,
       'add-paper': AddPaperHandler,

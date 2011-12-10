@@ -287,11 +287,19 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
                 true, paperCaps.setTopics)
     .toTableRow('Topic(s):');
 	var errorsDomB = errorsB.transform_b(function(e) {if(e.error) return P({className:'error'},e.error); else return SPAN();});
+
+  var userNameB = new TextInputWidget(launchInfo.name, 40).
+    belayServerSaving(function(input) {
+      return genRequest({fields:{name:input}})
+    }, false, launchInfo.updateName).
+    toTableRow('Your Name:');
+
 	return DIVB(launchInfo.newUser ? newUserWidget() : '',
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
 		TABLEB({className:'key-value'},TBODYB(
-			TR(TH('Contact:'),TD(launchInfo.fullName,'<',launchInfo.email,'>')),
+      userNameB.dom,
+			TR(TH('Contact:'),TD(paperCaps.paperContactName,' <',paperCaps.paperContactEmail,'>')),
 			basicInfo.info.showNum ? TR(TH('Paper #:'),TD(paperInfo.id)) : '',
 			TR(TH('Remaining Components:'),TD({className:(missinginfo == 'Submission Complete' ? 'yes-submitted' : 'normal')},missinginfo)),
 				titleWidget.dom,

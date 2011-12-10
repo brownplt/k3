@@ -41,6 +41,7 @@ class Generator(TestCase):
     generate.generate()
     init = ContinueInit()
     init.process_request(None)
+    self.conference = Conference.get_by_shortname('SC')
 
   def tearDown(self):
     Conference.get_by_shortname('SC').delete()
@@ -500,8 +501,22 @@ class TestAuthorLaunch(Generator):
         'paper': paper
       }))
     )
-    
-    
+
+class TestUpdateAuthorName(Generator):
+  def test_change_name(self):
+    user = make_author(
+      full_name=u'Albus Dumbledore',
+      email='dominator@hogwarts.edu',
+      conference=self.conference
+    )
+
+    change_name = bcap.grant('user-update-name', user)
+    response = change_name.post({'name': u'New Dumbledore'})
+
+    self.assertEqual(response, {'name': u'New Dumbledore'})
+
+    userafter = get_one(User.objects.filter(email='dominator@hogwarts.edu'))
+    self.assertEqual(userafter.full_name, u'New Dumbledore')
 
 class TestAdminPage(Generator):
   def setUp(self):
