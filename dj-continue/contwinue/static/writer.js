@@ -256,7 +256,14 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
         }, true, paperCaps.addAuthor);
     });
 
-  var authorsRow = TRB(TH('Authors'), TDB(authorsWidget.dom));
+  var authorsRow = TRB(
+    TH('Authors'),
+    TDB(P({
+      style:{
+       'font-style':'italic'
+      }},
+      'Adding an author will send them a message with a link to edit this paper.'),
+    authorsWidget.dom));
     
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
 			.belayServerSaving(function(pcpaper) {
