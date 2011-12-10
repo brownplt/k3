@@ -446,7 +446,7 @@ class Topic(bcap.Grantable):
 
 class Paper(bcap.Grantable):
   contact = models.ForeignKey(User)
-  authors = models.ManyToManyField(User, related_name='authors')
+  authors = models.ManyToManyField(User, related_name='papers')
   unverified_authors = models.ManyToManyField(UnverifiedUser)
   author = models.TextField()
   title = models.TextField(default='No Paper Title Given')

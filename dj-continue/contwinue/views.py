@@ -564,9 +564,7 @@ def make_user(uu):
 
   for paper in uu.paper_set.all():
     paper.unverified_authors.remove(uu)
-    user.paper_set.add(paper)
-
-  user.save()
+    user.papers.add(paper)
 
   return (account, user)
 
@@ -640,6 +638,7 @@ class LaunchAttachToPaperHandler(bcap.CapHandler):
 
     uu = granted['unverified'].unverifieduser
     paper = granted['paper'].paper
+
     existing_user = get_one(User.objects.filter(email=uu.email))
     if not (existing_user is None):
       if not (paper in existing_user.paper_set.all()):
@@ -647,6 +646,7 @@ class LaunchAttachToPaperHandler(bcap.CapHandler):
         existing_user.paper_set.add(paper)
         paper.unverified_authors.remove(uu)
         paper.save()
+        existing_user.save()
       self.updateGrant({
         'newuser': False,
         'user': existing_user,

@@ -100,7 +100,7 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(user.conference, self.conference)
 
     self.assertFalse(self.paper in uu.paper_set.all())
-    self.assertTrue(self.paper in newuser.paper_set.all())
+    self.assertTrue(self.paper in newuser.papers.all())
 
   def test_author_get(self):
     cap = bcap.grant('writer-paper-info', {'writer': self.writer, 'paper': self.paper})
@@ -406,15 +406,23 @@ class TestAuthorLaunch(Generator):
 
   def test_launch_attach_to_paper(self):
     uu = UnverifiedUser(
-      name='Hermione Granger',
-      email='hermione@hogwarts.edu',
+      name='Severus Snape',
+      email='jerk@hogwarts.edu',
       conference=self.writer.conference,
       roletext='user'
     )
     uu.save()
 
-    paper = self.paper
+    paper = Paper(
+      contact=self.writer,
+      title=u'Potions and Stuff',
+      conference=self.conference,
+      target=self.conference.default_target
+    )
+    paper.save()
+    paper.authors.add(self.writer)
     paper.unverified_authors.add(uu)
+    self.assertTrue(uu in paper.unverified_authors.all())
 
     launch_new_cap = bcap.grant('launch-attach-to-paper', {
       'newuser': True,
@@ -427,10 +435,15 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(response['mainTitle'], paper.title)
     self.assertTrue(response['newUser'])
 
-    newuser = get_one(User.objects.filter(email='hermione@hogwarts.edu'))
-    self.assertTrue(paper in newuser.paper_set.all())
-    self.assertEqual(len(uu.paper_set.all()), 0)
-    self.assertEqual(len(newuser.paper_set.all()), 1)
+    newuser = get_one(User.objects.filter(email='jerk@hogwarts.edu'))
+    newuu = get_one(UnverifiedUser.objects.filter(email='jerk@hogwarts.edu'))
+    newpaper = get_one(Paper.objects.filter(title=u'Potions and Stuff'))
+
+    self.assertFalse(newuu in newpaper.unverified_authors.all())
+    self.assertFalse(newpaper in newuu.paper_set.all())
+    self.assertTrue(newpaper in newuser.papers.all())
+    self.assertTrue(newuser in newpaper.authors.all())
+    self.assertEqual(len(newuser.papers.all()), 1)
 
   def test_launch_attach_to_paper_existing(self):
     user = make_author(
@@ -469,7 +482,7 @@ class TestAuthorLaunch(Generator):
     newpaper = get_one(Paper.objects.filter(title=u'Multicore Polyjuice Potion'))
 
     authors_after = newpaper.authors.all()
-    papers_after = newuser.paper_set.all()
+    papers_after = newuser.papers.all()
 
     self.assertEqual(len(authors_before), 0)
     self.assertEqual(len(authors_after), 1)
