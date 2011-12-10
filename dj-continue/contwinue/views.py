@@ -244,6 +244,8 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
 
     def save_text(ct, excomp, val):
       if ct.fmt == 'Text':
+        if (excomp and val == excomp.value) or (not excomp and val ==''):
+          return
         if excomp: excomp.delete() # TODO(joe): deleting the same as destroySelf()?
         newcomp = Component(
           conference=conf, type=ct, paper=paper,
