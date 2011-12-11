@@ -147,6 +147,7 @@ class WriterPaperInfoHandler(bcap.CapHandler):
     caller = granted['writer'].user
     author_json = []
     for author in paper.authors.all():
+      if caller == author: continue
       if caller == paper.contact and author != caller:
         remove = bcap.grant('paper-remove-author', {
           'user': author,

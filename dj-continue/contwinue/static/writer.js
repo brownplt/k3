@@ -149,6 +149,27 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].untilStr; else return compType.deadlineStr;
 	};
 
+  var userNameB = new TextInputWidget(launchInfo.name, 40).
+    belayServerSaving(function(input) {
+      return genRequest({fields:{name:input}})
+    }, false, launchInfo.updateName).
+    toTableRow('Your Name:');
+
+  var updatedNameE = userNameB.events.serverResponse.transform_e(function(r) {
+    return r.name;
+  });
+  var updatedNameB = updatedNameE.startsWith(launchInfo.name);
+  var contactName = paperCaps.paperContactName;
+  var contactEmail = paperCaps.paperContactEmail;
+  var contactNameB = updatedNameE.transform_e(function(name) {
+    if(launchInfo.email === contactEmail) {
+      return name;
+    }
+    else {
+      return contactEmail;
+    }
+  }).startsWith(contactName);
+
   var newUserWidget = function() {
     var dismiss = P(A({href:'javascript://Close', id:'dismiss'}, 'Dismiss'));
     var d = DIV({id: 'new-user-message',
@@ -193,7 +214,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
 			var sizelimit = compType.sizelimit;
 			return TD(
 				submittedpara,
-				compVal ? P('Current: ',A({'href':'Author/'+compType.id+'.'+cvext+'?cookie='+authCookie},'download'),BR(),
+				compVal ? P('Current: ',A({'href':'Author/'+compType.id+'.'+cvext+'?cookie='+authCookie, target: '_blank'},'download'),BR(),
 					SPAN({className:'small'},'Last modified: ',compVal.lsStr)) : '',
 				[INPUT({type:'file',name:compType.abbr,size:50}),
 				(compType.format == 'PDF' ? P({className:'small'},'Use PDF format only.') : ''),
@@ -218,6 +239,10 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
       }, true, paperCaps.setTitle)
 			.toTableRow('Paper Title:');
 
+  var titleB = titleWidget.events.serverResponse.transform_e(function(r) {
+    return r.title;
+  }).startsWith(paperInfo.title);
+
   insertValueB(lift_b(function(value) {
     var ret;
     if(typeof value === 'string') ret = value;
@@ -225,6 +250,12 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
     return tabTitle(ret);
   }, titleWidget.behaviors.value), paperDomId(paperInfo), 'innerText');
 
+  paperInfo.authors.push({
+    name: updatedNameB,
+    email: launchInfo.email,
+    added: true,
+    remove: null
+  });
   var authorsWidget = new ModListWidget(
     paperInfo.unverifiedAuthors.concat(paperInfo.authors),
     TR(TH('Name'), TH('Email')),
@@ -233,7 +264,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
         {del: unverified.remove === null ? new ClickWidget(SPAN(),null) : new LinkWidget('Remove')},
         function() { return unverified; },
         function(_,delobj) {
-          return TR(TD(unverified.name), TD(unverified.email), delobj.del);
+          return TRB(TDB(unverified.name), TD(unverified.email), delobj.del);
         });
       ret.events.del = postE(ret.events.del.transform_e(function() {
         return [unverified.remove, {}]
@@ -256,14 +287,31 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
         }, true, paperCaps.addAuthor);
     });
 
+  var hasTitleAndNameB = lift_b(function(name, title) {
+    return name !== '' && title !== '';
+  }, updatedNameB, titleB);
+
   var authorsRow = TRB(
     TH('Authors'),
-    TDB(P({
+    TDB(PB({
       style:{
        'font-style':'italic'
       }},
-      'Adding an author will send them a message with a link to edit this paper.'),
-    authorsWidget.dom));
+      'Adding an author will send them a message with a link to edit this paper.', 
+      SPANB({
+        style: {
+          display: hasTitleAndNameB.lift_b(function(tn) {
+            return !tn ? 'block' : 'none'
+          })
+        }}, '  To add authors, make sure you\'ve entered your name and a title for the paper.')),
+    DIVB({
+        style: {
+          display: hasTitleAndNameB.lift_b(function(tn) { 
+            return tn ? 'table-row' : 'none';
+          })
+        }
+      },
+      authorsWidget.dom)));
     
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
 			.belayServerSaving(function(pcpaper) {
@@ -288,18 +336,13 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
     .toTableRow('Topic(s):');
 	var errorsDomB = errorsB.transform_b(function(e) {if(e.error) return P({className:'error'},e.error); else return SPAN();});
 
-  var userNameB = new TextInputWidget(launchInfo.name, 40).
-    belayServerSaving(function(input) {
-      return genRequest({fields:{name:input}})
-    }, false, launchInfo.updateName).
-    toTableRow('Your Name:');
 
 	return DIVB(launchInfo.newUser ? newUserWidget() : '',
 		((missinginfo == 'Submission Complete') ? '' : P('Please finish providing information about your submission.')),
 		H3('General Information'),
 		TABLEB({className:'key-value'},TBODYB(
       userNameB.dom,
-			TR(TH('Contact:'),TD(paperCaps.paperContactName,' <',paperCaps.paperContactEmail,'>')),
+			TRB(TH('Paper Contact:'),TDB(contactNameB,' <',paperCaps.paperContactEmail,'>')),
 			basicInfo.info.showNum ? TR(TH('Paper #:'),TD(paperInfo.id)) : '',
 			TR(TH('Remaining Components:'),TD({className:(missinginfo == 'Submission Complete' ? 'yes-submitted' : 'normal')},missinginfo)),
 				titleWidget.dom,
@@ -384,13 +427,16 @@ function loader() {
         }
       },
       A({id:'closenew',style:{float:'right',width:'1em','text-align':'center'},href:'javascript://Close'}, 'X'),
-      P(STRONG({'padding-right': '1em'}, 'Enter your paper\'s title (you can change it later):')),
+      P(STRONG({'padding-right': '1em'}, 'Enter the new paper\'s title (you can change it later):')),
       INPUT({id:'newtitle', 'height': '3em', size: '50', type:'text'}),
       BR(),
       INPUT({id: 'submitnew', 'height': '3em', size: '50', type:'button', value:'Submit'})
     );
     insertDomB(newPaperDiv, 'tab_list', 'after');
     var subClicksE = extractEvent_e('new_submission', 'click').transform_e(function() {
+      // TODO(joe): how to do this with flapjax?  focusing before it shows
+      // up doesn't work, so i use this dirty hack to do it on the next turn
+      setTimeout(function() { getObj('newtitle').focus(); }, 0);
       return 'block';
     });
     var closeClicksE = extractEvent_e('closenew', 'click').transform_e(function() {
@@ -403,6 +449,10 @@ function loader() {
       extractEvent_e('newtitle', 'keypress').filter_e(function(v) {
         return v.keyCode === 13;
       }));
+    insertValueB(submitPaperE.constant_e(true).startsWith(false),
+      'newtitle', 'disabled');
+    insertValueB(submitPaperE.constant_e(true).startsWith(false),
+      'submitnew', 'disabled');
     var postDataE = submitPaperE.transform_e(function(_) {
       return [di.addPaper, {title: getObj('newtitle').value}];
     });
