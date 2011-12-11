@@ -518,6 +518,74 @@ class TestUpdateAuthorName(Generator):
     userafter = get_one(User.objects.filter(email='dominator@hogwarts.edu'))
     self.assertEqual(userafter.full_name, u'New Dumbledore')
 
+class TestRemoveAuthor(Generator):
+  def test_remove_existing_user(self):
+    user = make_author(
+      full_name=u'Nevill Longbottom',
+      email='neville@hogwarts.edu',
+      conference=self.conference
+    )
+    user2 = make_author(
+      full_name='Draco Malfoy',
+      email='draco@hogwarts.edu',
+      conference=self.conference
+    )
+
+    paper = Paper(
+      contact=user,
+      title=u'Defense Against the Dark Farts',
+      target=self.conference.default_target,
+      conference=self.conference
+    )
+    paper.save()
+    paper.authors.add(user, user2)
+
+    remove_author = bcap.grant('paper-remove-author', {
+      'paper': paper,
+      'user': user2
+    })
+    response = remove_author.post({})
+
+    self.assertEqual({'success': True}, response)
+
+    self.assertTrue(user in paper.authors.all())
+    self.assertTrue(user2 not in paper.authors.all())
+
+  def test_remove_author_unverified(self):
+    uhagrid = UnverifiedUser(
+      name='Rubeus Hagrid',
+      email='facilities@hogwarts',
+      conference=self.conference
+    )
+    uhagrid.save()
+    minerva = make_author(
+      full_name='Minerva McGonnagal',
+      email='mcg@hogwarts.edu',
+      conference=self.conference
+    )
+
+    paper = Paper(
+      contact=minerva,
+      title=u'Transmuting Groundskeepers to Professors',
+      target=self.conference.default_target,
+      conference=self.conference
+    )
+    paper.save()
+    paper.authors.add(minerva)
+    paper.unverified_authors.add(uhagrid)
+
+    remove_cap = bcap.grant('paper-remove-author', {
+      'unverified': uhagrid,
+      'paper': paper
+    })
+
+    response = remove_cap.post({})
+
+    self.assertEqual({'success': True}, response)
+
+    self.assertTrue(uhagrid not in paper.unverified_authors.all())
+    self.assertTrue(minerva in paper.authors.all())
+
 class TestAdminPage(Generator):
   def setUp(self):
     super(TestAdminPage, self).setUp()

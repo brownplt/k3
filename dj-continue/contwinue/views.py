@@ -147,10 +147,10 @@ class WriterPaperInfoHandler(bcap.CapHandler):
     caller = granted['writer'].user
     author_json = []
     for author in paper.authors.all():
-      if author == caller:
-        remove = None
-      if author == paper.contact:
+      if caller == paper.contact and author != caller:
         remove = {}
+      elif author == caller:
+        remove = None
       else: 
         remove = None
       author_json.append({
@@ -161,6 +161,10 @@ class WriterPaperInfoHandler(bcap.CapHandler):
       }) 
     unverified_author_json = []
     for author in paper.unverified_authors.all():
+      if author == paper.contact:
+        remove = {}
+      else:
+        remove = None
       unverified_author_json.append({
         'email': author.email,
         'name': author.name,
@@ -468,6 +472,26 @@ class AddAuthorHandler(bcap.CapHandler):
 
       return bcap.bcapResponse({'name': existing_user.full_name, 'email': email})
 
+
+# RemoveAuthorHandler
+
+# Remove an author from a paper.  The author can be verified or unverified.
+
+# Granted:  {'user':|user:User|, 'paper':|paper:Paper|}
+#         U {'unverified':|unverified:Unverified|, 'paper':|paper:Paper|}
+# -> {}
+# <- {'success': True}
+class RemoveAuthorHandler(bcap.CapHandler):
+  def post_arg_names(self): return []
+  def post(self, granted, args):
+    paper = granted['paper'].paper
+    if granted.has_key('user'):
+      paper.authors.remove(granted['user'].user)
+      return bcap.bcapResponse({'success': True})
+    elif granted.has_key('unverified'):
+      paper.unverified_authors.remove(granted['unverified'].unverifieduser)
+      return bcap.bcapResponse({'success': True})
+    return logWith404(logger, 'No user or unverified in RemoveAuthorHandler')
 
 class AddPaperHandler(bcap.CapHandler):
   def post_arg_names(self): return ['title']
@@ -879,6 +903,7 @@ class ContinueInit():
       'paper-deadline-extensions': PaperDeadlineExtensionsHandler,
       'paper-set-title': PaperSetTitleHandler,
       'paper-add-author': AddAuthorHandler,
+      'paper-remove-author': RemoveAuthorHandler,
       'paper-set-author': PaperSetAuthorHandler,
       'paper-set-pcpaper': PaperSetPcPaperHandler,
       'paper-set-target': PaperSetTargetsHandler,
