@@ -148,28 +148,32 @@ class WriterPaperInfoHandler(bcap.CapHandler):
     author_json = []
     for author in paper.authors.all():
       if caller == paper.contact and author != caller:
-        remove = {}
-      elif author == caller:
-        remove = None
+        remove = bcap.grant('paper-remove-author', {
+          'user': author,
+          'paper': paper
+        })
       else: 
         remove = None
       author_json.append({
         'email': author.email,
         'name': author.full_name,
         'added': True,
-        'remove': remove # Add the removal cap
+        'remove': remove
       }) 
     unverified_author_json = []
     for author in paper.unverified_authors.all():
-      if author == paper.contact:
-        remove = {}
+      if caller == paper.contact:
+        remove = bcap.grant('paper-remove-author', {
+          'unverified': author,
+          'paper': paper
+        })
       else:
         remove = None
       unverified_author_json.append({
         'email': author.email,
         'name': author.name,
         'added': False,
-        'remove': {} # Add the removal cap
+        'remove': remove
       }) 
     paper_json = paper.get_paper()
     paper_json['authors'] = author_json
@@ -446,7 +450,15 @@ class AddAuthorHandler(bcap.CapHandler):
       e_response = send_and_log_email(subject, body, email, fromaddr, logger)
       if e_response: return e_response
 
-      return bcap.bcapResponse({'name': name, 'email': email})
+      remove = bcap.grant('paper-remove-author', {
+        'unverified': uu,
+        'paper': paper
+      })
+      return bcap.bcapResponse({
+        'name': name,
+        'email': email,
+        'remove': remove
+      })
     else:
       paper.authors.add(existing_user)
       paper.save()
@@ -470,7 +482,15 @@ class AddAuthorHandler(bcap.CapHandler):
       e_response = send_and_log_email(subject, body, email, fromaddr, logger)
       if e_response: return e_response
 
-      return bcap.bcapResponse({'name': existing_user.full_name, 'email': email})
+      remove = bcap.grant('paper-remove-author', {
+        'user': existing_user,
+        'paper': paper
+      })
+      return bcap.bcapResponse({
+        'name': existing_user.full_name,
+        'email': email,
+        'remove': remove
+      })
 
 
 # RemoveAuthorHandler
