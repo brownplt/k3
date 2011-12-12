@@ -409,8 +409,9 @@ class User(bcap.Grantable):
     for account in Account.objects.filter(user=self).all():
       google = get_one(GoogleCredentials.objects.filter(account=account))
       if not (google is None): googles.append(google)
-      contwinue = get_one(ContinueCredentials.objects.filter(account=account))
-      if not (contwinue is None): contwinues.append(contwinue)
+      contwinue_set = ContinueCredentials.objects.filter(account=account)
+      for contwinue in contwinue_set:
+        contwinues.append(contwinue)
     return {
       'googleCreds': [g.to_json() for g in googles],
       'continueCreds': [c.to_json() for c in contwinues]
