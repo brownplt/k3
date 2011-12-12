@@ -82,6 +82,8 @@ def invokeCapURL(capURL, meth, data=""):
           self.status = result.status_code
 
       return Wrapper()
+    elif result.has_header('Content-Disposition'):
+      return result
     else:
       if result.status_code >= 400:
         raise BelayException('invokeCapURL Failed')

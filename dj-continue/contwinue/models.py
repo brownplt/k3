@@ -1,4 +1,5 @@
 import belaylibs.models as bcap
+import belaylibs.dj_belay as belay
 from django.db import models
 import time
 import logging
@@ -500,10 +501,12 @@ class Component(bcap.Grantable):
   conference = models.ForeignKey(Conference)
 
   def to_json(self):
+    get_cap = belay.grant('get-component-file', self)
     return {
       'typeID': self.type.id,
       'lsStr': convertTime(self.lastSubmitted),
-      'value': self.value
+      'value': self.value,
+      'getComponent': get_cap
     }
 
 class DeadlineExtension(bcap.Grantable):

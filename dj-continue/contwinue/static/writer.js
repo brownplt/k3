@@ -227,14 +227,11 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
 			);
 		}
 		else {
-		    	var cvext = '';
-			if(compVal && compVal.value.indexOf('.') != -1)
-			    cvext = compVal.value.substr(compVal.value.indexOf('.')+1);
 			var slstr = '';
 			var sizelimit = compType.sizelimit;
 			return TD(
 				submittedpara,
-				compVal ? P('Current: ',A({'href':'Author/'+compType.id+'.'+cvext+'?cookie='+authCookie, target: '_blank'},'download'),BR(),
+				compVal ? P('Current: ',A({'href':compVal.getComponent.serialize(), target: '_blank'},'download'),BR(),
 					SPAN({className:'small'},'Last modified: ',compVal.lsStr)) : '',
 				[INPUT({type:'file',name:compType.abbr,size:50}),
 				(compType.format == 'PDF' ? P({className:'small'},'Use PDF format only.') : ''),

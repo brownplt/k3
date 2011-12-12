@@ -241,6 +241,33 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(aftercomponent.value, 'This is the abstract')
     self.assertEqual(aftercomponent.mimetype, 'text/plain')
 
+  def test_get_component_file(self):
+    f = open('testdata/testpdf.pdf', 'r')
+
+    pcomp = ComponentType.objects.filter(abbr='P')[0]
+
+    filesDict = {
+      'P': f
+    }
+    textDict = {    }
+
+    handler = PaperUpdateComponentsHandler()
+    response = handler.post_files(self.paper, textDict, filesDict)
+
+    self.assertEqual(bcap.dataPostProcess(response.content), True)
+
+    aftercomponent = get_one(Component.objects.filter(type=pcomp, paper=self.paper))
+
+    get_component = bcap.grant('get-component-file', aftercomponent)
+
+    response = get_component.get()
+
+    f2 = open('testdata/testpdf.pdf', 'r')
+    self.assertEqual(response.content, f2.read())
+    self.assertEqual(response.__getitem__('Content-Disposition'), 'attachment; filename=testdata/testpdf.pdf')
+    f2.close()
+
+
   def test_update_non_pdf(self):
     f = open('testdata/not-a-pdf.txt', 'r')
 
@@ -587,6 +614,7 @@ class TestRemoveAuthor(Generator):
 
     self.assertTrue(uhagrid not in paper.unverified_authors.all())
     self.assertTrue(minerva in paper.authors.all())
+
 
 class TestAdminPage(Generator):
   def setUp(self):

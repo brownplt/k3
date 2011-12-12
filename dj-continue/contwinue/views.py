@@ -12,6 +12,7 @@ import settings
 from contwinue.models import *
 from contwinue.email import send_and_log_email, notFoundResponse
 import contwinue.email_strings as strings
+import contwinue.files as files
 
 import belaylibs.dj_belay as bcap
 from belaylibs.models import Grant
@@ -238,6 +239,17 @@ class PaperSetTopicsHandler(bcap.CapHandler):
     paper.save()
     paper.conference.update_last_change(granted.paper)
     return bcap.bcapResponse(granted.paper.get_paper())
+
+class GetComponentFileHandler(bcap.CapHandler):
+  def get(self, granted):
+    comp = granted.component
+    if comp.type.fmt == 'Text':
+      return logWith404(logger, 'Couldn\'t get component of type text')
+    fname = os.path.join(settings.SAVEDFILES_DIR, '%d-%d-component' %
+      (comp.paper.id, comp.type.id))
+    response = files.file_response(fname, comp.value)
+    print(response.__class__)
+    return response
 
 class PaperUpdateComponentsHandler(bcap.CapHandler):
   def post_arg_names(self): return []
@@ -947,6 +959,7 @@ class ContinueInit():
       'paper-set-target': PaperSetTargetsHandler,
       'paper-set-topics': PaperSetTopicsHandler,
       'paper-update-components': PaperUpdateComponentsHandler,
+      'get-component-file': GetComponentFileHandler,
       'launch-paper': LaunchPaperHandler,
       'launch-new-paper': LaunchNewPaperHandler,
       'launch-attach-to-paper': LaunchAttachToPaperHandler,
