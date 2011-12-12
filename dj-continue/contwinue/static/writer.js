@@ -44,11 +44,13 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
       };
     });
 
-    insertDomB(attemptsE.filter_e(function(r) {
-        return r.error;
-      }).
-      transform_e(function(err) {
-        return SPAN({style:{color:'red'}}, err.message);
+    insertDomB(attemptsE.transform_e(function(r) {
+        if (r.error) {
+          return SPAN({style:{color:'red'}}, r.message);
+        }
+        else {
+          return SPAN();
+        }
       }).startsWith(SPAN()), error);
 
     var reqE = postE(attemptsE.filter_e(function(r) { return r.success; }).
