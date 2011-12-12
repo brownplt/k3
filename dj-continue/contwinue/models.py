@@ -584,5 +584,4 @@ class ContinueCredentials(bcap.Grantable):
   def to_json(self):
     return {
       'username': self.username,
-      'email': self.account.email
     }

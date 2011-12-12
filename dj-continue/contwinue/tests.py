@@ -116,8 +116,7 @@ class TestAuthorLaunch(Generator):
     self.assertTrue(type(response['target']['id']), int)
     self.assertEqual(len(response['topics']), 1)
 
-    self.assertEqual(response['authors'][0]['email'], self.writer.email)
-    self.assertEqual(len(response['authors']), 1)
+    self.assertEqual(len(response['authors']), 0)
 
   def test_extension(self):
     paperc = ComponentType.objects.filter(description='Paper')[0]
@@ -262,8 +261,9 @@ class TestAuthorLaunch(Generator):
     addauthor = bcap.grant('paper-add-author', {'paper': paper, 'user': author})
     response = addauthor.post({'email': 'sk@cs.fake', 'name': 'Shriram Krishnamurthi'})
 
-    self.assertEqual(response, {'name': 'Shriram Krishnamurthi',
-                                'email': 'sk@cs.fake'})
+    self.assertEqual(response['name'], 'Shriram Krishnamurthi')
+    self.assertEqual(response['email'], 'sk@cs.fake')
+    self.assertTrue(isinstance(response['remove'], bcap.Capability))
 
     uu = get_one(UnverifiedUser.objects.filter(email='sk@cs.fake'))
     self.assertTrue(not (uu is None))
@@ -301,7 +301,9 @@ class TestAuthorLaunch(Generator):
     response = addauthor.post({'email': user_email, 'name': 'Joe the Writer'})
     existing_user = get_one(User.objects.filter(email=user_email, conference=paper.conference))
 
-    self.assertEqual(response, {'email': user_email, 'name':existing_user.full_name})
+    self.assertEqual(response['name'], existing_user.full_name)
+    self.assertEqual(response['email'], user_email)
+    self.assertTrue(isinstance(response['remove'], bcap.Capability))
     uu = get_one(UnverifiedUser.objects.filter(email=user_email))
     self.assertTrue(uu is None)
 

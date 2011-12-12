@@ -10,7 +10,7 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
       clientkey = newUUIDv4();
       window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
     });
-    return DIV(btn);
+    return DIVB(btn);
   };
   var makeEmptyContinueDiv = function() {
     var password = INPUT({type:'password', size:30});
@@ -78,11 +78,31 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
     }];
   }));
 
-  var googlesB = googlePostE.startsWith(googles);
+  var googleErrorsE = googlePostE.filter_e(function(r) {
+    return r.error;
+  });
+  var googleErrorsDiv = DIVB({
+      style: {
+        display: googleErrorsE.constant_e('block').startsWith('none'),
+        color: 'red'
+      }
+    },
+    googleErrorsE.transform_e(function(r) {
+      return r.message;
+    }).startsWith(''));
+
+  var googleSuccessesE = googlePostE.filter_e(function(r) {
+    return r && !r.error;
+  });
+
+  var googlesB = googleSuccessesE.startsWith(googles);
   var googleDivB = lift_b(function(googles) {
-    if(googles.length === 0) { return makeEmptyGoogleDiv(); }
+    if(googles.length === 0) {
+      var btnDiv = makeEmptyGoogleDiv();
+      return DIVB(googleErrorsDiv, btnDiv);
+    }
     else {
-      return DIV(
+      return DIVB(
         P('This account is associated with the Gmail account for ',
   STRONG(googles[0].email), '.  This means you can sign in with Google to get back to' +
   ' your submissions.'));
@@ -108,7 +128,7 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
                   DIV({style:{'text-align':'center', 'margin': '1em'}},
                       STRONG('paper submit request ' + basicInfo.info.name)))
   var accountGoogle = DIVB(pad,H3('Associate with a Google account:'),
-                            googleDivB);
+                            switch_b(googleDivB));
   var accountContinue = DIV(pad,H3('Create a password:'),
                               continueDiv);
 
@@ -122,7 +142,7 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
                ULB(
                 link,
                 search,
-                switch_b(accountGoogle),
+                accountGoogle,
                 accountContinue)))
 }
 

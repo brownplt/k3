@@ -325,8 +325,9 @@ class AssociateHandler(bcap.CapHandler):
       return logWith404(logger, 'Bad associate key for %s: %s' %
         (user.email, args['key']))
 
-    user.accounts.add(account)
-    user.save()
+    cred = get_one(ContinueCredentials.objects.filter(account=account))
+    cred.account = user.account
+    cred.save()
     return bcap.bcapResponse({'success': True})
 
 
@@ -335,27 +336,18 @@ class AddGoogleAccountHandler(bcap.CapHandler):
   def post(self, granted, args):
     user = granted.user
 
-    existing_accounts = user.accounts.all()
-
     newaccount = get_one(Account.objects.filter(key=args['key']))
-    user.accounts.add(newaccount)
-    user.save()
+    users = get_one(User.objects.filter(account=newaccount))
+    if users is not None:
+      return bcap.bcapResponse({
+        'error': True,
+        'message': 'That Google account is associated with a different Continue account.  You will have to manage them separately.'
+      })
+    cred = get_one(GoogleCredentials.objects.filter(account=newaccount))
+    cred.account = user.account
+    cred.save()
 
-    if args['new']:
-      for l in Launchable.objects.filter(account=newaccount):
-        l.delete()
-
-    for a in existing_accounts:
-      for l in Launchable.objects.filter(account=a):
-        l2 = Launchable(
-          account=newaccount,
-          launchcap=l.launchcap,
-          launchbase=l.launchbase,
-          display=l.display
-        )
-        l2.save()
-
-    return bcap.bcapResponse(newaccount.get_credentials()['googleCreds'])
+    return bcap.bcapResponse(user.account.get_credentials()['googleCreds'])
           
 
 
@@ -374,18 +366,18 @@ class AddPasswordHandler(bcap.CapHandler):
   def post_arg_names(self): return ['password']
   def post(self, granted, args):
     password = args['password']
-    account = granted.account
+    user = granted.user
 
     salt = str(uuid.uuid4())
     credentials = ContinueCredentials(
-      username=account.email,
+      username=user.email,
       hashed_password=get_hashed(password, salt),
       salt=salt,
-      account=account
+      account=user.account
     )
     credentials.save()
 
-    return bcap.bcapResponse(account.get_credentials())
+    return bcap.bcapResponse(user.account.get_credentials())
 
 # AddAuthorHandler
 # Adds an author to a paper, and sends email notification
@@ -568,8 +560,8 @@ def paper_launch_info(user, paper, newuser):
   
   for p in papers:
     paper_json = {
-      'paperContactName': paper.contact.full_name,
-      'paperContactEmail': paper.contact.email,
+      'paperContactName': p.contact.full_name,
+      'paperContactEmail': p.contact.email,
       'getPaper': bcap.regrant('writer-paper-info', {
         'writer': user,
         'paper': p
@@ -596,7 +588,7 @@ def paper_launch_info(user, paper, newuser):
     'email': user.email,
     'updateName': bcap.regrant('user-update-name', user),
     'accountkey': account.key,
-    'addPassword': bcap.regrant('add-password', account),
+    'addPassword': bcap.regrant('add-password', user),
     'addGoogleAccount': bcap.regrant('add-google-account', user),
     'credentials': user.get_credentials(),
     'papers': paper_jsons,
@@ -632,6 +624,21 @@ def make_user(uu):
     paper.unverified_authors.remove(uu)
     user.papers.add(paper)
 
+  return (account, user)
+
+def make_user_with_paper_launch(uu, paper):
+  (account, user) = make_user(uu)
+  launch = bcap.grant('launch-paper', {
+    'user': user,
+    'paper': paper
+  })
+  launchable = Launchable(
+    account = account,
+    launchbase = '%s/paper' % bcap.this_server_url_prefix(),
+    launchcap = bcap.cap_for_hash(launch),
+    display = ''
+  )
+  launchable.save()
   return (account, user)
 
 def new_paper(contact):
@@ -681,6 +688,16 @@ class LaunchNewPaperHandler(bcap.CapHandler):
     (account, user) = make_user(uu)
 
     paper = new_paper(user)
+    launchable = Launchable(
+      account=user.account,
+      launchbase='%s/paper' % bcap.this_server_url_prefix(),
+      launchcap=bcap.cap_for_hash(bcap.grant('launch-paper', {
+        'user': user,
+        'paper': paper
+      })),
+      display=''
+    )
+    launchable.save()
     self.updateGrant({
       'create': False,
       'user': user,
@@ -719,7 +736,7 @@ class LaunchAttachToPaperHandler(bcap.CapHandler):
       })
       return paper_launch_info(existing_user, paper, False)
 
-    (account, user) = make_user(uu)
+    (account, user) = make_user_with_paper_launch(uu, paper)
     return paper_launch_info(user, granted['paper'].paper, True)
 
 # LaunchPaperHandler
