@@ -272,7 +272,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
     added: true,
     remove: null
   });
-  var authorsErrors = P({style: {color: 'red'}}, '');
+  var authorsErrors = P({style: {color: 'red'}}, BR());
   var authorsWidget = new ModListWidget(
     paperInfo.unverifiedAuthors.concat(paperInfo.authors),
     TR(TH('Name'), TH('Email')),

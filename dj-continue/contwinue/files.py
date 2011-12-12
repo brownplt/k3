@@ -1,10 +1,15 @@
 import os
+import subprocess
 import settings
 import logging
 from lib.py.common import logWith404
 from django.http import HttpResponse
 
 logger = logging.getLogger('default')
+
+def get_filetype(ofname):
+  return subprocess.Popen(['file', '-bi', ofname],stdout=subprocess.PIPE).communicate()[0][:-1]
+
 
 def file_response(filename, response_name):
     full_path = os.path.join(settings.SAVEDFILES_DIR, filename)

@@ -6,8 +6,10 @@ from django.core import mail
 from django.test import TestCase
 
 import contwinue.generate as generate
-from contwinue.models import *
 from contwinue.views import *
+from contwinue.submitter import *
+from contwinue.models import *
+from belaylibs.models import Grant
 import contwinue.email_strings as strings
 
 import belaylibs.dj_belay as bcap
