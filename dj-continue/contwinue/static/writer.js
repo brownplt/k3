@@ -124,7 +124,7 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
   var pad = {style:{margin:'1em'}};
   var launch = COMMON.urlPrefix + '/paper' + launchKey;
   var link = DIV(pad,H3('Bookmark this link, and visit it directly: '),
-                DIV({style:{'margin':'1em'}},A({href:launch},launch)));
+                DIV({style:{'margin':'1em'}},A({href:launch, target:'_blank'},launch)));
 
   var search = DIV(pad,H3('Save the invitation message.  You can search your inbox for:'),
                   DIV({style:{'text-align':'center', 'margin': '1em'}},
