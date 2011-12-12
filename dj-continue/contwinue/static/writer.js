@@ -134,9 +134,6 @@ function makeAccountInfoTab(launchInfo, basicInfo, launchKey) {
   var accountContinue = DIV(pad,H3('Create a password:'),
                               continueDiv);
 
-  // "login options for returning to your submissions"
-  // "bookmark this link" --> "visit this link directly (don't share it)"
-  // "save the INVITATION message"
   return DIVB({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
              PB('Welcome, ', STRONG(launchInfo.email), '.  ' +
                'You have several options for returning to your submissions:',
@@ -171,7 +168,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
 		if (deadlineExts[compType.id]) return deadlineExts[compType.id].untilStr; else return compType.deadlineStr;
 	};
 
-  var userNameB = new TextInputWidget(launchInfo.name, 40).
+  var userNameB = new TextInputWidget(paperInfo.thisAuthor.name, 40).
     belayServerSaving(function(input) {
       return genRequest({fields:{name:input}})
     }, false, launchInfo.updateName).
@@ -180,7 +177,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
   var updatedNameE = userNameB.events.serverResponse.transform_e(function(r) {
     return r.name;
   });
-  var updatedNameB = updatedNameE.startsWith(launchInfo.name);
+  var updatedNameB = updatedNameE.startsWith(paperInfo.thisAuthor.name);
   var contactName = paperCaps.paperContactName;
   var contactEmail = paperCaps.paperContactEmail;
   var contactNameB = updatedNameE.transform_e(function(name) {

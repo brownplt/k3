@@ -180,6 +180,10 @@ class WriterPaperInfoHandler(bcap.CapHandler):
     paper_json = paper.get_paper()
     paper_json['authors'] = author_json
     paper_json['unverifiedAuthors'] = unverified_author_json
+    paper_json['thisAuthor'] = {
+      'email': caller.email,
+      'name': caller.full_name
+    }
     return bcap.bcapResponse(paper_json)
 
 class AuthorTextHandler(bcap.CapHandler):
