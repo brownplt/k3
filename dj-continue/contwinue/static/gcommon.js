@@ -107,7 +107,8 @@ function onlyErrors(_) {return _.error;}
 /* noErrors :: a -> Boolean
  * Return true if input is not error
  */
-function noErrors(_) {return !_.error;}
+function noErrors(_) {
+return !_.error;}
 
 /*
  * Take an unformatted string, and format it using paragraphs and linebreaks
@@ -754,17 +755,22 @@ function ModListWidget(initObjs,header,widgetFn,addWidgetFn) {
 		}));
 	}
 	var addWidgetB;
-	var additionsE = rec_e(function(arE) {
-		addWidgetB = arE.filter_e(noErrors).transform_e(function(aw) {return addWidgetFn();}).startsWith(addWidgetFn());
-		var outE = consumer_e();
-		addWidgetB.transform_b(function(awb) {outE.add_e(awb.behaviors.value.changes());});
+  var additionsE = rec_e(function(arE) {
+    addWidgetB = arE.filter_e(noErrors).transform_e(function(aw) {
+      return addWidgetFn();
+    }).startsWith(addWidgetFn());
+    var outE = consumer_e();
+		addWidgetB.transform_b(function(awb) {
+      outE.add_e(awb.behaviors.value.changes());
+    });
 		return outE.transform_e(function(ov) {
-			return {action:'add',
-				  	value: ov,
-					id:nextId++};
-		});
-	});
-	eventsE.add_e(additionsE);
+			return {
+        action:'add',
+        value: ov,
+        id:nextId++};
+    });
+  });
+  eventsE.add_e(additionsE);
 	
 	var widgs = map(function(io) {
 			var w = {id:nextId++,widget:widgetFn(io)};
@@ -772,7 +778,9 @@ function ModListWidget(initObjs,header,widgetFn,addWidgetFn) {
 			return w;
 	},initObjs);
 
-	var widgsB = collect_b(widgs,eventsE.filter_e(noErrors),function(evt,oldWidgs) {
+	var widgsB = collect_b(widgs,eventsE.filter_e(function(evt) {
+    return noErrors(evt.value);
+  }),function(evt,oldWidgs) {
 		if(evt.action == 'delete') {
 			return filter(function (obj) {return obj.id != evt.id;},oldWidgs);
 		}

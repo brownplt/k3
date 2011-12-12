@@ -11,7 +11,7 @@ def notFoundResponse():
 
   return bcap.bcapResponse({
     'emailError': True,
-    'error': message,
+    'error': True,
     'message': message
   })
 
@@ -21,7 +21,7 @@ persists, contact the system maintainer.'
 
   return bcap.bcapResponse({
     'emailError': True,
-    'error': message,
+    'error': True,
     'message': message
   })
 

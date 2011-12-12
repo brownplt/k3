@@ -275,6 +275,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
     added: true,
     remove: null
   });
+  var authorsErrors = P({style: {color: 'red'}}, '');
   var authorsWidget = new ModListWidget(
     paperInfo.unverifiedAuthors.concat(paperInfo.authors),
     TR(TH('Name'), TH('Email')),
@@ -291,7 +292,7 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
       return ret
     },
     function() {
-      return new ButtonInputWidget(
+      var adder = new ButtonInputWidget(
         [new TextInputWidget('',30),
          new TextInputWidget('',30)],
         {value: new ButtonWidget('Add')},
@@ -304,7 +305,19 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
         belayServerSaving(function(author) {
           return {fields:{name:author.name, email:author.email}}; 
         }, true, paperCaps.addAuthor);
+      var authorResponses = adder.events.serverResponse;
+      var errors = authorResponses.filter_e(function(r) {
+        return r.error;
+      });
+      insertValueE(errors.constant_e('block'), authorsErrors,
+          'style', 'display');
+      insertValueE(errors.transform_e(function(r) {
+        setTimeout(function() { $(authorsErrors).fadeOut(3000); }, 1000);
+        return r.message;
+      }), authorsErrors, 'innerText');
+      return adder;
     });
+
 
   var hasTitleAndNameB = lift_b(function(name, title) {
     return name !== '' && title !== '';
@@ -330,7 +343,8 @@ function makeDetailsTab(paperInfo,basicInfo,authorText,extensions,errorsB,launch
           })
         }
       },
-      authorsWidget.dom)));
+      authorsWidget.dom),
+      authorsErrors));
     
 	var pcpWidget = new CheckboxWidget(paperInfo.pcpaper)
 			.belayServerSaving(function(pcpaper) {
