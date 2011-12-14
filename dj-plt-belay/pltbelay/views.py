@@ -162,20 +162,24 @@ def request_plt_account_silent(request):
     Currently, used by Resume as a trusted channel to ask for new accounts
     so that service isn't exposed to arbitrary clients, and can be controlled
     through emails sent from Resume"""
+  logger.error('Reached request_account')
   def request_allowed():
     return request.META['REMOTE_ADDR'] in settings.REQUESTING_DOMAINS
     
   if request.method != 'POST':
     return HttpResponseNotAllowed(['POST'])
+  args = bcap.dataPostProcess(request.read())
+  logger.error('Belay: got account request: %s' % args)
+  logger.error('Request is from: %s' % request.META['REMOTE_ADDR'])
 
   if not request_allowed():
     return logWith404(logger, 'request_silent: bad request %s' %\
       request.META['REMOTE_ADDR'])
 
-  args = bcap.dataPostProcess(request.read())
   pa = PendingAccount(email = args['email'])
   pa.save()
   create_cap = bcap.grant('create-account', pa)
+  logger.error('Belay: successful create: %s' % create_cap.serialize())
 
   return bcap.bcapResponse({'create': create_cap})
 

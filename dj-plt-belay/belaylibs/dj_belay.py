@@ -87,7 +87,10 @@ def invokeCapURL(capURL, meth, data=""):
       return dataPostProcess(result.content)
   else:
     # TODO: https
-    conn = httplib.HTTPConnection(parsed.netloc)
+    if parsed.scheme == 'https':
+      conn = httplib.HTTPSConnection(parsed.netloc)
+    else:
+      conn = httplib.HTTPConnection(parsed.netloc)
     conn.request(method=meth, url=parsed.path, body=data)
     result = conn.getresponse()
 
@@ -97,7 +100,8 @@ def invokeCapURL(capURL, meth, data=""):
     elif re.match('image/.*', result.getheader('Content-Type', '')):
       return result 
     else:
-      return dataPostProcess(result.read())
+      result_data = result.read()
+      return dataPostProcess(result_data)
 
 class Capability(object):
   def __init__(self, ser):

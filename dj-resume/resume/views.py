@@ -1260,6 +1260,7 @@ class UnverifiedUserAddRevHandler(bcap.CapHandler):
 
     create_belay = bcap.Capability(settings.BELAY_CREATE)
     response = create_belay.post(bcap.dataPreProcess({'email': args['email']}))
+    logger.error('Successfully got response for account creation: %s' % response)
     create_cap = response['create']
 
     ub = UnverifiedBelayAccount(uu=uu, create=create_cap.serialize())
