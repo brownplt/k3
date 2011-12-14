@@ -411,6 +411,10 @@ $(function() {
       return launchData.getBasic;
     }));
     var basicInfoE = getBasicInfoSE(infoE);
+
+    basicInfoE.transform_e(function(bi) {
+      COMMON.setContact(bi.contact);
+    });
     
     basicInfoE.lift_e(function(v) { basicInfo = parseBasic(v); });
 
