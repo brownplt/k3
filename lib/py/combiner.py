@@ -14,10 +14,13 @@ def append_files(out, filenames):
     f = open(path, 'r')
     contents = f.read()
     if get_file_type(contents) == 'pdf':
-      pdf = file(path, 'rb')
-      reader = PdfFileReader(pdf)
-      for pagenum in range(reader.getNumPages()):
-        out.addPage(reader.getPage(pagenum))
+      try:
+        pdf = file(path, 'rb')
+        reader = PdfFileReader(pdf)
+        for pagenum in range(reader.getNumPages()):
+          out.addPage(reader.getPage(pagenum))
+      except Exception as e:
+        raise Exception("Error (%s) when processing file %s" % (e, filename))
 
 def get_rev_tex(rev):
   scores = rev.get_scores()
