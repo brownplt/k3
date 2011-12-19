@@ -64,8 +64,6 @@ $(function() {
     demoEventsE = receiver_e();
     document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);})};
 
-    var curAuthE = getAuthE(onLoadTimeE);
-
     var basicInfoE = getE(onLoadTimeE.constant_e(launchInfo.getBasic));
 
     basicInfoE.lift_e(function(v) { console.log('basicInfo: ', v); basicInfo = v; });
