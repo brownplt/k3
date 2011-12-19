@@ -65,6 +65,9 @@ $(function() {
     document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);})};
 
     var basicInfoE = getE(onLoadTimeE.constant_e(launchInfo.getBasic));
+    basicInfoE.transform_e(function(bi) {
+      COMMON.setContact(bi.contact);
+    });
 
     basicInfoE.lift_e(function(v) { console.log('basicInfo: ', v); basicInfo = v; });
     
@@ -249,7 +252,7 @@ $(function() {
 
     insertDomB(TABLEB({className:'key-value'},TBODYB(
             TRB(TH('Email: '),emailCellB),
-            contRowsB)),'contact','beginning');
+            contRowsB)),'contact-rows','beginning');
 
     var saveBtn = new ButtonWidget('Save Draft');
     var subBtn = new ButtonWidget('Submit Review');
@@ -404,7 +407,7 @@ $(function() {
       applicantB.transform_b(function(app) {
           return P(STRONG('username: '),SPAN(app.uname));
       }),'uname');
-    },basicInfoE,curAuthE);
+    },basicInfoE,constant_b({}));
       onLoadTimeE.sendEvent('Loaded!');
   });
 });
