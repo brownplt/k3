@@ -584,7 +584,8 @@ function areaFilter(basicInfo) {
       document.notifyDemo({ action: "areachange" });
       return function(applicant) {
         for (var i = 0; i < applicant.info.areas.length; i++) {
-          if (member(applicant.info.areas[i].id,areas)) { return true; }
+          if (member(applicant.info.areas[i].id,areas) &&
+              applicant.info.areas[i].weight >= 5) { return true; }
         }
         return false;
       };

@@ -140,8 +140,15 @@ class Applicant(bcap.Grantable):
     return Review.objects.filter(applicant=self, draft=False)\
       .exclude(advocate='comment')
   def getAreas(self):
-    dept_areas = self.department.my(Area)
-    return [a.to_json() for a in dept_areas if self in a.applicants.all()]
+    areas = self.area_set.all()
+    areas_json = []
+    for area in areas:
+      a_json = area.to_json()
+      weight = AreaWeight.objects.filter(applicant=self, area=area)
+      if len(weight) == 0: a_json['weight'] = 0
+      else: a_json['weight'] = weight[0].number
+      areas_json.append(a_json)
+    return areas_json
   def getReviews(self):
     return [r.to_json() for r in self.myReviews()]
   def getComponentTypeById(self, id):
@@ -204,6 +211,27 @@ class Applicant(bcap.Grantable):
     return [h.reviewer.auth.name for h in hiddens]
   def getPairsOfReviewer(self, reviewer):
     return AppRevPair.objects.filter(applicant=self, reviewer=reviewer)
+  def remove_area(self, area):
+    self.area_set.remove(area)
+    for aw in AreaWeight.objects.filter(applicant=self, area=area):
+      aw.delete()
+    self.save()
+  def update_area(self, area, weight):
+    if not (area in self.area_set.all()):
+      self.area_set.add(area)
+    weights = AreaWeight.objects.filter(area=area, applicant=self)
+    if len(weights) == 0:
+      aweight = AreaWeight(
+        area=area,
+        number=int(weight),
+        applicant=self
+      )
+      aweight.save()
+    else:
+      for aw in weights:
+        aw.number = int(weight)
+        aw.save()
+    self.save()
   def remove_areas(self):
     for a in Area.objects.filter(department=self.department, applicants=self):
       a.applicants.remove(self)
@@ -425,6 +453,13 @@ class Area(bcap.Grantable):
   abbr = models.TextField()
   department = models.ForeignKey(Department)
   applicants = models.ManyToManyField(Applicant)
+
+class AreaWeight(bcap.Grantable):
+  class Meta:
+    unique_together =(('applicant', 'area'))
+  number = models.IntegerField(default=0)
+  area = models.ForeignKey(Area)
+  applicant = models.ForeignKey(Applicant)
 
 class Highlight(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)

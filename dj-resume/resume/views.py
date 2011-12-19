@@ -744,27 +744,20 @@ class GetReviewHandler(bcap.CapHandler):
 class SetAreasHandler(bcap.CapHandler):
   # TODO(matt): duplication of functionality in SubmitReviewHandler,
   # should be refactored
-  def convert_areas_argument(self, areas):
-    if areas == '':
-      areas = []
-    if not isinstance(areas, list):
-      areas = [areas]
-    return [int(a) for a in areas]
   def post(self, granted, args):
     applicant = granted.applicant
     if not args.has_key('areas'):
-      area_ids = []
+      areas = {}
     else:
-      area_ids = args['areas']
-    area_ids = self.convert_areas_argument(area_ids)
-    applicant.remove_areas()
-    # TODO(matt): bad to look up things by ID, but again, the frontend is written
-    # this way
-    for aid in area_ids:
+      areas = args['areas']
+
+    for (aid, weight) in areas.iteritems():
       ar = applicant.department.get_area_by_id(aid)
-      if ar:
-        ar.applicants.add(applicant)
-        ar.save()
+      if weight == 'none':
+        applicant.remove_area(ar)
+      else:
+        applicant.update_area(ar, weight)
+
     return bcap.bcapResponse(applicant.to_json())
 
 class ChangeApplicantHandler(bcap.CapHandler):

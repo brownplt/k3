@@ -96,18 +96,52 @@ $(function() {
       insertDomB(applicantB.transform_b(function(a) {return H2(a.name,DIV({className:'sub'},'application'));}),'appname');
 
       insertDomB(applicantB.transform_b(function(ai) {
+        var widget = new SelectListWidget(
+          map(function(a) {
+            var appAreaInfo = filter(function(areaInfo) {
+                  return areaInfo.id === a.id;
+            }, ai.areas)[0];
+            var weight = appAreaInfo ? appAreaInfo.weight : 'none';
+ 
+            return {
+              k: a.id, v: {
+                label: a.name,
+                value: !appAreaInfo ? 'none' : weight,
+                options: [OPTION({
+                      value: 'none',
+                      selected: !appAreaInfo
+                    }, 'No Fit')
+                  ].concat(map(function(score) {
+                    return OPTION({
+                        value: score,
+                        selected: score === weight
+                      },
+                      String(score));
+                }, [1,2,3,4,5,6,7,8,9,10]))
+              }
+            };
+          }, basicInfo.areas)
+        ).belayServerSaving(function(careas) {
+          return genRequest({fields:{areas:careas}});
+        }, false, launchInfo.setAreas).dom;
+
+/*
         var widget = new CheckboxListWidget(
-        map(function(a) {return {k:a.id,v:a.name};},basicInfo.areas),
-        map(function(a) {return a.id;},ai.areas)	
-          ).belayServerSaving(function(careas) {
-        demoEventsE.sendEvent({action:'areaSet'});
-        return genRequest({fields:{areas:careas}});
-          }, false, launchInfo.setAreas).dom;
+          map(function(a) {return {k:a.id,v:a.name};},basicInfo.areas),
+          map(function(a) {return a.id;},ai.areas)	
+        ).belayServerSaving(function(careas) {
+          return genRequest({fields:{areas:careas}});
+        }, false, launchInfo.setAreas).dom;
+*/
 
 //        disableInputs(widget,true);
 
 //        unlockEdits.lift_e(function(v) { disableInputs(widget,v); });
-        return DIV(H4('area'),widget);
+        return DIV(H4('area'),
+          P({style:{'font-style':'italic'}},
+            'Choose a score 5 or greater to have an applicant show up in the search for an area.'),
+          widget);
+
       }),'area','beginning');
     
       insertDomB(applicantB.transform_b(function(ai) {
