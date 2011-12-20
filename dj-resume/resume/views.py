@@ -201,7 +201,6 @@ class ResumeInit():
         'get-reviewer' : GetReviewerHandler,\
         'get-applicants' : GetApplicantsHandler,\
         'get-few-applicants' : GetFewApplicantsHandler,\
-        'get-highlighted-applicants' : GetHighlightedApplicantsHandler,\
         'add-applicant-with-position' : UnverifiedApplicantAddHandler,\
         'add-verified-applicant' : AddVerifiedApplicantHandler,\
         'get-applicant-email-and-create' : ApplicantEmailAndCreateHandler,\
@@ -690,7 +689,6 @@ class ReviewerLaunchHandler(bcap.CapHandler):
       'getReviewer': bcap.regrant('get-reviewer', granted),
       'getApplicants': bcap.regrant('get-applicants', granted),
       'getFewApplicants': bcap.regrant('get-few-applicants', granted),
-      'getHighlightedApplicants': bcap.regrant('get-highlighted-applicants', granted),
       'numApplicants': Applicant.objects.filter(
         department=granted.reviewer.department
       ).count()
@@ -1000,14 +998,6 @@ class GetAppReviewHandler(bcap.CapHandler):
       'domain': bcap.this_server_url_prefix(),
       'url' : '/appreview',
     })
-
-class GetHighlightedApplicantsHandler(bcap.CapHandler):
-  def get(self, granted):
-    highlights = Highlight.objects.filter(highlightee=granted.reviewer)
-    applicants = []
-    for h in highlights:
-      applicants.append(h.applicant)
-    return get_applicants_info(applicants, granted.reviewer)
 
 class GetFewApplicantsHandler(bcap.CapHandler):
   def post_arg_names(self): return ['start', 'howmany']
