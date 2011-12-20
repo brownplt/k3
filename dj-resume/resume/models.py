@@ -2,6 +2,7 @@ import belaylibs.models as bcap
 from django.db import models
 import logging
 import time
+from django.core.cache import cache
 
 logger = logging.getLogger('default')
 
@@ -177,16 +178,16 @@ class Applicant(bcap.Grantable):
   def getRefletters(self):
     return []
   def get_component_objects(self):
-    return Component.objects.filter(applicant=self)
+    return self.component_set.all()
   def getComponents(self):
-    return [c.to_json() for c in Component.objects.filter(applicant=self)]
+    return [c.to_json() for c in self.component_set.all()]
   def getComponentByType(self, component_type):
     return Component.objects.filter(department=self.department, applicant=self,\
       type=component_type)
   def getReferences(self):
-    return [r.to_json() for r in Reference.objects.filter(applicant=self)]
+    return [r.to_json() for r in self.reference_set.all()]
   def getReferencesModel(self):
-    return [r for r in Reference.objects.filter(applicant=self)]
+    return [r for r in self.reference_set.all()]
   def getReferencesOfEmail(self, email):
     return [r.to_json() for r in Reference.objects.filter(applicant=self, email=email)]
   def componentUpdate(self, id, val):
@@ -210,7 +211,7 @@ class Applicant(bcap.Grantable):
     hiddens = Hidden.objects.filter(applicant=self)
     return [h.reviewer.auth.name for h in hiddens]
   def getPairsOfReviewer(self, reviewer):
-    return AppRevPair.objects.filter(applicant=self, reviewer=reviewer)
+    return self.apprevpair_set.filter(reviewer=reviewer)
   def remove_area(self, area):
     self.area_set.remove(area)
     for aw in AreaWeight.objects.filter(applicant=self, area=area):
@@ -287,6 +288,14 @@ class Applicant(bcap.Grantable):
       'highlights' : self.getHighlights(),
       'hiddenunames' : self.getHiddenUNames()
     }
+  def cache_id(self): return 'applicant_%s' % self.id
+  def cached_json(self):
+    cached = cache.get(self.cache_id(), 'no-app')
+    if cached != 'no-app': return cached
+    json = self.to_json()
+    cache.set(self.cache_id(), json)
+    return json
+     
   genders = [\
     ('Unknown', 'Unknown'),\
     ('Male', 'Male'),\
