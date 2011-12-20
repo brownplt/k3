@@ -1,3 +1,5 @@
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 import resume.models as rmod
 import random
 import logging
@@ -5,6 +7,25 @@ from django.http import HttpResponse
 from datetime import date
 
 logger = logging.getLogger('default')
+
+def make_applicants(d, p, howmany):
+  for i in range(1, howmany):
+    auth = rmod.AuthInfo(
+      email='applicant%s@foo' % i,
+      name='Applicant',
+      role='applicant',
+      department=d
+    )
+    auth.save()
+    app = rmod.Applicant(
+      auth=auth,
+      firstname='Applicant',
+      lastname='Applicant%s' % i,
+      country='Azerbaijan',
+      department=d,
+      position=p
+    )
+    app.save()
 
 def generate(request):
   cs_objs = rmod.Department.objects.filter(shortname='cs')

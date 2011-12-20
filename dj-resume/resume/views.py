@@ -200,6 +200,8 @@ class ResumeInit():
         'set-basic' : SetBasicHandler,\
         'get-reviewer' : GetReviewerHandler,\
         'get-applicants' : GetApplicantsHandler,\
+        'get-few-applicants' : GetFewApplicantsHandler,\
+        'get-highlighted-applicants' : GetHighlightedApplicantsHandler,\
         'add-applicant-with-position' : UnverifiedApplicantAddHandler,\
         'add-verified-applicant' : AddVerifiedApplicantHandler,\
         'get-applicant-email-and-create' : ApplicantEmailAndCreateHandler,\
@@ -686,7 +688,12 @@ class ReviewerLaunchHandler(bcap.CapHandler):
     return bcap.bcapResponse({
       'getBasic': bcap.regrant('get-basic', department),
       'getReviewer': bcap.regrant('get-reviewer', granted),
-      'getApplicants': bcap.regrant('get-applicants', granted)
+      'getApplicants': bcap.regrant('get-applicants', granted),
+      'getFewApplicants': bcap.regrant('get-few-applicants', granted),
+      'getHighlightedApplicants': bcap.regrant('get-highlighted-applicants', granted),
+      'numApplicants': Applicant.objects.filter(
+        department=granted.reviewer.department
+      ).count()
     })
 
 class GetReviewerHandler(bcap.CapHandler):
@@ -813,13 +820,14 @@ def file_response(filename, response_prefix):
     resp_filename = '%s.%s' % (\
       response_prefix,\
       file_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+#    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
     return response
 
 class GetLetterHandler(bcap.CapHandler):
   def get(self, granted):
     ref = granted.reference
     filename = get_letter_filename(ref)
+    self.revoke()
     return file_response(filename, 'letter')
 
 class GetStatementHandler(bcap.CapHandler):
@@ -850,7 +858,8 @@ class GetStatementHandler(bcap.CapHandler):
     resp_filename = 'applicant_%s.%s' % (\
       component.type.name.replace(' ', '_'),\
       file_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+#    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+    self.revoke()
     return response
 
 class GetCombinedHandler(bcap.CapHandler):
@@ -860,7 +869,8 @@ class GetCombinedHandler(bcap.CapHandler):
       from lib.py.combiner import get_combined_data
       combined_data = get_combined_data(applicant)
       response = HttpResponse(combined_data, mimetype='pdf')
-      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
+#      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
+      self.revoke()
       return response
     except Exception as e:
       return logWith404(logger, 'GetCombinedHandler: %s' % e, level='error')
@@ -990,6 +1000,70 @@ class GetAppReviewHandler(bcap.CapHandler):
       'domain': bcap.this_server_url_prefix(),
       'url' : '/appreview',
     })
+
+class GetHighlightedApplicantsHandler(bcap.CapHandler):
+  def get(self, granted):
+    highlights = Highlight.objects.filter(highlightee=granted.reviewer)
+    applicants = []
+    for h in highlights:
+      applicants.append(h.applicant)
+    return get_applicants_info(applicants, granted.reviewer)
+
+class GetFewApplicantsHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['start', 'howmany']
+
+  def post(self, granted, args):
+    applicants = granted.reviewer.get_applicants_model()
+    highlights = Highlight.objects.filter(highlightee=granted.reviewer)
+
+    if(len(highlights) > 0):
+      highlight_ids = map(lambda h: str(h.applicant_id), highlights)
+
+      extra = 'id in (%s)' % ', '.join(highlight_ids)
+      logger.error('Extra: %s' % extra)
+      applicants = applicants.extra(select={'is_highlighted': extra})
+      logger.error('Apps: %s' % len(applicants))
+      applicants = applicants.extra(order_by=['-is_highlighted', 'id'])
+
+    start = int(args['start'])
+    howmany = int(args['howmany'])
+    applicants = applicants[start:howmany+start]
+
+    return get_applicants_info(applicants, granted.reviewer)
+
+def get_applicants_info(applicants, reviewer):
+  applicant_json = []
+  for applicant in applicants:
+    pairs = applicant.getPairsOfReviewer(reviewer)
+    if len(pairs) > 0:
+      pair = pairs[0]
+    else:
+      pair = AppRevPair(applicant=applicant, reviewer=reviewer)
+      pair.save()
+    a_json = applicant.to_json()
+    launchCap = bcap.regrant('launch-app-review', pair)
+    a_json['launchURL'] = '%s/appreview/#%s' % \
+         (bcap.this_server_url_prefix(), launchCap.serialize())
+    components = applicant.get_component_objects()
+    component_caps = dict(\
+      [(c.type.id, bcap.grant('get-statement', c))\
+      for c in components if c.type.type == 'statement'])
+    a_json['components'] = component_caps
+    references = applicant.getReferencesModel()
+    refjson = []
+    for r in references:
+      rjson = r.to_json()
+      rjson['getLetter'] = bcap.regrant('get-letter', r)
+      refjson.append(rjson)
+    a_json['refletters'] = refjson
+    applicant_json.append(a_json)
+    a_json['getCombined'] = bcap.grant('get-combined', applicant)
+  return bcap.bcapResponse({
+    'changed': True,
+    'lastChange': reviewer.getLastChange(),
+    'value': applicant_json
+  })
+
 
 class GetApplicantsHandler(bcap.CapHandler):
   def post_arg_names(self):

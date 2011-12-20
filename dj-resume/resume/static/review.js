@@ -439,6 +439,48 @@ $(function() {
     
     var applicantsB = rec_e(function(aqE) {
         var lastChangeValB = aqE.transform_e(function(_) {return _.lastChange;}).startsWith(0);
+
+        var howManyE = launchE.transform_e(function(launchData) {
+          return launchData.numApplicants;
+        });
+
+        // As incremental apps come in, we let newAppsE know
+        var newAppsE = receiver_e();
+
+        var incrementalAppsE = newAppsE.collect_e([], function(apps, allApps) {
+          return allApps.concat(apps);
+        });
+        var appCountE = incrementalAppsE.transform_e(function(_) {
+          return _.length;
+        });
+        var loadE = lift_b(function(li, currCount, increment, total) {
+          if(li && total && currCount < total) {
+            return [li.getFewApplicants,
+                    {start: currCount, howmany: increment}];
+          }
+          else {
+            return null;
+          }
+        }, launchE.startsWith(null),
+           appCountE.startsWith(0),
+           constant_b(20),
+           howManyE.startsWith(null)).changes();
+        var loadApplicantsE = postE(loadE.filter_e(function(_) {
+          return _ !== null;
+        }));
+        loadApplicantsE.filter_e(function(_) {
+          newAppsE.sendEvent(_.value);
+        });
+
+        var addedAppsE = incrementalAppsE.transform_e(function(_) {
+          return {
+            lastChange: 0,
+            changed: true,
+            value: _
+          };
+        });
+
+
         var applicantsCapB = launchE.transform_e(function(launchData) {
           return launchData.getApplicants;
         }).startsWith(null);
@@ -446,8 +488,8 @@ $(function() {
           return [applicantsCap, { lastChange: lcv }];
         }, applicantsCapB, lastChangeValB);
         var applicantChangesE = postE(timer_e(120000).
-                                        merge_e(launchE).
-                                          snapshot_e(postB)).
+                                        snapshot_e(postB)).
+          merge_e(addedAppsE).
           filter_e(function(_) {return _.changed;});
         return applicantChangesE;
     }).transform_e(function(_) {return _.value;}).startsWith([]);
