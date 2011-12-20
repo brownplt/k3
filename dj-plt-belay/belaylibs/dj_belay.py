@@ -156,12 +156,18 @@ def dataPostProcess(serialized):
 
 # Base class for handlers that process capability invocations.
 class CapHandler(object):
+  def __init__(self, grant):
+    self.grant = grant
+
   methods = ['get', 'put', 'post', 'delete']
 
   # Subclasses override if they handle file uploads
   myFiles = {}
   def files_needed(self):
     return []
+
+  def revoke(self):
+    self.grant.delete()
 
   def allowedMethods(self):
     return [m.upper() for m in self.methods if self.__class__.__dict__.has_key(m)]
@@ -261,7 +267,7 @@ def handle(cap_id, method, args, files):
 
   grant = grants[0]   
   handler_class = get_handler(str(grant.internal_path))
-  handler = handler_class()
+  handler = handler_class(grant)
 
   files_needed = handler.files_needed()
   using_files = len(files_needed) > 0
