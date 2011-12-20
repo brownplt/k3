@@ -24,10 +24,11 @@ import re
 import httplib
 import settings
 
+from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest
 from lib.py.common import logWith404
 
-from models import Grant
+from models import Grant, Grantable
 
 logger = logging.getLogger('default')
 
@@ -249,9 +250,23 @@ def get_handler(path):
 def set_handler(path, handler):
   handlerData.path_to_handler[path] = handler
 
+def get_cached_grant(cap_id):
+  cached = cache.get('cap_%s' % cap_id, 'no-cap')
+  if cached == 'no-cap': return []
+  class GrantWrapper(object):
+    def __init__(self, cap_id, internal_path, db_entity):
+      self.cap_di = cap_id
+      self.internal_path = internal_path
+      self.db_entity = db_entity
+
+  entity = Grantable.objects.filter(id=cached['db_entity'])[0]
+
+  return [GrantWrapper(cached['cap_id'], cached['internal_path'], entity)]
 
 def handle(cap_id, method, args, files):
-  grants = Grant.objects.filter(cap_id=cap_id)
+  grants = get_cached_grant(cap_id)
+  if len(grants) == 0:
+    grants = Grant.objects.filter(cap_id=cap_id)
 
   if len(grants) == 0:
     response = HttpResponse()
@@ -363,6 +378,17 @@ def regrant(path, entity):
     return Capability(cap_url(items[0].cap_id))
   else:
     return grant(path, entity)
+
+def cachegrant(path, entity):
+  cap_id = str(uuid.uuid4())
+  item = {
+    'cap_id': cap_id,
+    'internal_path': path,
+    'db_entity': entity.grantable_ptr_id
+  }
+  cache.set('cap_%s' % cap_id, item)
+  return Capability(cap_url(cap_id))
+  
 
 def revoke(path_or_handler, entity):
   entity.grant_set.filter(internal_path=path).delete()

@@ -1009,23 +1009,23 @@ class GetApplicantsHandler(bcap.CapHandler):
         pair = AppRevPair(applicant=applicant, reviewer=reviewer)
         pair.save()
       a_json = applicant.to_json()
-      launchCap = bcap.regrant('launch-app-review', pair)
+      launchCap = bcap.cachegrant('launch-app-review', pair)
       a_json['launchURL'] = '%s/appreview/#%s' % \
            (bcap.this_server_url_prefix(), launchCap.serialize())
       components = applicant.get_component_objects()
       component_caps = dict(\
-        [(c.type.id, bcap.grant('get-statement', c))\
+        [(c.type.id, bcap.cachegrant('get-statement', c))\
         for c in components if c.type.type == 'statement'])
       a_json['components'] = component_caps
       references = applicant.getReferencesModel()
       refjson = []
       for r in references:
         rjson = r.to_json()
-        rjson['getLetter'] = bcap.regrant('get-letter', r)
+        rjson['getLetter'] = bcap.cachegrant('get-letter', r)
         refjson.append(rjson)
       a_json['refletters'] = refjson
       applicant_json.append(a_json)
-      a_json['getCombined'] = bcap.grant('get-combined', applicant)
+      a_json['getCombined'] = bcap.cachegrant('get-combined', applicant)
     return bcap.bcapResponse({
       'changed': True,
       'lastChange': reviewer.getLastChange(),
