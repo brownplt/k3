@@ -556,7 +556,7 @@ class TestReference(TestAdminLaunch):
 
     launch_cap = sendReferenceRequest(applicant, reference)
 
-    launch_info = launch_cap.get()
+    launch_info = launch_cap['success'].get()
 
     self.assertEqual(launch_info['name'], "Henry Kissinger")
     self.assertEqual(launch_info['institution'], "Podunk University")

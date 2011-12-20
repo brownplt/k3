@@ -527,12 +527,12 @@ class SubmitContactInfoHandler(bcap.CapHandler):
 class GetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
     applicant = granted.applicant
-    return bcap.bcapResponse(applicant.to_json())
+    return bcap.bcapResponse(applicant.cached_json())
 
 class AppReviewGetApplicantHandler(bcap.CapHandler):
   def get(self, granted):
     pair = granted.apprevpair
-    a_json = pair.applicant.to_json()
+    a_json = pair.applicant.cached_json()
     references = pair.applicant.getReferencesModel()
     refjson = []
     for r in references:
@@ -585,7 +585,7 @@ class SubmitStatementHandler(bcap.CapHandler):
     component.value = statement.size
     component.save()
 
-    app_info = applicant.to_json()
+    app_info = applicant.cached_json()
 
     resp = {'component' : ct.name, 'app' : app_info}
     return bcap.bcapResponse(resp)
@@ -761,7 +761,7 @@ class SetAreasHandler(bcap.CapHandler):
       else:
         applicant.update_area(ar, weight)
 
-    return bcap.bcapResponse(applicant.to_json())
+    return bcap.bcapResponse(applicant.cached_json())
 
 class ChangeApplicantHandler(bcap.CapHandler):
   def name_str(self):
@@ -773,7 +773,7 @@ class ChangeApplicantHandler(bcap.CapHandler):
     if args.has_key('ethnicity'):
       applicant.ethnicity = args['ethnicity']
     applicant.save()
-    return bcap.bcapResponse(applicant.to_json())
+    return bcap.bcapResponse(applicant.cached_json())
 
 class SetPositionHandler(bcap.CapHandler):
   def post_arg_names(self):
@@ -918,6 +918,7 @@ class SubmitReviewHandler(bcap.CapHandler):
     for (val_id, none) in errors:
       logger.error('SubmitReviewHandler: no score value with id %s'\
         % str(val_id))
+
   def fillReview(self, scores, advdet, comments, pair, draft):
     reviews = pair.get_reviews(draft=draft)
     if len(reviews) > 0:
@@ -931,6 +932,8 @@ class SubmitReviewHandler(bcap.CapHandler):
     review.destroy_scores()
     review.save()
     self.process_scoreval_ids(review, scores)
+    review.save()
+
   def post(self, granted, args):
     pair = granted.apprevpair
     draft = args['draft']
@@ -942,7 +945,7 @@ class SubmitReviewHandler(bcap.CapHandler):
       scores = args['scores']
     scores = self.convert_scores_argument(scores)
     self.fillReview(scores, advdet, comments, pair, draft)
-    return bcap.bcapResponse(pair.applicant.to_json())
+    return bcap.bcapResponse(pair.applicant.cached_json())
 
 class HighlightApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -952,14 +955,14 @@ class HighlightApplicantHandler(bcap.CapHandler):
       h = Highlight(department=pair.applicant.department,\
         applicant=pair.applicant, highlightee=pair.reviewer)
       h.save()
-    return bcap.bcapResponse(pair.applicant.to_json())
+    return bcap.bcapResponse(pair.applicant.cached_json())
 
 class UnhighlightApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
     pair = granted.apprevpair
     highlights = pair.get_highlights()
     highlights.delete()
-    return bcap.bcapResponse(pair.applicant.to_json())
+    return bcap.bcapResponse(pair.applicant.cached_json())
 
 class RejectApplicantHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -982,7 +985,7 @@ class HideApplicantHandler(bcap.CapHandler):
     elif hide == 'yes':
       if not applicant.is_hidden_from(reviewer):
         applicant.hide_from(reviewer)
-    return bcap.bcapResponse(applicant.to_json())
+    return bcap.bcapResponse(applicant.cached_json())
 
 class GetAppReviewHandler(bcap.CapHandler):
   def get(self, granted):
@@ -1008,7 +1011,7 @@ class GetApplicantsHandler(bcap.CapHandler):
       else:
         pair = AppRevPair(applicant=applicant, reviewer=reviewer)
         pair.save()
-      a_json = applicant.to_json()
+      a_json = applicant.cached_json()
       launchCap = bcap.cachegrant('launch-app-review', pair)
       a_json['launchURL'] = '%s/appreview/#%s' % \
            (bcap.this_server_url_prefix(), launchCap.serialize())

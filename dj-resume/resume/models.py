@@ -137,6 +137,9 @@ class ApplicantPosition(bcap.Grantable):
   autoemail = models.BooleanField()
 
 class Applicant(bcap.Grantable):
+  def save(self):
+    super(bcap.Grantable, self).save()
+    cache.set('applicant_%s' % self.id, self.to_json())  
   def myReviews(self):
     return Review.objects.filter(applicant=self, draft=False)\
       .exclude(advocate='comment')
@@ -327,6 +330,9 @@ class Applicant(bcap.Grantable):
     return self.firstname + ' ' + self.lastname
 
 class ReadyApplicant(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   applicant = models.ForeignKey(Applicant)
   ready = models.BooleanField(default=False)
 
@@ -397,11 +403,17 @@ class Reviewer(bcap.Grantable):
     return self.department.lastChange
 
 class Hidden(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   reviewer = models.ForeignKey(Reviewer)
   applicant = models.ForeignKey(Applicant)
   department = models.ForeignKey(Department)
 
 class Review(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   advocate_choices = [\
     ('advocate', 'advocate'),\
     ('detract', 'detract'),\
@@ -447,6 +459,9 @@ class Review(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Score(bcap.Grantable):
+  def save(self):
+    self.review.applicant.save()
+    super(bcap.Grantable, self).save()
   def to_json(self):
     return {'score' : 'dummy field'}
   value = models.ForeignKey(ScoreValue)
@@ -464,6 +479,9 @@ class Area(bcap.Grantable):
   applicants = models.ManyToManyField(Applicant)
 
 class AreaWeight(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   class Meta:
     unique_together =(('applicant', 'area'))
   number = models.IntegerField(default=0)
@@ -471,6 +489,9 @@ class AreaWeight(bcap.Grantable):
   applicant = models.ForeignKey(Applicant)
 
 class Highlight(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   applicant = models.ForeignKey(Applicant)
   highlightee = models.ForeignKey(Reviewer)
   department = models.ForeignKey(Department)
@@ -509,6 +530,9 @@ class PendingHighlight(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Reference(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   def to_json(self):
     return {\
       'submitted' : self.submitted,\
@@ -552,6 +576,9 @@ class ComponentType(bcap.Grantable):
   department = models.ForeignKey(Department)
 
 class Component(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   def to_json(self):
     return {\
       'typeID' : self.type.id,\
@@ -572,6 +599,9 @@ class AuthCookie(bcap.Grantable):
   expires = models.IntegerField()
 
 class AppRevPair(bcap.Grantable):
+  def save(self):
+    self.applicant.save()
+    super(bcap.Grantable, self).save()
   def get_reviews(self, draft):
     return Review.objects.filter(applicant=self.applicant,\
       reviewer = self.reviewer, draft=draft)
