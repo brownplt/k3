@@ -379,11 +379,6 @@ class Reviewer(bcap.Grantable):
                 .exclude(comments='')
     return list(set([r.applicant.id for r in reviews]))
 
-  def get_applicants_model(self):
-    return Applicant.objects.filter(
-      department=self.department
-    ).order_by('id')
-
   def getApplicants(self):
     # TODO(joe): This should be filtered by department, figure out filter
     applicants = Applicant.objects.all()
