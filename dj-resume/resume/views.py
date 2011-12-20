@@ -816,7 +816,7 @@ def file_response(filename, response_prefix):
     resp_filename = '%s.%s' % (\
       response_prefix,\
       file_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+#    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
     return response
 
 class GetLetterHandler(bcap.CapHandler):
@@ -853,7 +853,7 @@ class GetStatementHandler(bcap.CapHandler):
     resp_filename = 'applicant_%s.%s' % (\
       component.type.name.replace(' ', '_'),\
       file_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
+#    response['Content-Disposition'] = 'attachment; filename=%s' % resp_filename
     return response
 
 class GetCombinedHandler(bcap.CapHandler):
@@ -863,7 +863,7 @@ class GetCombinedHandler(bcap.CapHandler):
       from lib.py.combiner import get_combined_data
       combined_data = get_combined_data(applicant)
       response = HttpResponse(combined_data, mimetype='pdf')
-      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
+#      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
       return response
     except Exception as e:
       return logWith404(logger, 'GetCombinedHandler: %s' % e, level='error')
