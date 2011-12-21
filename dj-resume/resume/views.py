@@ -699,7 +699,7 @@ class GetReviewerHandler(bcap.CapHandler):
       'hiddens': reviewer.hiddenIds(),
       'highlights': reviewer.highlightIds(),
       'drafts': reviewer.draftIds(),
-      'auth': {'role' : 'reviewer'}
+      'auth': {'role' : 'reviewer', 'username': reviewer.auth.name}
     }
     return bcap.bcapResponse(ret)
 

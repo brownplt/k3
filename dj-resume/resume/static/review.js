@@ -39,8 +39,8 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
   map(function(s) {me.statements[s] = true;},this.info.statements);
 
   this.rstatus = 'none';
-  map(function(r) {if (r.rname == rinfo.auth.username) me.rstatus = 'reviewed';},this.info.reviews);
   map(function(r) {if (r.rname == rinfo.auth.username) me.rstatus = 'comment';},this.info.comments);
+  map(function(r) {if (r.rname == rinfo.auth.username) me.rstatus = 'reviewed';},this.info.reviews);
 
   this.highlighted = inList(this.id,rinfo.highlights);
   this.hidden = inList(this.id,rinfo.hiddens);
