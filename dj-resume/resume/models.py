@@ -43,7 +43,10 @@ class Department(bcap.Grantable):
       'appemail' : r.applicant.auth.email,
       'reference' : r} for r in refs]
   def getBasic(self):
-    return {\
+    cached_json = cache.get('basic_%s' % self.id, 'no-basic')
+    if cached_json != 'no-basic':
+      return cached_json
+    basicJson = {\
       'info' : self.to_json(),\
       'positions' : [j.to_json() for j in self.my(ApplicantPosition)],\
       'components' : [c.to_json() for c in self.my(ComponentType)],\
@@ -60,6 +63,8 @@ class Department(bcap.Grantable):
       'countries' : list(set([a.country for a in self.my(Applicant)])),\
       'degrees' : [d.to_json() for d in self.my(Degree)],\
     }
+    cache.set('basic_%s' % self.id, basicJson)
+    return basicJson
   def to_json(self):
     return {\
       'name' : self.name,\

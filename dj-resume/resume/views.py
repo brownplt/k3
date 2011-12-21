@@ -715,23 +715,23 @@ class LaunchAppReviewHandler(bcap.CapHandler):
       for c in components if c.type.type == 'statement'])
 
     resp = {\
-      'getBasic' : bcap.grant('get-basic', applicant.department),\
-      'getApplicant' : bcap.grant('apprev-get-applicant', pair),\
-      'getReviewers' : bcap.grant('appreview-get-reviewers', applicant),\
-      'getReview' : bcap.grant('get-review', pair),\
-      'setAreas' : bcap.grant('set-areas', applicant),\
+      'getBasic' : bcap.cachegrant('get-basic', applicant.department),\
+      'getApplicant' : bcap.cachegrant('apprev-get-applicant', pair),\
+      'getReviewers' : bcap.cachegrant('appreview-get-reviewers', applicant),\
+      'getReview' : bcap.cachegrant('get-review', pair),\
+      'setAreas' : bcap.cachegrant('set-areas', applicant),\
       # setGender/Ethnicity mapped to changeApplicant
-      'changeApplicant' : bcap.grant('change-applicant', applicant),\
-      'setPosition' : bcap.grant('set-position', applicant),\
+      'changeApplicant' : bcap.cachegrant('change-applicant', applicant),\
+      'setPosition' : bcap.cachegrant('set-position', applicant),\
       'componentCaps' : component_caps,\
-      'getCombined' : bcap.grant('get-combined', applicant),\
-      'uploadMaterial' : bcap.grant('upload-material', applicant),\
-      'revertReview' : bcap.grant('revert-review', pair),\
-      'submitReview' : bcap.grant('submit-review', pair),\
-      'getHighlightStatus' : bcap.grant('get-highlight-status', pair),\
-      'unhighlightApplicant' : bcap.grant('unhighlight-applicant', pair),\
-      'rejectApplicant' : bcap.grant('reject-applicant', applicant),\
-      'hideApplicant' : bcap.grant('hide-applicant', pair),\
+      'getCombined' : bcap.cachegrant('get-combined', applicant),\
+      'uploadMaterial' : bcap.cachegrant('upload-material', applicant),\
+      'revertReview' : bcap.cachegrant('revert-review', pair),\
+      'submitReview' : bcap.cachegrant('submit-review', pair),\
+      'getHighlightStatus' : bcap.cachegrant('get-highlight-status', pair),\
+      'unhighlightApplicant' : bcap.cachegrant('unhighlight-applicant', pair),\
+      'rejectApplicant' : bcap.cachegrant('reject-applicant', applicant),\
+      'hideApplicant' : bcap.cachegrant('hide-applicant', pair),\
     }
     return bcap.bcapResponse(resp)
 
@@ -863,7 +863,7 @@ class GetCombinedHandler(bcap.CapHandler):
       from lib.py.combiner import get_combined_data
       combined_data = get_combined_data(applicant)
       response = HttpResponse(combined_data, mimetype='pdf')
-#      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
+      response['Content-Disposition'] = 'attachment; filename=applicant_combined.pdf'
       return response
     except Exception as e:
       return logWith404(logger, 'GetCombinedHandler: %s' % e, level='error')
@@ -1341,7 +1341,7 @@ class AppReviewGetReviewersHandler(bcap.CapHandler):
           'name' : r.auth.name,\
           'uname' : '%s (%s)' % (r.auth.name, r.auth.email),\
           'role' : r.auth.role,\
-          'highlight' : bcap.grant('highlight-applicant', self.pair_of(applicant, r))\
+          'highlight' : bcap.cachegrant('highlight-applicant', self.pair_of(applicant, r))\
         } for r in reviewers])
 
 class ChangeContactsHandler(bcap.CapHandler):

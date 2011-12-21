@@ -60,7 +60,7 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
 		   fold(function(rl,acc) {
 		       return (acc.length ? acc.concat([', ']) : acc).concat(
 									     rl.submitted ? 
-									     [A({href:rl.getLetter.serialize()},rl.name)] : 
+									     [A({target: '_blank',href:rl.getLetter.serialize()},rl.name)] : 
 									     [rl.name]);
 		     },[],this.info.refletters)),
 		 P(STRONG('Reviews: '),
@@ -232,10 +232,10 @@ function getTblColumns(bi,reviewer) {
 
   return standardCols.concat(map(function(c) {
 	return makeColumn('statement-col',c.short,function(a,b) {return 0;},function(a,cookie) {
-	    return TD(a.statements[c.id] ? A({href:a.components[c.id].serialize()},c.short) : '');});
+	    return TD(a.statements[c.id] ? A({target:'_blank',href:a.components[c.id].serialize()},c.short) : '');});
       },bi.statements)).concat([
 				makeColumn('combined-col','All',function(a,b) {return 0;},function(a,cookie) {
-				    return TD(A({href:a.info.getCombined.serialize()},
+				    return TD(A({target:'_blank',href:a.info.getCombined.serialize()},
 						(a.info.statements.length ? IMG({alt:'Get Combined PDF',title:'Get Combined PDF',border:0,src:'/static/images/pdficon_small.gif'}) : '')));}),
 				/*				batchCol,*/
 				makeColumn('summary', "My Scores", 
@@ -475,7 +475,7 @@ $(function() {
         tblRowsB = merge_e(tblRowsB.changes(),refilterE.snapshot_e(tblRowsB)).startsWith(tblRowsB.valueNow());
 
         pagesizecookie = getCookie('appage');
-        if(!pagesizecookie) pagesizecookie = '[10,1]';
+        if(!pagesizecookie) pagesizecookie = '[25,1]';
         sortcookie = getCookie('appsort');
 
         var filterFnB = initializeFilters(basicInfo, hiddensB, curAuth);

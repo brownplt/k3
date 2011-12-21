@@ -206,10 +206,10 @@ $(function() {
         UL({className:'material-list'},
           map(function(stmt) {
             return stmt.submitted ?
-              LI({className:'submitted'},A({href:launchInfo.componentCaps[stmt.id].serialize()},stmt.name)) :
+              LI({className:'submitted'},A({target:'_blank',href:launchInfo.componentCaps[stmt.id].serialize()},stmt.name)) :
               LI({className:'unsubmitted'},stmt.name);
             },comps.statements),
-          LI(A({href:launchInfo.getCombined.serialize()},IMG({src:'/static/images/pdficon_small.gif',alt:'Get Combined PDF',border:0,style:{'padding-right': '.5em'}}),SPAN('Get Combined PDF') ))
+          LI(A({target:'_blank',href:launchInfo.getCombined.serialize()},IMG({src:'/static/images/pdficon_small.gif',alt:'Get Combined PDF',border:0,style:{'padding-right': '.5em'}}),SPAN('Get Combined PDF') ))
           ));
       }),'personal','beginning');
     
