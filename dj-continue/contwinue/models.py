@@ -549,7 +549,7 @@ class Review(bcap.Grantable):
   submitted = models.BooleanField(default=False)
   published = models.BooleanField(default=False)
   overall = models.ForeignKey(RatingValue)
-  experties = models.ForeignKey(ExpertiseValue)
+  expertise = models.ForeignKey(ExpertiseValue)
   subreviewers = models.TextField(default='')
   last_saved = models.IntegerField()
   conference = models.ForeignKey(Conference)
