@@ -293,3 +293,69 @@ class TestAdminPage(Generator):
     self.assertTrue(other_paper.id in response)
     self.assertTrue(paper.id in response)
 
+class TestSetRole(Generator):
+  def test_add(self):
+    sherlock_acct = Account(key=str(uuid.uuid4()))
+    sherlock_acct.save()
+    sherlock = User(
+      full_name=u'Sherlock Holmes',
+      email=u'sherlock@gb.gov',
+      conference=self.conference,
+      account=sherlock_acct
+    )
+    sherlock.save()
+    user = sherlock
+    self.assertEqual(len(user.roles.all()), 0)
+
+    set_role = bcap.grant('set-role', user)
+    set_role.post({
+      'role': 'reviewer',
+      'value': 'panda-(any-value)'
+    })
+
+    self.assertEqual(len(user.roles.all()), 1)
+    rev_role = Role.get_by_conf_and_name(self.conference, 'reviewer')
+    self.assertEqual(user.roles.all()[0], rev_role)
+
+  def test_remove(self):
+    watson_acct = Account(key=str(uuid.uuid4()))
+    watson_acct.save()
+    watson = User(
+      full_name=u'Doctor Watson',
+      email=u'watson@gb.gov',
+      conference=self.conference,
+      account=watson_acct
+    )
+    watson.save()
+    watson.roles.add(Role.get_by_conf_and_name(self.conference, 'reviewer'))
+    user = watson
+    self.assertEqual(len(user.roles.all()), 1)
+
+    set_role = bcap.grant('set-role', user)
+    set_role.post({
+      'role': 'reviewer',
+      'value': 'off'
+    })
+
+    self.assertEqual(len(user.roles.all()), 0)
+
+  def test_add_ridiculous(self):
+    mori_acct = Account(key=str(uuid.uuid4()))
+    mori_acct.save()
+    mori = User(
+      full_name=u'Moriarty',
+      email=u'mori@gb.gov',
+      conference=self.conference,
+      account=mori_acct
+    )
+    mori.save()
+    user = mori
+    self.assertEqual(len(mori.roles.all()), 0)
+
+    set_role = bcap.grant('set-role', user)
+    set_role.post({
+      'role': 'not-a-real-role',
+      'value': 'on'
+    })
+
+    self.assertEqual(len(user.roles.all()), 0)

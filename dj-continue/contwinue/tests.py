@@ -15,7 +15,7 @@ import contwinue.email_strings as strings
 import belaylibs.dj_belay as bcap
 
 from contwinue.tests_common import Generator
-from contwinue.admin_tests import TestAdminPage
+from contwinue.admin_tests import TestAdminPage, TestSetRole
 
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.

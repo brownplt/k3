@@ -162,6 +162,7 @@ class ContinueInit():
       'delete-component-type': admin.DeleteComponentTypeHandler,
       'change-component-type': admin.ChangeComponentTypeHandler,
       'change-user-email': admin.ChangeUserEmailHandler,
+      'set-role': admin.SetRoleHandler
       # End LaunchAdmin handlers
 
       # End LaunchContinue handlers

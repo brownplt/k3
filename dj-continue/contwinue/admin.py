@@ -188,3 +188,18 @@ class GetPapersOfDVHandler(bcap.CapHandler):
     decision_value = granted['decision_value'].decisionvalue
 
     return bcap.bcapResponse(conference.papers_of_dv(decision_value))
+
+# SetRoleHandler
+# Turns a role for a given user on or off, depending on value
+# granted: |user:User|
+# -> {role: role-string, value: 'on' or any}
+class SetRoleHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['role', 'value']
+  def post(self, granted, args):
+    user = granted.user
+    role = Role.get_by_conf_and_name(user.conference, args['role'])
+    if role is not None:
+      if args['value'] == 'off': user.roles.remove(role)
+      else: user.roles.add(role)
+    return bcap.bcapResponse('true')
+

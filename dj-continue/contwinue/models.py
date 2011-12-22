@@ -284,6 +284,10 @@ class Role(bcap.Grantable):
   name = models.CharField(max_length=20)
   conference = models.ForeignKey(Conference)
 
+  @classmethod
+  def get_by_conf_and_name(self, conference, name):
+    return get_one(Role.objects.filter(conference=conference, name=name))
+
 class BidValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
