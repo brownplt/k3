@@ -132,7 +132,7 @@ class ApplicantPosition(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
   def save(self):
-    super(self, bcap.Grantable).save()
+    super(bcap.Grantable, self).save()
     self.department.update_basic()
   def to_json(self):
     return {\
