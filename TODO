@@ -1,0 +1,115 @@
+Actual feature requests:
+
+- Author response
+
+This will require the most design effort---the submission page currently has no
+UI for this, nor does the review page.  We need to sketch the UI for both
+places, and decide on the data model that backs it.
+
+- Multiple submissions per account
+
+This requires a layer of indirection.  Currently, when you visit writer.html,
+something happens that directs you to a single submission.  We need to simply
+not do that, and identify where in the data model the one-to-one constraint
+exists (if anywhere).
+
+- Past Review Response Upload
+
+We need to get Robby’s opinion on whether simply using another submissions
+component is acceptable here, or we want something more elaborate.
+
+--------------------------------------
+
+Accounts
+[x] (1) Associate Gmail accounts with existing accounts
+[x] (1) UI for already-existing jpasswords
+[] (1) Email for forgot password
+[] (1) Write instructions for new submitter page
+[] (1) Send mail to Shriram (and Robby) with instructions for new submitter page
+
+Pages
+
+[] (_) Frontend for writer.js
+  [x] (1) Add/Remove author handlers
+
+[x] (2) Identify handlers/models for backend of writer.(html|js)
+[x] (_) Move them (and unit-test each one)
+  [x] (1) Author/get → became GetWriterPaperInfoHandler
+  [x] (1) getBasic → became WriterBasicHandler
+  [x] (1) Author/getDeadlineExts → became PaperDeadlineExtensionsHandler
+  [x] (1) getAuthorText → became AuthorTextHandler
+  [x] (1) Author/setTitle → became PaperSetTitleHandler
+  [x] (1) Author/setAuthor → became PaperSetAuthorHandler
+  [x] (1) Author/setPcPaper → became PaperSetPcPaperHandler
+  [x] (1) Author/setTarget → became PaperSetTargetHandler
+  [x] (1) Author/setTopics → became PaperSetTopicsHandler
+  [x] (1) Author/<compid>.<cvext> →became PaperGetComponentHandler
+  [x] (1) Author/updateComponents → became PaperUpdateComponentsHandler
+  [x] (1) [new] AddAuthorHandler
+  [x] (1) [new] RemoveAuthorHandler
+  [x] (1) [new] AuthorUpdateNameHandler
+[x] (2) Move handler usage to frontend of writer.js
+
+[] (2) Identify handlers/models for backend of continue.(html|js)jk
+[] (_) Move them (and unit-test each one)
+  [] (1) getPaperSummaries →
+  [] (1) getBasic →
+  [] (1) getAbstracts →
+  [] (1) Paper/<id>/getAbstract → 
+  [] (1) updateBids → 
+  [] (1) getReviewPercentages → 
+  [] (1) Paper/<id>/updateDecision → 
+  [] (1) Meeting/setOrder → 
+  [] (1) Meeting/jumpTo → 
+  [] (1) Meeting/endMeeting → 
+  [] (1) getUserBids →
+  [] (1) Meeting/getOrder →
+  [] (1) genPaperLink() [js function]
+  [] (1) compLink() [js function]
+
+[x] (2) Identify handlers/models for backend of admin.(html|js)
+[] (_) Move them (and unit-test each one)
+  [x] DecisionValue/delete
+  [x] DecisionValue/add
+  [x] Topic/delete
+  [x] Topic/add
+  [x] ReviewComponentType/add
+  [x] ComponentType/change
+  [x] ComponentType/delete
+  [x] ComponentType/add
+  [x] User/changeEmail
+  [x] User/getIdsByDecision → became GetPapersOfDVHandler
+  [] User/sendEmails
+  [x] User/setRole­→ became SetRoleHandler 
+  [] ?/setContact
+  [] ?/updateScores
+  [] ?/getAuthorText
+  [x] getAdmin
+  [x] User/getAll
+  [] ?/getSubReviewers
+  [] UnverifiedUser/addPCs
+
+[] (2) Identify handlers/models for backend of meeting.(html|js)
+  [] ...
+[] (_) Move them (and unit-test each one)
+
+[] (2) Identify handlers/models for backend of spreadsheet.(html|js)
+  [] ...
+[] (_) Move them (and unit-test each one)
+
+Misc
+
+[] (2) Sketch a UI for author response---goal is to get FEEDBACK
+
+[] () Move generator to a single call, make the testing superclass not clear out
+
+[] (1) Error on non-PDF for submission
+[x] (1) Fix name-redrawing bug
+[] (1) One portal for PC members, one for authors?
+[] (1) Login styles --- padding next to start, and float the OK button
+
+[] (1) mk_simple_get_handler --- a useful abstraction for some of the backend?
+
+[] () Refactor all email strings into strings.py
+[] () Remove silly logger dependencies from files, strings, accounts, etc
+[] () What belongs in accounts.py?
