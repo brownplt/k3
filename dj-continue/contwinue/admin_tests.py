@@ -349,3 +349,55 @@ class TestSetRole(Generator):
     })
 
     self.assertEqual(len(user.roles.all()), 0)
+
+class TestSetContact(Generator):
+  def setUp(self):
+    super(TestSetContact, self).setUp()
+    self.acct = Account(key=str(uuid.uuid4()))
+    self.acct.save()
+    self.user = User(
+      full_name='Darkwing Duck',
+      email='dark@wing.duck',
+      conference=self.conference,
+      account=self.acct
+    )
+    self.user.save()
+    
+  def test_make_admin_and_add(self):
+    user = self.user
+    admin = Role.get_by_conf_and_name(self.conference, 'admin')
+    user.roles.add(admin)
+
+    self.assertNotEqual(self.conference.admin_contact, user)
+
+    set_contact = bcap.grant('set-contact', self.conference)
+    result = set_contact.post({'contactID': user.id})
+    self.assertEqual(result, True)
+
+    new_conf = Conference.get_by_shortname('SC')
+    self.assertEqual(new_conf.admin_contact, user)
+
+  def test_add_non_admin(self):
+    user = self.user
+
+    self.assertNotEqual(self.conference.admin_contact, user)
+
+    set_contact = bcap.grant('set-contact', self.conference)
+    result = set_contact.post({'contactID': user.id})
+    self.assertEqual(result, {
+      'error': True,
+      'message': 'User %s is not an admin' % user.id
+    })
+    new_conf = Conference.get_by_shortname('SC')
+    self.assertEqual(new_conf.admin_contact, self.conference.admin_contact)
+
+  def test_add_unkown(self):
+    set_contact = bcap.grant('set-contact', self.conference)
+    result = set_contact.post({'contactID': 98659})
+    self.assertEqual(result, {
+      'error': True,
+      'message': 'No user with id %s.' % 98659
+    })
+    new_conf = Conference.get_by_shortname('SC')
+    self.assertEqual(new_conf.admin_contact, self.conference.admin_contact)
+

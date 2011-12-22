@@ -391,6 +391,10 @@ class User(bcap.Grantable):
   roles = models.ManyToManyField(Role)
   account = models.ForeignKey(Account)
 
+  @classmethod
+  def get_by_id(self, id):
+    return get_one(User.objects.filter(id=id))
+
   def role_names(self):
     return [r.name for r in self.roles.all()]
 

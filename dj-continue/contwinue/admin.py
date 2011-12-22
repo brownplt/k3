@@ -193,6 +193,7 @@ class GetPapersOfDVHandler(bcap.CapHandler):
 # Turns a role for a given user on or off, depending on value
 # granted: |user:User|
 # -> {role: role-string, value: 'on' or any}
+# <- True
 class SetRoleHandler(bcap.CapHandler):
   def post_arg_names(self): return ['role', 'value']
   def post(self, granted, args):
@@ -201,5 +202,33 @@ class SetRoleHandler(bcap.CapHandler):
     if role is not None:
       if args['value'] == 'off': user.roles.remove(role)
       else: user.roles.add(role)
-    return bcap.bcapResponse('true')
+    return bcap.bcapResponse(True)
+
+# SetContactHandler
+# Sets the conference's contact to a different user if that user is an
+# administrator
+# granted: |conference:Conference|
+# -> {contactID: Number}
+# <- True
+class SetContactHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['contactID']
+  def post(self, granted, args):
+    conf = granted.conference
+    cid = args['contactID']
+    user = User.get_by_id(cid)
+    if user is None:
+      return bcap.bcapResponse({
+        'error': True,
+        'message': 'No user with id %s.' % cid
+      })
+    admin = Role.get_by_conf_and_name(conf, 'admin')
+    if admin in user.roles.all():
+      conf.admin_contact = user
+      conf.save()
+      return bcap.bcapResponse(True)
+    else:
+      return bcap.bcapResponse({
+        'error': True,
+        'message': 'User %s is not an admin' % cid
+      })
 

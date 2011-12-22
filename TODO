@@ -81,7 +81,7 @@ Pages
   [x] User/getIdsByDecision → became GetPapersOfDVHandler
   [] User/sendEmails
   [x] User/setRole­→ became SetRoleHandler 
-  [] ?/setContact
+  [x] ?/setContact → became SetContactHandler
   [] ?/updateScores
   [] ?/getAuthorText
   [x] getAdmin
