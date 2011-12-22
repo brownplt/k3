@@ -1,18 +1,8 @@
-import time, datetime, os
-
-import json
-
-from django.core import mail
-from django.test import TestCase
-
-import contwinue.generate as generate
-from contwinue.views import *
-from contwinue.submitter import *
-from contwinue.models import *
 from belaylibs.models import Grant
-import contwinue.email_strings as strings
-
 import belaylibs.dj_belay as bcap
+
+from contwinue.models import *
+from contwinue.admin import *
 
 from contwinue.tests_common import Generator, has_keys
 
