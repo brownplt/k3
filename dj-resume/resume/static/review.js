@@ -81,11 +81,11 @@ function ApplicantEntry(rinfo,basicInfo,app,cols,nsorder) {
 
   this.batchCb = INPUT({type:'checkbox'});
   this.rejectDom = SPAN();
-  if(rinfo.auth.role == 'admin') {
-    var rejectWidget = new CheckboxWidget(this.info.rejected).serverSaving(
+  if(rinfo.auth.role == 'head-reviewer') {
+    var rejectWidget = new CheckboxWidget(this.info.rejected).belayServerSaving(
 									   function(rej) {
-									     return genRequest({url:'Applicant/'+me.id+'/reject',fields:{cookie:authCookie,reject:(rej?'yes':'no')},asynchronous:false});
-									   });
+									     return genRequest({fields:{reject:(rej?'yes':'no')}});
+									   }, false, this.info.reject);
     rejectWidget.events.serverResponse.transform_e(function(sr) {
 	me.info.rejected = sr.rejected;
 	refilterE.sendEvent('r');

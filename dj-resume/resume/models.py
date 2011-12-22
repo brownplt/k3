@@ -42,6 +42,8 @@ class Department(bcap.Grantable):
     return [{'appname' : r.applicant.firstname + ' ' + r.applicant.lastname,
       'appemail' : r.applicant.auth.email,
       'reference' : r} for r in refs]
+  def update_basic(self):
+    cache.delete('basic_%s' % self.id)
   def getBasic(self):
     cached_json = cache.get('basic_%s' % self.id, 'no-basic')
     if cached_json != 'no-basic':
@@ -112,6 +114,7 @@ class AuthInfo(bcap.Grantable):
   roles = [\
     ('applicant', 'applicant'),\
     ('reviewer', 'reviewer'),\
+    ('head-reviewer', 'head-reviewer'),\
     ('admin', 'admin')\
   ]
   email = models.EmailField()
@@ -128,6 +131,9 @@ class AuthInfo(bcap.Grantable):
 class ApplicantPosition(bcap.Grantable):
   class Meta:
     unique_together = (('department', 'name'))
+  def save(self):
+    super(self, bcap.Grantable).save()
+    self.department.update_basic()
   def to_json(self):
     return {\
       'id' : self.id,\

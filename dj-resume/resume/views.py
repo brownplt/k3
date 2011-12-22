@@ -699,7 +699,7 @@ class GetReviewerHandler(bcap.CapHandler):
       'hiddens': reviewer.hiddenIds(),
       'highlights': reviewer.highlightIds(),
       'drafts': reviewer.draftIds(),
-      'auth': {'role' : 'reviewer', 'username': reviewer.auth.name}
+      'auth': {'role' : reviewer.auth.role, 'username': reviewer.auth.name}
     }
     return bcap.bcapResponse(ret)
 
@@ -965,9 +965,15 @@ class UnhighlightApplicantHandler(bcap.CapHandler):
     return bcap.bcapResponse(pair.applicant.cached_json())
 
 class RejectApplicantHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['reject']
   def post(self, granted, args):
     applicant = granted.applicant
-    return logWith404(logger, 'RejectApplicantHandler NYI')
+    if args['reject'] == 'yes':
+      applicant.rejected = True
+    elif args['reject'] == 'no':
+      applicant.rejected = False
+    applicant.save()
+    return bcap.bcapResponse(applicant.cached_json())
 
 class HideApplicantHandler(bcap.CapHandler):
   def name_str(self):
@@ -1029,6 +1035,8 @@ class GetApplicantsHandler(bcap.CapHandler):
       a_json['refletters'] = refjson
       applicant_json.append(a_json)
       a_json['getCombined'] = bcap.cachegrant('get-combined', applicant)
+      if reviewer.auth.role == 'head-reviewer':
+        a_json['reject'] = bcap.cachegrant('reject-applicant', applicant)
     return bcap.bcapResponse({
       'changed': True,
       'lastChange': reviewer.getLastChange(),
