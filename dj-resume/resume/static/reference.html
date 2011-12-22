@@ -69,7 +69,10 @@
         insertDomE(merge_e(writerReqE.filter_e(onlyErrors),iframeRetE).transform_e(
               function(response) {
                 response = capServer.dataPostProcess(JSON.stringify(response));
-                if(response.error) {
+                if(response.empty) {
+
+                }
+                else if(response.error) {
                   return P({ className: 'error' },
                       'We couldn\'t verify that your upload was a PDF or Word document.')
                 }
