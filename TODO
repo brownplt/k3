@@ -83,7 +83,7 @@ Pages
   [x] User/setRole­→ became SetRoleHandler 
   [x] ?/setContact → became SetContactHandler
   [] ?/updateScores
-  [] ?/getAuthorText
+  [x] ?/getAuthorText → became AuthorTextHandler (in submitter.py)
   [x] getAdmin
   [x] User/getAll
   [] ?/getSubReviewers
