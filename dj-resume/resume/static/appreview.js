@@ -156,7 +156,7 @@ $(function() {
         return DIV(H4('gender'),widget);
       }),'gender','beginning');
 
-      insertDomB(applicantB.transform_b(function(ai) {
+/*      insertDomB(applicantB.transform_b(function(ai) {
         var widget = new SelectWidget(ai.position.id,
           map(makePositionOption,basicInfo.positions))
           .belayServerSaving(function(gen) {
@@ -167,7 +167,7 @@ $(function() {
             
 //        unlockEdits.lift_e(function(v) { widget.disabled = v; });  
         return DIV(H4('position'),widget);
-      }),'position','beginning');
+      }),'position','beginning');*/
                        
     
       insertDomB(applicantB.transform_b(function(ai) {
