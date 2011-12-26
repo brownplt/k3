@@ -550,9 +550,12 @@ class TestSendEmails(Generator):
     self.assertEqual(mail.outbox[0].subject, subject)
     self.assertEqual(mail.outbox[1].subject, subject)
 
-    self.assertEqual(mail.outbox[0].to, 'harry@hogwarts.edu')
-    self.assertEqual(mail.outbox[1].to, 'teachers_pet@hogwarts.edu')
-    self.assertEqual(mail.outbox[0].sender, self.conference.admin_contact.email)
+    self.assertEqual(mail.outbox[0].to, ['harry@hogwarts.edu'])
+    self.assertEqual(mail.outbox[1].to, ['teachers_pet@hogwarts.edu'])
+    self.assertEqual(
+      mail.outbox[0].from_email,
+      self.conference.admin_contact.email
+    )
 
   def test_preview_with_reviews(self):
     subject = 'Some paper feedback'

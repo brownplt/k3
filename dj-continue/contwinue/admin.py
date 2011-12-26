@@ -5,6 +5,8 @@ from lib.py.common import logWith404, make_get_handler
 from contwinue.models import *
 import belaylibs.dj_belay as bcap
 
+import contwinue.email as email
+
 logger = logging.getLogger('default')
 
 #######################################
@@ -295,6 +297,12 @@ class SendEmailsHandler(bcap.CapHandler):
     if stage=='preview':
       return bcap.bcapResponse(useremails)
     else:
-      for email in useremails:
-        # send mail
-        return bcap.bcapResponse({'sent': 'sent'})
+      for uemail in useremails:
+        email.send_and_log_email(
+          subject=uemail['Subject'],
+          msg=uemail['Body'],
+          address=uemail['To']['email'],
+          fromaddr=act.email,
+          logger=logger
+        )
+      return bcap.bcapResponse({'sent': 'sent'})
