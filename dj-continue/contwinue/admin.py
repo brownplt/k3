@@ -232,3 +232,69 @@ class SetContactHandler(bcap.CapHandler):
         'message': 'User %s is not an admin' % cid
       })
 
+# SendEmailsHandler
+# Sends multiple emails to multiple users, with a few options
+#   sendReviews: If 'yes', sends reviews for the user's paper(s)
+#   stage: If 'preview', doesn't send emails, but returns them in json
+
+# granted: |conference:Conference|
+# -> {
+#      stage: 'preview' or any,
+#      sendReviews: 'yes' or any,
+#      subject: String,
+#      body: String,
+#      users: [userid] or userid
+#    }
+# <- [{
+#      Subject: String,
+#      To: UserJSON,
+#      Body: String
+#    }]
+#  or
+#    {sent: 'sent'}
+class SendEmailsHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return ['stage', 'sendReviews', 'subject', 'body', 'users']
+  def post(self, granted, args):
+    act = granted.conference.admin_contact
+    users = args['users']
+    subject = args['subject']
+    sendReviews = args['sendReviews']
+    body = args['body']
+    stage = args['stage']
+    if not isinstance(users, list):
+      users = [users]
+    useremails = []
+    for uid in users:
+      user = User.get_by_id(uid)
+      paperemails = []
+      if user is None:
+        continue
+      revtxt = ""
+      if sendReviews == 'yes':
+        papers = user.papers.all()
+        for paper in papers:
+          revtxt = u"\n-------\n"
+          i = 1
+          revs = []
+          for review in paper.review_set.all():
+            thisrev = u'Review %d:\n\n' % i
+            if(not review.submitted):
+              thisrev += u'Unsubmitted.\n\n'
+            else:
+              for comp in review.reviewcomponent_set.all():
+                if not comp.type.pc_only:
+                  thisrev += comp.value+u'\n\n'
+            revs.append(thisrev)
+          revtxt += u''.join(revs) + u'======'
+          paperemails.append({'Subject':subject, 'To':user.to_json(), 'Body':body+revtxt})
+      if paperemails == []:
+        useremails.append({'Subject':subject, 'To':user.to_json(), 'Body':body+revtxt})
+      else:
+        useremails += paperemails
+    if stage=='preview':
+      return bcap.bcapResponse(useremails)
+    else:
+      for email in useremails:
+        # send mail
+        return bcap.bcapResponse({'sent': 'sent'})

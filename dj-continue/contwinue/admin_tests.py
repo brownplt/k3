@@ -1,10 +1,13 @@
 from belaylibs.models import Grant
 import belaylibs.dj_belay as bcap
 
+import settings
+from django.core import mail
+
 from contwinue.models import *
 from contwinue.admin import *
 
-from contwinue.tests_common import Generator, has_keys
+from contwinue.tests_common import Generator, has_keys, make_author
 
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.
@@ -401,3 +404,195 @@ class TestSetContact(Generator):
     new_conf = Conference.get_by_shortname('SC')
     self.assertEqual(new_conf.admin_contact, self.conference.admin_contact)
 
+class TestSendEmails(Generator):
+  def setUp(self):
+    super(TestSendEmails, self).setUp()
+    self.harry = make_author(
+      full_name='Harry Potter',
+      email='harry@hogwarts.edu',
+      conference=self.conference
+    )
+    self.ron = make_author(
+      full_name='Ron Weasley',
+      email='ron@hogwarts.edu',
+      conference=self.conference
+    )
+    self.hermione = make_author(
+      full_name='Hermione Granger',
+      email='teachers_pet@hogwarts.edu',
+      conference=self.conference
+    )
+    self.snape = make_author(
+      full_name='Severus Snape',
+      email='potions@hogwarts.edu',
+      conference=self.conference
+    )
+    self.harrys_paper = Paper(
+      title='Multithreaded Patronus Composition',
+      contact=self.harry,
+      target=self.conference.default_target,
+      conference=self.conference 
+    )
+    self.harrys_paper.save()
+    self.harry.papers.add(self.harrys_paper)
+
+    self.hermiones_paper = Paper(
+      title='DuoStudy: Rewinding Education',
+      contact=self.hermione,
+      target=self.conference.default_target,
+      conference=self.conference
+    )
+    self.hermiones_paper.save()
+    self.hermione.papers.add(self.hermiones_paper)
+
+    self.harry_review = Review(
+      reviewer=self.snape,
+      paper=self.harrys_paper,
+      submitted=True,
+      published=False,
+      overall=RatingValue.objects.all()[0],
+      expertise=ExpertiseValue.objects.all()[0],
+      last_saved=0,
+      conference=self.conference
+    )
+    self.harry_review.save()
+    self.harry_comment = ReviewComponent(
+      type=ReviewComponentType.objects.filter(description='Comments for the Author')[0],
+      value='This paper was poopy.',
+      review=self.harry_review,
+      conference=self.conference
+    )
+    self.harry_comment.save()
+
+    self.hermione_review = Review(
+      reviewer=self.snape,
+      paper=self.hermiones_paper,
+      submitted=True,
+      published=False,
+      overall=RatingValue.objects.all()[0],
+      expertise=ExpertiseValue.objects.all()[0],
+      last_saved=0,
+      conference=self.conference
+    )
+    self.hermione_review.save()
+    self.hermione_comment = ReviewComponent(
+      type=ReviewComponentType.objects.filter(description='Comments for the Author')[0],
+      value='This paper was great, but Hermione wrote it.',
+      review=self.hermione_review,
+      conference=self.conference
+    )
+    self.hermione_comment.save()
+    # So that emails work with the test framework
+    settings.DEBUG=False
+
+  def tearDown(self):
+    super(TestSendEmails, self).tearDown()
+    # So that nothing surprising happens later
+    settings.DEBUG=True
+
+  def test_preview_with_no_reviews(self):
+    subject = 'All Papers Rejected'
+    body = 'Sorry, but everything is being rejected by Snape.'
+
+    conf = self.conference
+    send_emails = bcap.grant('send-emails', conf)
+    result = send_emails.post({
+      'stage':'preview',
+      'sendReviews':'no',
+      'subject':subject,
+      'body':body,
+      'users':[self.harry.id, self.hermione.id]
+    })
+
+    self.assertEqual(result, [
+      {
+        'Subject': subject,
+        'Body': body,
+        'To': {
+          'username': '',
+          'fullname': self.harry.full_name,
+          'email': self.harry.email,
+          'rolenames': [],
+          'reviewCount': 1,
+          'id': self.harry.id
+        }
+      },
+      {
+        'Subject': subject,
+        'Body': body,
+        'To': {
+          'username': '',
+          'email': self.hermione.email,
+          'fullname': self.hermione.full_name,
+          'rolenames': [],
+          'reviewCount': 1,
+          'id': self.hermione.id
+        }
+      }])
+
+  def test_send_with_no_reviews(self):
+    subject = 'All Papers Rejected'
+    body = 'Sorry, but everything is being rejected by Snape.'
+
+    conf = self.conference
+    send_emails = bcap.grant('send-emails', conf)
+    result = send_emails.post({
+      'stage':'real-frickin-deal',
+      'sendReviews':'no',
+      'subject':subject,
+      'body':body,
+      'users':[self.harry.id, self.hermione.id]
+    })
+
+    self.assertEqual(len(mail.outbox), 2)
+    self.assertEqual(mail.outbox[0].body, body)
+    self.assertEqual(mail.outbox[1].body, body)
+    self.assertEqual(mail.outbox[0].subject, subject)
+    self.assertEqual(mail.outbox[1].subject, subject)
+
+    self.assertEqual(mail.outbox[0].to, 'harry@hogwarts.edu')
+    self.assertEqual(mail.outbox[1].to, 'teachers_pet@hogwarts.edu')
+    self.assertEqual(mail.outbox[0].sender, self.conference.admin_contact.email)
+
+  def test_preview_with_reviews(self):
+    subject = 'Some paper feedback'
+    body = 'Comments included below'
+
+    conf = self.conference
+    send_emails = bcap.grant('send-emails', conf)
+    result = send_emails.post({
+      'stage':'preview',
+      'sendReviews':'yes',
+      'subject':subject,
+      'body':body,
+      'users':[self.harry.id, self.hermione.id]
+    })
+
+    def body_with_comment(comment):
+      return body + "\n-------\nReview 1:\n\n" + comment.value + '\n\n======'
+
+    self.assertEqual(result, [
+      {
+        'Subject': subject,
+        'Body': body_with_comment(self.harry_comment),
+        'To': {
+          'username': '',
+          'fullname': self.harry.full_name,
+          'email': self.harry.email,
+          'rolenames': [],
+          'reviewCount': 1,
+          'id': self.harry.id
+        }
+      },
+      {
+        'Subject': subject,
+        'Body': body_with_comment(self.hermione_comment),
+        'To': {
+          'username': '',
+          'email': self.hermione.email,
+          'fullname': self.hermione.full_name,
+          'rolenames': [],
+          'reviewCount': 1,
+          'id': self.hermione.id
+        }
+      }])

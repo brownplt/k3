@@ -163,7 +163,8 @@ class ContinueInit():
       'change-component-type': admin.ChangeComponentTypeHandler,
       'change-user-email': admin.ChangeUserEmailHandler,
       'set-role': admin.SetRoleHandler,
-      'set-contact': admin.SetContactHandler
+      'set-contact': admin.SetContactHandler,
+      'send-emails': admin.SendEmailsHandler
       # End LaunchAdmin handlers
 
       # End LaunchContinue handlers

@@ -399,16 +399,17 @@ class User(bcap.Grantable):
     return [r.name for r in self.roles.all()]
 
   def to_json(self):
-    review_count = len(Review.objects.filter(
-      conference=self.conference, 
-      reviewer=self, 
-      published=True))
+    review_count = 0
+    for paper in self.papers.all():
+      for rc in paper.review_set.all():
+        review_count += 1
     return {
       'username' : self.username,
       'fullname' : self.full_name,
       'email' : self.email,
       'rolenames' : self.role_names(),
-      'reviewCount' : review_count
+      'reviewCount' : review_count,
+      'id': self.id
     }
 
   def get_credentials(self):

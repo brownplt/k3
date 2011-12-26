@@ -7,22 +7,11 @@ from django.core import mail
 import belaylibs.dj_belay as bcap
 from belaylibs.models import Grant
 
-from contwinue.tests_common import Generator
+from contwinue.tests_common import Generator, make_author
 from contwinue.models import *
 from contwinue.submitter import *
 import contwinue.email_strings as strings
 
-def make_author(full_name, email, conference):
-  account = Account(key=str(uuid.uuid4()))
-  account.save()
-  user = User(
-    full_name=full_name,
-    email=email,
-    conference=conference,
-    account=account
-  )
-  user.save()
-  return user
 
 class TestAuthorLaunch(Generator):
   def setUp(self):
