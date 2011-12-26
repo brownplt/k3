@@ -8,7 +8,7 @@ import belaylibs.dj_belay as bcap
 from contwinue.tests_common import Generator
 from contwinue.admin_tests import TestAdminPage, TestSetRole, TestSetContact, \
     TestSendEmails
-from contwinue.author_tests import TestAuthorLaunch, TestUpdateAuthorName, \
+from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
 
 # Note:  These tests rely on generate.py, which creates an initial department

@@ -240,6 +240,7 @@ class TestAuthorLaunch(Generator):
     self.assertTrue(uu in paper.unverified_authors.all())
 
     self.assertEqual(len(mail.outbox), 1)
+    self.assertEqual(mail.outbox[0].to, ['sk@cs.fake'])
     self.assertEqual(
       mail.outbox[0].subject,
       strings.add_author_subject % {
