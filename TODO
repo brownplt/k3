@@ -43,7 +43,7 @@ Pages
   [x] (1) Author/setPcPaper → became PaperSetPcPaperHandler
   [x] (1) Author/setTarget → became PaperSetTargetHandler
   [x] (1) Author/setTopics → became PaperSetTopicsHandler
-  [x] (1) Author/<compid>.<cvext> →became PaperGetComponentHandler
+  [x] (1) Author/<compid>.<cvext> → became PaperGetComponentHandler
   [x] (1) Author/updateComponents → became PaperUpdateComponentsHandler
   [x] (1) [new] AddAuthorHandler
   [x] (1) [new] RemoveAuthorHandler
