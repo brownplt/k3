@@ -69,24 +69,24 @@ Pages
 
 [x] (2) Identify handlers/models for backend of admin.(html|js)
 [] (_) Move them (and unit-test each one)
-  [x] DecisionValue/delete
-  [x] DecisionValue/add
-  [x] Topic/delete
-  [x] Topic/add
-  [x] ReviewComponentType/add
-  [x] ComponentType/change
-  [x] ComponentType/delete
-  [x] ComponentType/add
-  [x] User/changeEmail
+  [x] DecisionValue/delete → became DeleteDecisionValueHandler
+  [x] DecisionValue/add → became AddDecisionValueHandler
+  [x] Topic/delete → became DeleteTopicHandler
+  [x] Topic/add → became AddTopicHandler
+  [x] ReviewComponentType/add → became AddReviewComponentTypeHandler
+  [x] ComponentType/change → became ChangeComponentTypeHandler
+  [x] ComponentType/delete → became DeleteComponentTypeHandler
+  [x] ComponentType/add → became AddComponentTypeHandler
+  [x] User/changeEmail → became ChangeUserEmailHandler
   [x] User/getIdsByDecision → became GetPapersOfDVHandler
-  [x] User/sendEmails
+  [x] User/sendEmails → became SendEmailsHandler
   [x] User/setRole­→ became SetRoleHandler 
   [x] ?/setContact → became SetContactHandler
   [] ?/updateScores
   [x] ?/getAuthorText → became AuthorTextHandler (in submitter.py)
-  [x] getAdmin
-  [x] User/getAll
-  [x] ?/getSubReviewers
+  [x] getAdmin → became GetAdminHandler
+  [x] User/getAll → became GetAllHandler
+  [x] ?/getSubReviewers → became GetSubReviewersHandler
   [] UnverifiedUser/addPCs
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)
