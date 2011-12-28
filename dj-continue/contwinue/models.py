@@ -555,6 +555,10 @@ class Review(bcap.Grantable):
   last_saved = models.IntegerField()
   conference = models.ForeignKey(Conference)
 
+  @classmethod
+  def get_by_conference(cls, conference):
+    return Review.objects.filter(conference=conference)
+
 class Launchable(bcap.Grantable):
   account = models.ForeignKey(Account)
   launchbase = models.TextField(max_length=500)

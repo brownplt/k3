@@ -164,7 +164,8 @@ class ContinueInit():
       'change-user-email': admin.ChangeUserEmailHandler,
       'set-role': admin.SetRoleHandler,
       'set-contact': admin.SetContactHandler,
-      'send-emails': admin.SendEmailsHandler
+      'send-emails': admin.SendEmailsHandler,
+      'get-subreviewers': admin.GetSubReviewersHandler,
       # End LaunchAdmin handlers
 
       # End LaunchContinue handlers

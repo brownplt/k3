@@ -86,7 +86,7 @@ Pages
   [x] ?/getAuthorText → became AuthorTextHandler (in submitter.py)
   [x] getAdmin
   [x] User/getAll
-  [] ?/getSubReviewers
+  [x] ?/getSubReviewers
   [] UnverifiedUser/addPCs
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)

@@ -306,3 +306,19 @@ class SendEmailsHandler(bcap.CapHandler):
           logger=logger
         )
       return bcap.bcapResponse({'sent': 'sent'})
+
+# GetSubReviewersHandler
+# Returns a list of strings representing subreviewers
+
+# granted: |conference:Conference|
+# <- [String]
+class GetSubReviewersHandler(bcap.CapHandler):
+  def get(self, granted):
+    conference = granted.conference
+    subs = []
+    for rev in Review.get_by_conference(conference):
+      if rev.submitted:
+        subs += [x.lstrip().rstrip() for x in rev.subreviewers.split('\n') \
+                  if x.lstrip() != '']
+    return bcap.bcapResponse(sorted(subs))
+

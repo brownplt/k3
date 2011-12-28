@@ -599,3 +599,38 @@ class TestSendEmails(Generator):
           'id': self.hermione.id
         }
       }])
+
+class TestGetSubReviewers(Generator):
+  def setUp(self):
+    super(TestGetSubReviewers, self).setUp()
+    self.r1 = Review(
+      paper=Paper.objects.all()[0],
+      reviewer=User.objects.all()[0],
+      submitted=True,
+      subreviewers='Henry\n\nAlfred',
+      overall=RatingValue.objects.all()[0],
+      expertise=ExpertiseValue.objects.all()[0],
+      last_saved=0,
+      conference=self.conference
+    )
+    self.r1.save()
+    self.r2 = Review(
+      paper=Paper.objects.all()[0],
+      reviewer=User.objects.all()[0],
+      submitted=False,
+      subreviewers='Alfred\nGeorge',
+      overall=RatingValue.objects.all()[0],
+      expertise=ExpertiseValue.objects.all()[0],
+      last_saved=0,
+      conference=self.conference
+    )
+    self.r2.save()
+
+  def tearDown(self):
+    self.r1.delete()
+    self.r2.delete()
+
+  def test_get(self):
+    get_sr = bcap.grant('get-subreviewers', self.conference)
+    result = get_sr.get()
+    self.assertEqual(result, ['Alfred', 'Henry'])
