@@ -79,7 +79,7 @@ Pages
   [x] ComponentType/add
   [x] User/changeEmail
   [x] User/getIdsByDecision → became GetPapersOfDVHandler
-  [] User/sendEmails
+  [x] User/sendEmails
   [x] User/setRole­→ became SetRoleHandler 
   [x] ?/setContact → became SetContactHandler
   [] ?/updateScores
