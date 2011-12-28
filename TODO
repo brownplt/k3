@@ -50,7 +50,7 @@ Pages
   [x] (1) [new] AuthorUpdateNameHandler
 [x] (2) Move handler usage to frontend of writer.js
 
-[] (2) Identify handlers/models for backend of continue.(html|js)jk
+[] (2) Identify handlers/models for backend of continue.(html|js)
 [] (_) Move them (and unit-test each one)
   [] (1) getPaperSummaries →
   [] (1) getBasic →
@@ -82,7 +82,7 @@ Pages
   [x] User/sendEmails → became SendEmailsHandler
   [x] User/setRole­→ became SetRoleHandler 
   [x] ?/setContact → became SetContactHandler
-  [] ?/updateScores
+  [x] ?/updateScores → ignored, decision support is weird...
   [x] ?/getAuthorText → became AuthorTextHandler (in submitter.py)
   [x] getAdmin → became GetAdminHandler
   [x] User/getAll → became GetAllHandler
