@@ -113,3 +113,9 @@ Misc
 [] () Refactor all email strings into strings.py
 [] () Remove silly logger dependencies from files, strings, accounts, etc
 [] () What belongs in accounts.py?
+
+[] () Belay handlers---apply using kwargs to avoid args['blahblah']
+[] () Belay knowngrant(handler, data, string): grant a well-known cap
+[] () Default return of a CapHandler should be bcapResponsed, special
+      returns should be available for files, html, etc.
+

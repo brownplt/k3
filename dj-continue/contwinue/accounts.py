@@ -16,6 +16,7 @@ import belaylibs.dj_belay as bcap
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
  ContinueCredentials, Account, Conference, UnverifiedUser, User, get_one, Paper
 from contwinue.email import send_and_log_email
+import contwinue.email_strings as strings
 
 logger = logging.getLogger('default')
 
@@ -54,31 +55,13 @@ def request_account(request):
       'paper': get_one(Paper.objects.filter(contact=user))
     })
 
-    message=u"""
-We received a request to create an account for you to submit to %(confname)s,
-and we already have a submission on record for you.  This link will take you
-back to your submissions:
-
-%(base)s/paper#%(key)s
-
-You can revisit this link as often as you like to edit your submission.  The
-submission page has instructions for creating an optional password-based
-account at your convenience.
-
-If you run into any problems, or you believe you received this message in
-error, please reply to this email.
-
-Thanks!
-%(confname)s
-"""
-
-    filled_message = message % {
+    filled_message = strings.remind_account_str % {
       'confname': conf.name,
       'base': bcap.this_server_url_prefix(),
       'key': bcap.cap_for_hash(launch)
     }
 
-    subject = 'Reminder: Your Account for %s' % conf.name
+    subject = strings.remind_account_subject % conf.name
     fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
     
     resp = send_and_log_email(subject, filled_message, email, fromaddr, logger)
@@ -112,30 +95,13 @@ Thanks!
 
   launch = bcap.grant('launch-new-paper', {'create': True, 'unverified': user})
 
-  message=u"""
-You've made a request to submit a paper for %(confname)s.  This link will take
-you to a page where you can get started:
-
-%(base)s/paper#%(key)s
-
-You can revisit this link as often as you like to edit your submission.  The
-submission page has instructions for creating an optional password-based
-account at your convenience.
-
-If you run into any problems, or you believe you received this message in
-error, please reply to this email.
-
-Thanks!
-%(confname)s
-"""
-
-  filled_message = message % {
+  filled_message = strings.request_account_str % {
     'confname': conf.name,
     'base': bcap.this_server_url_prefix(),
     'key': bcap.cap_for_hash(launch)
   }
 
-  subject = 'Create an Account for %s' % conf.name
+  subject = strings.request_account_subject % conf.name
   fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
   
   resp = send_and_log_email(subject, filled_message, email, fromaddr, logger)
