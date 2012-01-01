@@ -110,7 +110,7 @@ Misc
 
 [] (1) mk_simple_get_handler --- a useful abstraction for some of the backend?
 
-[] () Refactor all email strings into strings.py
+[x] () Refactor all email strings into strings.py
 [] () Remove silly logger dependencies from files, strings, accounts, etc
 [] () What belongs in accounts.py?
 
