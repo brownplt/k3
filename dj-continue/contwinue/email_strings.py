@@ -66,3 +66,26 @@ Thanks!
 %(confname)s
 """
 
+new_reviewer_subject = u"Your Reviewer Account for %(confname)s"
+
+new_reviewer_body = u"""
+Dear %(name)s,
+
+A reviewer account has been made for you for
+
+%(confname)s
+
+This link will take you a to a page where you can get started:
+
+%(base)s/review#%(key)s
+
+You can revisit this link as often as you like to edit your submission.  The
+page has instructions for creating an optional password-based account at your
+convenience.
+
+If you run into any problems, or you believe you received this message in
+error, please reply to this email.
+
+Thanks!
+%(confname)s
+"""

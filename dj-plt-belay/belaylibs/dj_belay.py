@@ -43,7 +43,7 @@ def cap_id_from_url(capURL):
 
 def cap_for_hash(cap):
   return handlerData.cap_prefix + cap_id_from_url(cap.serialize())
- 
+
 class BelayException(Exception):
   pass
   

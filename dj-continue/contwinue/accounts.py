@@ -227,4 +227,46 @@ def glogin_landing(request):
 
   return response
 
+# new_reviewer : Conference, String, String -> UnverifiedUser
+def new_reviewer(conf, name, email):
+  uu = UnverifiedUser(
+    conference=conf,
+    name=name,
+    email=email,
+    roletext='reviewer'
+  )
+  uu.save()
+  return uu
 
+# send_new_reviewer_email : UnverifiedUser -> None
+# Sends an account creation email to the given UnverifiedUser
+# The UnverifiedUser must have roletext='reviewer', or this is
+# an error.  Thows Exceptions if emails are invalid or cannot
+# be sent
+def send_new_reviewer_email(unverified_user):
+  if unverified_user.roletext != 'reviewer':
+    raise Exception('Tried to send reviewer email to %s' % unverified_user.roletext)
+
+  launch_cap = bcap.grant('launch-reviewer', {
+    'newuser': True,
+    'unverified': unverified_user
+  })
+
+  fromaddr = "%s <%s>" % \
+    (unverified_user.conference.name,
+     unverified_user.conference.admin_contact.email)
+
+  send_and_log_email(
+    subject=strings.new_reviewer_subject % {
+      'confname': unverified_user.conference.name
+    },
+    msg=strings.new_reviewer_body % {
+      'confname': unverified_user.conference.name,
+      'name': unverified_user.name,
+      'base': bcap.this_server_url_prefix(),
+      'key': bcap.cap_for_hash(launch_cap)
+    },
+    address=unverified_user.email,
+    fromaddr=fromaddr,
+    logger=logger
+  )

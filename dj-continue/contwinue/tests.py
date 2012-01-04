@@ -10,6 +10,7 @@ from contwinue.admin_tests import TestAdminPage, TestSetRole, TestSetContact, \
     TestSendEmails, TestGetSubReviewers
 from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
+from contwinue.accounts_tests import TestCreateReviewer
 
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.
@@ -44,4 +45,3 @@ class TestBasic(Generator):
     self.assertEqual(len(response['decisions']), 1)
     # make_new makes 2
     self.assertEqual(len(response['components']), 4)
-
