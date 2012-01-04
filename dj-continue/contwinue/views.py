@@ -166,6 +166,7 @@ class ContinueInit():
       'set-contact': admin.SetContactHandler,
       'send-emails': admin.SendEmailsHandler,
       'get-subreviewers': admin.GetSubReviewersHandler,
+      'add-pcs': admin.AddPCsHandler
       # End LaunchAdmin handlers
 
       # End LaunchContinue handlers

@@ -238,7 +238,7 @@ def new_reviewer(conf, name, email):
   uu.save()
   return uu
 
-# send_new_reviewer_email : UnverifiedUser -> None
+# send_new_reviewer_email : UnverifiedUser -> EmailResponse
 # Sends an account creation email to the given UnverifiedUser
 # The UnverifiedUser must have roletext='reviewer', or this is
 # an error.  Thows Exceptions if emails are invalid or cannot
@@ -256,7 +256,7 @@ def send_new_reviewer_email(unverified_user):
     (unverified_user.conference.name,
      unverified_user.conference.admin_contact.email)
 
-  send_and_log_email(
+  return send_and_log_email(
     subject=strings.new_reviewer_subject % {
       'confname': unverified_user.conference.name
     },

@@ -6,6 +6,7 @@ from contwinue.models import *
 import belaylibs.dj_belay as bcap
 
 import contwinue.email as email
+import contwinue.accounts as accounts
 
 logger = logging.getLogger('default')
 
@@ -321,4 +322,33 @@ class GetSubReviewersHandler(bcap.CapHandler):
         subs += [x.lstrip().rstrip() for x in rev.subreviewers.split('\n') \
                   if x.lstrip() != '']
     return bcap.bcapResponse(sorted(subs))
+
+# AddPCsHandler
+# Sends emails to each PC given (a list of emails and list of names)
+
+# granted: |conference:Conference|
+# -> { emails: [String] U String, names: [String] U String
+# <- [{'error': String, 'name': String} U {'name': String}]
+class AddPCsHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    conf = granted.conference
+    emails = args['emails']
+    names = args['names']
+    if not (isinstance(emails, list)): emails = [emails]
+    if not (isinstance(names, list)): names = [names]
+
+    ret = []
+    for i in range(len(names)):
+      unverified_rev = accounts.new_reviewer(conf, names[i], emails[i])
+      try:
+        email_response = accounts.send_new_reviewer_email(unverified_rev)
+        if not email_response:
+          appendage = {'name': names[i]}
+        else:
+          appendage = {'error': 'Email error', 'name': names[i]}
+      except Exception as e:
+        appendage = {'error': str(e), 'name': names[i]}
+      ret.append(appendage)
+
+    return bcap.bcapResponse(ret)
 

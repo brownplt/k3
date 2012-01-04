@@ -634,3 +634,34 @@ class TestGetSubReviewers(Generator):
     get_sr = bcap.grant('get-subreviewers', self.conference)
     result = get_sr.get()
     self.assertEqual(result, ['Alfred', 'Henry'])
+
+class TestAddPCs(Generator):
+  def test_add(self):
+    names = ['Shriram', 'Joe']
+    emails = ['sk@cs.brown.edu', 'joe@cs.brown.edu']
+
+    add_pcs = bcap.grant('add-pcs', self.conference)
+    result = add_pcs.post({
+      'names': names,
+      'emails': emails
+    })
+
+    self.assertEqual(result, [
+      {'name': 'Shriram'},
+      {'name': 'Joe'}
+    ])
+
+  def test_add_err(self):
+    names = ['Joe']
+    emails = ['joe-not-an-email']
+
+    add_pcs = bcap.grant('add-pcs', self.conference)
+    result = add_pcs.post({
+      'names': names,
+      'emails': emails
+    })
+
+    self.assertEqual(result, [
+      {'name': 'Joe', 'error': 'Email error'}
+    ])
+
