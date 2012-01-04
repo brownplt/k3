@@ -662,6 +662,6 @@ class TestAddPCs(Generator):
     })
 
     self.assertEqual(result, [
-      {'name': 'Joe', 'error': 'Email error'}
+      {'name': 'Joe', 'error': 'We didn\'t recognize that email address.'}
     ])
 

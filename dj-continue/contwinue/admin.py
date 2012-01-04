@@ -345,7 +345,7 @@ class AddPCsHandler(bcap.CapHandler):
         if not email_response:
           appendage = {'name': names[i]}
         else:
-          appendage = {'error': 'Email error', 'name': names[i]}
+          appendage = {'error': 'We didn\'t recognize that email address.', 'name': names[i]}
       except Exception as e:
         appendage = {'error': str(e), 'name': names[i]}
       ret.append(appendage)
