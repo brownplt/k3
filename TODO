@@ -68,7 +68,7 @@ Pages
   [] (1) compLink() [js function]
 
 [x] (2) Identify handlers/models for backend of admin.(html|js)
-[] (_) Move them (and unit-test each one)
+[x] (_) Move them (and unit-test each one)
   [x] DecisionValue/delete → became DeleteDecisionValueHandler
   [x] DecisionValue/add → became AddDecisionValueHandler
   [x] Topic/delete → became DeleteTopicHandler
@@ -87,7 +87,7 @@ Pages
   [x] getAdmin → became GetAdminHandler
   [x] User/getAll → became GetAllHandler
   [x] ?/getSubReviewers → became GetSubReviewersHandler
-  [] UnverifiedUser/addPCs
+  [x] UnverifiedUser/addPCs
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)
   [] ...
