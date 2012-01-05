@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title>Loading...</title>
+    <link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+    <script src="/static/lib/js/flapjax/flapjax.js"></script>
+    <script src="/static/lib/js/flapjax/json.js"></script>
+    <script src="/static/lib/js/flapjax/plug.js"></script>
+    <script src="/static/lib/js/flapjax/myfjws.js"></script>
+    <script src="/static/gcommon.js"></script>
+    <script src="/static/common.js"></script>
+    <script src="/common.js"></script>
+    <script src="/static/lib/js/caps.js"></script>
+    <script src="/static/lib/js/flapjax-belay.js"></script>
+    <script type="text/javascript" src="admin.js"></script>
+    <style>
+      .single-email-preview {
+        background-color: #ddd;
+        border: 1px dashed black;
+        padding: 0.25em;
+        margin: 0.25em;
+        font-size: medium;
+        font-family: monospace
+      }
+      .trshow {
+        display: table-row;
+      }
+      .trhide {
+        display: none;
+      }
+    </style>
+    </head>
+    <body onload="loader();">
+	<h1 id="confhead"></h1>
+	<div id="login"></div>
+	<div class="tabs" id="admintabs">
+	    <h4>Navigation:</h4>
+	    <ul>
+		<li class="left-tab"><a href="javascript://Config" class="admin-tab" id="config_tab" title="Continue Configuration">Configuration</a></li>
+		<li class="left-tab"><a href="javascript://Users" class="admin-tab" id="users_tab" title="Users">Users</a></li>
+		<li class="left-tab"><a href="javascript://Customize" class="admin-tab" id="customize_tab" title="Customization">Customization</a></li>
+		<li class="left-tab"><a href="javascript://Communication" class="admin-tab" id="comm_tab" title="Communication">Communication</a></li>
+		<li class="left-tab"><a href="javascript://Information" class="admin-tab" id="info_tab" title="Other Information">Information</a></li>
+		<li class="right-tab"><a href="" class="admin-tab" id="back_to_list_tab">Back to List</a></li>
+	    </ul>
+	</div>
+
+	<div id="config_content" style="display:none">
+	    <form action="configure" target="conftarget" method="post">
+	    <input type="hidden" id="conf_cookie" name="cookie" />
+		<h3>Conference Information</h3>
+		<table class="key-value">
+		    <tbody>
+			<tr><th>Conference Name:</th><td><input name="conference_name" id="conference_name" size="50" /></td></tr>
+			<tr><th>Short Name:</th><td><input name="conference_short_name" id="conference_short_name" size="20" /></td></tr>
+			<tr><th>Enable Bidding:</th><td><input name="showBid" id="showBid" type="checkbox" value="yes" /></td></tr>
+			<tr><th>Show Paper Numbers to Submitters:</th><td><input name="showNum" id="showNum" type="checkbox" value="yes"/></td></tr>
+			<tr><th colspan="2" style="text-align: left;">Text to show to authors above components:</th></tr>
+			<tr><td colspan="2"><textarea name="general_text" id="general_text" rows="4" cols="60"></textarea></td></tr>
+			<tr><th colspan="2" style="text-align: left;">Text to show to authors above Submit button:</th></tr>
+			<tr><td colspan="2"><textarea name="component_text" id="component_text" rows="4" cols="60"></textarea></td></tr>
+		    </tbody>
+		</table>
+		<div class="form-buttons"><input name="submit" value="Save" type="submit" /></div>
+		</form>
+		<div id="ds">
+		</div>
+	</div>
+	<div id="user_content" style="display:none">
+	    <h3>Add New PC Members</h3>
+		<div id="addpc-result">
+		</div>
+	    <div id="addpc-content">
+	    </div>
+	    </form>
+	    <h3>PC Members</h3>
+	    <label>Designated contact admin: <select id="dcadm"></select></label>
+	    <div id="pc_members"></div>
+	    <h3>Current Users</h3>
+	    <div id="users"></div>
+	</div>
+
+	<div id="custom_content" style="display:none">
+		<h3>Submission Categories</h3>
+		<p>Specify the different kinds of submissions that there are. If there is more than one, authors will indicate which category their submission is in, and whether they want it to be considered for other categories as well. Categories may be different &quot;tracks&quot;, or they may be different kinds of presentations, like &quot;Paper&quot;, &quot;Poster&quot;, etc. Some conferences may have only one category, &quot;Accepted&quot;.</p>
+		<table id="categories"></table>
+		<h3>Other Decisions</h3>
+		<p>If you want to be able to set papers' decision status to something other than Undecided, Rejected, or one of the categories above, you may add additional categories here. This may be a temporary status, like &quot;consider for poster&quot; or &quot;decide by June 8th&quot;, or any kind of decision other than the categories above. These will not be visible to authors in any way.</p>
+	    <table id="decisions"></table>
+		<h3>Submission Components</h3>
+		<p>Specify what components you want applicants to submit below. Text components, like abstracts, will be displayed directly within Continue; other components must be downloaded.&quot;Max&quot; specifies a maximum file size in MB. Setting a maximum file size of 0 will allow unlimited-size uploads; maximum size don't apply to text components. If you check the box in the &quot;Man&quot; column, the component will be marked as mandatory.</p>
+	    <table id="components"></table>
+	    <h3>Topics</h3>
+	    <p>Specify what topics authors can indicate in their submissions.</p>
+		<table id="topics"></table>
+	    <h3>Review Components</h3>
+		<table id="rcomps"></table>
+	</div>
+
+	<div id="comm_content" style="display:none">
+	    <h3>Email PC Members or Submitters</h3>
+	    <p>Use this page to send email and reviews to submitters or PC members, or to export their email addresses as a text file.
+	    You can send messages to the PC, to all the submitters at once, or to any decision category individually.</p>
+	    <p><i>These emails will come from the &quot;Designated Contact Admin&quot;, which may be changed in the &quot;Users&quot; tab of the Admin page.</i></p>
+	    <table class="key-value">
+		<tbody>
+		    <tr><th>Email To:</th><td>
+			    <label><input name="emailto" value="pc" checked type="radio" />PC committee</label><br />
+			    <label><input name="emailto" value="allsub" type="radio" />All submitters</label><br />
+			    <label><input name="emailto" value="somesub" type="radio" />Papers with decision:<select name="email-decision" id="email-decision" />
+			</label></td></tr>
+		    </tbody>
+		</table>
+		<h3>Send Email</h3>
+		    <table class="key-value">
+			<tbody>
+			    <tr><th>To:</th><td id="email-to"></td></tr>
+			    <tr><th>From:</th><td id="email-from"></td></tr>
+			    <tr><th>Subject:</th><td><input id="email-subject" size="35" type="text"></td></tr>
+			    <tr><th>Message:</th><td><textarea cols="72" rows="10" id="email-message"></textarea>
+				    <div class="form-note">Use hard returns to wrap each line.</div></td></tr>
+			    <tr id="email-reviews-row"><th></th><td><label><input id="email-reviews" type="checkbox">Include reviews</label>
+				    <div class="form-note">Public comments will be sent.</div></td></tr>
+			    <tr><th></th><td><input id="email-preview" value="Preview Emails" type="button"><input id="email-send" value="Send Emails" type="button" /></td></tr>
+			    <tr><th>Recipients:</th><td id="recipients"></td></tr>
+			</tbody>
+		    </table>
+		    <pre id="previews"></pre>
+	    </div>
+
+	    <div id="info_content" style="display:none">
+		<h3>Sub-Reviewers</h3>
+		<p>The following sub-reviewers assisted the conference:</p>
+		<div id="subrevlist"></div>
+	    </div>
+
+	    <hr noshade="noshade" size="1" />
+	    <table id="footer">
+		<tbody>
+		    <tr>
+			<td align="left">Please send questions, comments, <br> problems, etc to <a href="mailto:arjun@cs.brown.edu">arjun@cs.brown.edu</a>.</td>
+			<td align="right"><a href="http://continue2.cs.brown.edu/">Continue conference management server</a><br>Powered by <a href="http://www.flapjax-lang.org/">Flapjax</a></td>
+		    </tr>
+		</tbody>
+	    </table>
+	    <iframe id="conftarget" name="conftarget" style="position: absolute; left: -999px; top: 0"></iframe>
+	</body>
+    </html>

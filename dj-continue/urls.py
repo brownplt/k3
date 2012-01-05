@@ -11,6 +11,7 @@ urlpatterns = patterns('',
   (r'^.*/request_account$', 'contwinue.accounts.request_account'),
 
   (r'^paper$', 'contwinue.views.paper'),
+  (r'^admin$', 'contwinue.views.admin_handler'),
 
   (r'^continue_login', 'contwinue.views.continue_login'),
   (r'^glogin$', 'contwinue.accounts.glogin'),

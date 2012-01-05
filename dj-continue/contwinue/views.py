@@ -121,8 +121,7 @@ def get_basic(request):
   return bcap.bcapResponse(conference.get_title_and_contact())
 
 paper = make_get_handler('writer.html', {})
-
-
+admin_handler = make_get_handler('admin.html', {})
 
 class ContinueInit():
   def process_request(self, request):
@@ -150,8 +149,8 @@ class ContinueInit():
       'launch-attach-to-paper': submitter.LaunchAttachToPaperHandler,
       # End LaunchPaper handlers
 
-      'get-papers-of-dv': admin.GetPapersOfDVHandler,
       'get-admin': admin.GetAdminHandler,
+      'get-papers-of-dv': admin.GetPapersOfDVHandler,
       'get-all': admin.GetAllHandler,
       'add-topic': admin.AddTopicHandler,
       'delete-topic': admin.DeleteTopicHandler,

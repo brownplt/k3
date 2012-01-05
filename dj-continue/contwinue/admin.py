@@ -352,3 +352,52 @@ class AddPCsHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(ret)
 
+class LaunchAdminHandler(bcap.CapHandler):
+  def get(self, granted):
+    user = granted.user
+    conf = user.conference
+    dvs = DecisionValue.objects.filter(conference=conf)
+    dvcaps = {}
+    deletedvs = {}
+    for dv in dvs:
+      dvcaps[dv.id] = bcap.grant('get-papers-of-dv', dv)
+      deletedvs[dv.id] = bcap.grant('delete-decision-value', dv)
+
+    topics = Topic.objects.filter(conference=conf)
+    topiccaps = {}
+    for topic in topics:
+      topic[id] = bcap.grant('delete-topic', topic)
+
+    cts = ComponentType.objects.filter(conference=conf)
+    deletects = {}
+    changects = {}
+    for ct in cts:
+      deletects[ct.id] = bcap.grant('delete-component-type', ct)
+      changects[ct.id] = bcap.grant('change-component-type', ct)
+
+    users = User.objects.filter(conference=conf)
+    emailcaps = {}
+    rolecaps = {}
+    for user in users:
+      emailcaps[user.id] = bcap.grant('change-user-email', user)
+      rolecaps[user.id] = bcap.grant('set-role', user)
+
+    return bcap.bcapResponse({
+      'getPapersOfDV': dvcaps,
+      'deleteDVs': deletedvs,
+      'deleteTopics': topiccaps,
+      'deleteComponentTypes': deletects,
+      'changeComponentTypes': changects,
+      'setRoles': rolecaps,
+      'changeEmails': emailcaps,
+      'sendEmails': bcap.regrant('send-emails', conf),
+      'getAll': bcap.regrant('get-all', conf),
+      'getAdmin': bcap.regrant('get-admin', user),
+      'addPCs': bcap.regrant('add-pcs', conf),
+      'setContact': bcap.regrant('set-contact', conf),
+      'addComponentType': bcap.regrant('add-component-type', conf),
+      'addDecisionValue': bcap.regrant('add-decision-value', conf),
+      'addTopic': bcap.regrant('add-topic', conf),
+      'addReviewComponentType': bcap.regrant('add-review-component-type', conf),
+      'getSubreviewers': bcap.regrant('get-subreviewers', conf)
+    })
