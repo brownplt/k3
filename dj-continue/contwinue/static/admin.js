@@ -1,8 +1,13 @@
-function deleteTransform(objName,evt) {
-	return getFilteredWSO_e(
+function getFieldE(liE, fld) {
+  return liE.transform_e(function(li) {
+    return li[fld];
+  });
+}
+
+function deleteTransform(objName,evt,cap) {
+	return post_e(
 		evt.transform_e(function(dobj) {
-			return genRequest({url:objName+'/delete',
-				fields: {cookie:authCookie,id:dobj.id}});
+			return [cap, genRequest({id:dobj.id})];
 	}));
 }
 
@@ -359,17 +364,23 @@ function loadDS(basicInfoE,adminInfoE) {
 function loader() {
 	var flapjax = flapjaxInit();
 	authCookie = $URL('cookie');
+  var capServer = new CapServer();
 	var onLoadTimeE = receiver_e();
 	var exceptsE = captureServerExcepts();
 	handleExcepts(exceptsE);
-	var basicInfoE = getBasicInfoE(onLoadTimeE);
-	var curUserE = getCurUserE(onLoadTimeE,authCookie);
+  var launchCap = launchCapFromKey(COMMON.urlPrefix, capServer);
+  var launchE = getE(onLoadTimeE.constant_e(launchCap));
+	var basicInfoE = getE(getFieldE(launchE, 'getBasic'));
+	basicInfoE.transform_e(function(bi) {
+		document.title = bi.info.shortname + ' - Manage Conference';
+  });
 	doConfHead(basicInfoE);
-	doLoginDivB(curUserE);
-	var authorTextE = getFilteredWSO_e(onLoadTimeE.constant_e(
-		genRequest({url:'getAuthorText',
-				fields:{cookie:authCookie}})));
-
+  loadAdminfoE = merge_e(onLoadTimeE);
+	var curUserE = getCurUserE(onLoadTimeE,authCookie);
+//	doLoginDivB(curUserE);
+	var authorTextE = getE(launchE.transform_e(function(li) {
+    return li.getAuthorText;
+  }))
 	lift_e(function(cu,bi) {
 			var AdminTabs = new TabSet(
 				constant_b(cu.rolenames),
@@ -390,19 +401,8 @@ function loader() {
 			$('back_to_list_tab').href = 'continue.html?cookie='+authCookie;
 	},curUserE,basicInfoE);
 
-	loadAdminfoE = merge_e(onLoadTimeE);
-	var adminInfoE = getFilteredWSO_e(loadAdminfoE.constant_e(
-		genRequest(
-			{url:  'getAdmin',
-			fields: {cookie:authCookie}})
-		));
-
-	var usersInfoB = getFilteredWSO_e(onLoadTimeE.constant_e(
-		genRequest(
-			{url: 'User/getAll',
-			fields: {cookie:authCookie}})
-		)).startsWith([]);
-
+	var adminInfoE = getE(getFieldE(launchE, 'getAdmin'));
+	var usersInfoB = getE(getFieldE(launchE, 'getAll')).startsWith([]);
 	var usersByRoleB = usersInfoB.transform_b(function(users) {
 		var out = {pc:[],user:[]};
 		map(function(u) {if (inList('user',u.rolenames)) out.user.push(u); else out.pc.push(u);},users);
@@ -507,7 +507,7 @@ function loader() {
 	});
 	insertDomB(apcDomB,'addpc-content');
 	insertDomB(confirmB,'addpc-result');
-	$('conf_cookie').value = authCookie;
+	getObj('conf_cookie').value = authCookie;
 	
 	iframeLoad_e('conftarget').transform_e(function(_) {
 		if(_)

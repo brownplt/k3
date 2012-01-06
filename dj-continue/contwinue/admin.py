@@ -383,6 +383,8 @@ class LaunchAdminHandler(bcap.CapHandler):
       rolecaps[user.id] = bcap.grant('set-role', user)
 
     return bcap.bcapResponse({
+      'getBasic': bcap.regrant('writer-basic', conf),
+
       'getPapersOfDV': dvcaps,
       'deleteDVs': deletedvs,
       'deleteTopics': topiccaps,
@@ -392,12 +394,13 @@ class LaunchAdminHandler(bcap.CapHandler):
       'changeEmails': emailcaps,
       'sendEmails': bcap.regrant('send-emails', conf),
       'getAll': bcap.regrant('get-all', conf),
-      'getAdmin': bcap.regrant('get-admin', user),
+      'getAdmin': bcap.regrant('get-admin', conf),
       'addPCs': bcap.regrant('add-pcs', conf),
       'setContact': bcap.regrant('set-contact', conf),
       'addComponentType': bcap.regrant('add-component-type', conf),
       'addDecisionValue': bcap.regrant('add-decision-value', conf),
       'addTopic': bcap.regrant('add-topic', conf),
       'addReviewComponentType': bcap.regrant('add-review-component-type', conf),
-      'getSubreviewers': bcap.regrant('get-subreviewers', conf)
+      'getSubreviewers': bcap.regrant('get-subreviewers', conf),
+      'getAuthorText': bcap.regrant('author-text', conf)
     })
