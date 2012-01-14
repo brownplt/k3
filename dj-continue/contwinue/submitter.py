@@ -1,4 +1,5 @@
 import os
+import hashlib
 import settings
 from contwinue.models import *
 import contwinue.email_strings as strings
@@ -254,19 +255,6 @@ class AddGoogleAccountHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(user.account.get_credentials()['googleCreds'])
           
-
-
-HASH_ITERATIONS = 20
-# TODO: non-ASCII characters can break this
-# need to sanitize raw password
-def get_hashed(rawpassword, salt):
-  salted = rawpassword + salt
-  for i in range(HASH_ITERATIONS):
-    m1 = hashlib.sha1()
-    m1.update(salted)
-    salted = m1.hexdigest()
-  return salted
-
 class AddPasswordHandler(bcap.CapHandler):
   def post_arg_names(self): return ['password']
   def post(self, granted, args):
@@ -276,7 +264,7 @@ class AddPasswordHandler(bcap.CapHandler):
     salt = str(uuid.uuid4())
     credentials = ContinueCredentials(
       username=user.email,
-      hashed_password=get_hashed(password, salt),
+      hashed_password=common.get_hashed(password, salt),
       salt=salt,
       account=user.account
     )

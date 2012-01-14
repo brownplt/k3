@@ -1,6 +1,7 @@
 from django.http import HttpResponseNotFound
 from django.shortcuts import render_to_response
 import logging
+import hashlib
 
 
 def logWith404(logger, msg, level='info'):
@@ -26,4 +27,15 @@ def make_get_handler(template, params):
 
     return render_to_response(template, params)
   return handler
+
+HASH_ITERATIONS = 20
+# TODO: non-ASCII characters can break this
+# need to sanitize raw password
+def get_hashed(rawpassword, salt):
+  salted = rawpassword + salt
+  for i in range(HASH_ITERATIONS):
+    m1 = hashlib.sha1()
+    m1.update(salted)
+    salted = m1.hexdigest()
+  return salted
 

@@ -17,7 +17,7 @@ import contwinue.admin as admin
 
 import belaylibs.dj_belay as bcap
 
-from lib.py.common import logWith404, make_get_handler
+from lib.py.common import logWith404, make_get_handler, get_hashed
 
 logger = logging.getLogger('default')
 
