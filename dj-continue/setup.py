@@ -37,3 +37,23 @@ def start_conference(admin_name, admin_email, conf_name, shortname, use_ds):
     launch_url
   ))
 
+def get_admin_launch(conf_shortname):
+  ContinueInit().process_request(None)
+  conf = models.Conference.objects.filter(shortname=conf_shortname)
+  admin = models.User.objects.filter(
+    conference = conf
+  )[0]
+  launch_admin = bcap.grant('launch-admin', admin)
+
+  launch_url = '%s/admin#%s' % (
+    bcap.this_server_url_prefix(),
+    bcap.cap_for_hash(launch_admin)
+  )
+
+  print('You can launch the admin page at %s.' % (
+    launch_url
+  ))
+  
+if __name__ == '__main__':
+  if sys.argv[1] == 'get_admin_launch':
+    get_admin_launch(sys.argv[2])
