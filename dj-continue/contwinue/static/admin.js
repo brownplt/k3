@@ -216,7 +216,7 @@ function UserTableWidget(usersB,isPC,curUser,adminInfo) {
 	this.events.roleChanged = roleChangeE;
 }
 
-function loadComm(basicInfoE,adminInfoE,usersByRoleB) {
+function loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE) {
 	var emailDecisionDomB = basicInfoE.transform_e(function(basicInfo) {
 		return SELECT({name:'email-decision'},
 			map(function(dec) {
@@ -226,11 +226,11 @@ function loadComm(basicInfoE,adminInfoE,usersByRoleB) {
 		}).startsWith(SELECT({name:'email-decision'}));
 	var emailDecisionE = $E(emailDecisionDomB);
 	var emailRadioB = $B('emailto');
-	var emailQueryB = getFilteredWSO_e(
-		emailDecisionE.transform_e(function(decid) {return genRequest(
-			{url:'User/getIDsByDecision',
-				fields:{cookie:authCookie,decid:decid}});
-			})).startsWith([]);
+	var emailQueryB = 
+    getE(lift_b(function(emailDecision, dvCaps) {
+      return dvCaps[emailDecision]; 
+    }, emailDecisionE.startsWith(null), dvCapsE.startsWith({})).
+    changes().filter_e(function(v) { return v; })).startsWith([]);
 	var decusersB = lift_b(function(emailQuery,usersByRole) {
 		var ubid = {};
 		map(function(u) {ubid[u.id] = u;},usersByRole.user);
@@ -374,7 +374,7 @@ function loader() {
 	handleExcepts(exceptsE);
   var launchCap = launchCapFromKey(COMMON.urlPrefix, capServer);
   var launchE = getE(onLoadTimeE.constant_e(launchCap));
-	var basicInfoE = getE(getFieldE(launchE, 'getBasic'));
+	var basicInfoE = getFieldE(launchE, 'basicInfo');
 	basicInfoE.transform_e(function(bi) {
 		document.title = bi.info.shortname + ' - Manage Conference';
   });
@@ -409,7 +409,7 @@ function loader() {
 	var usersInfoB = getE(getFieldE(launchE, 'getAll')).startsWith([]);
 	var usersByRoleB = usersInfoB.transform_b(function(users) {
 		var out = {pc:[],user:[]};
-		map(function(u) {if (inList('user',u.rolenames)) out.user.push(u); else out.pc.push(u);},users);
+		map(function(u) {if (inList('writer',u.rolenames)) out.user.push(u); else out.pc.push(u);},users);
 		return out;
 	});
 
@@ -420,7 +420,8 @@ function loader() {
 	insertDomB(subDomB,'subrevlist');
 
   var setContactE = getFieldE(launchE, 'setContact');
-	loadComm(basicInfoE,adminInfoE,usersByRoleB);
+  var dvCapsE = getFieldE(launchE, 'getPapersOfDV');
+	loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE);
 	loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE);
 
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.name;}),'conference_name','value');

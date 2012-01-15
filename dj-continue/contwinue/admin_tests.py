@@ -261,7 +261,7 @@ class TestAdminPage(Generator):
       description='Status Unknown', conference=self.conference)
     new_dv.save()
 
-    grant_data = {'conference' : self.conference, 'decision_value' : new_dv}
+    grant_data = new_dv
     get_cap = bcap.grant('get-papers-of-dv', grant_data)
 
     response = get_cap.get()

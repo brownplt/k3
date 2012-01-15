@@ -221,6 +221,18 @@ class Conference(bcap.Grantable):
       'info': info
     }
 
+  def get_admin_basic(self):
+    wb = self.get_writer_basic()
+    wb['decisions'] = [dv.to_json() for dv in self.my(DecisionValue)]
+    wb['bids'] = [b.to_json() for b in self.my(BidValue)]
+    wb['expertises'] = [e.to_json() for e in self.my(ExpertiseValue)]
+    wb['components'] = [ct.to_json() for ct in self.my(ComponentType)]
+    wb['ratings'] = [r.to_json() for r in self.my(RatingValue)]
+    wb['rcomponents'] = [rct.to_json() for rct in self.my(ReviewComponentType)]
+    wb['topics'] = [t.to_json() for t in self.my(Topic)]
+    wb['info']['displayComponent'] = self.display_component.to_json()
+    return wb
+
   def get_author_text(self):
     return [self.general_text, self.component_text]
 
@@ -292,6 +304,8 @@ class BidValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   conference = models.ForeignKey(Conference)
+  def to_json(self):
+    return { 'abbr': self.abbr, 'description': self.description }
 
 class RatingValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
@@ -299,11 +313,25 @@ class RatingValue(bcap.Grantable):
   number = models.IntegerField()
   conference = models.ForeignKey(Conference)
 
+  def to_json(self):
+    return {
+      'abbr': self.abbr,
+      'description': self.description,
+      'number': self.number,
+    }
+
 class ExpertiseValue(bcap.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   number = models.IntegerField()
   conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'abbr': self.abbr,
+      'description': self.description,
+      'number': self.number,
+    }
 
 class DecisionValue(bcap.Grantable):
   class Meta:

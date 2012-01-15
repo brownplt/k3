@@ -351,17 +351,15 @@ def handle(cap_id, method, args, files):
       xhr_content(response, content, "text/plain;charset=UTF-8")
       response.status_code = 404
     # Don't log file responses
-    if hasattr(response, 'Content-Disposition') and\
-        response['Content-Disposition'].find('attachment') != -1:
-      handler_log += '  Response: %s\n' % str(response)
+#    if hasattr(response, 'Content-Disposition') and\
+#        response['Content-Disposition'].find('attachment') != -1:
+    handler_log += '  Response: %s\n' % str(response)
     logger.error(handler_log)
     return response
-  finally:
-    pass
-  #except Exception as e:
-  #  logger.error(handler_log)
-  #  logger.error('BELAY: Uncaught handler exception: %s' % e)
-  #  raise e
+  except Exception as e:
+    logger.error(handler_log)
+    logger.error('BELAY: Uncaught handler exception: %s' % e)
+    raise e
 
 def proxyHandler(request):
 

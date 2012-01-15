@@ -187,8 +187,8 @@ class ChangeUserEmailHandler(bcap.CapHandler):
 # of the grant
 class GetPapersOfDVHandler(bcap.CapHandler):
   def get(self, granted):
-    conference = granted['conference'].conference
-    decision_value = granted['decision_value'].decisionvalue
+    decision_value = granted.decisionvalue
+    conference = decision_value.conference 
 
     return bcap.bcapResponse(conference.papers_of_dv(decision_value))
 
@@ -383,7 +383,7 @@ class LaunchAdminHandler(bcap.CapHandler):
       rolecaps[otheruser.id] = bcap.grant('set-role', otheruser)
 
     return bcap.bcapResponse({
-      'getBasic': bcap.regrant('writer-basic', conf),
+      'basicInfo': conf.get_admin_basic(),
 
       'getPapersOfDV': dvcaps,
       'deleteDVs': deletedvs,
