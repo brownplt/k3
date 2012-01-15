@@ -366,7 +366,7 @@ class LaunchAdminHandler(bcap.CapHandler):
     topics = Topic.objects.filter(conference=conf)
     topiccaps = {}
     for topic in topics:
-      topiccaps[id] = bcap.grant('delete-topic', topic)
+      topiccaps[topic.id] = bcap.grant('delete-topic', topic)
 
     cts = ComponentType.objects.filter(conference=conf)
     deletects = {}
@@ -378,9 +378,9 @@ class LaunchAdminHandler(bcap.CapHandler):
     users = User.objects.filter(conference=conf)
     emailcaps = {}
     rolecaps = {}
-    for user in users:
-      emailcaps[user.id] = bcap.grant('change-user-email', user)
-      rolecaps[user.id] = bcap.grant('set-role', user)
+    for otheruser in users:
+      emailcaps[otheruser.id] = bcap.grant('change-user-email', otheruser)
+      rolecaps[otheruser.id] = bcap.grant('set-role', otheruser)
 
     return bcap.bcapResponse({
       'getBasic': bcap.regrant('writer-basic', conf),
@@ -402,5 +402,6 @@ class LaunchAdminHandler(bcap.CapHandler):
       'addTopic': bcap.regrant('add-topic', conf),
       'addReviewComponentType': bcap.regrant('add-review-component-type', conf),
       'getSubreviewers': bcap.regrant('get-subreviewers', conf),
-      'getAuthorText': bcap.regrant('author-text', conf)
+      'getAuthorText': bcap.regrant('author-text', conf),
+      'currentUser': user.to_json()
     })
