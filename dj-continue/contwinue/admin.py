@@ -352,6 +352,35 @@ class AddPCsHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(ret)
 
+class ConfigureHandler(bcap.CapHandler):
+  def post_arg_names(self):
+    return [
+      'conference_name',
+      'conference_short_name',
+      'general_text',
+      'component_text'
+    ]
+  def post(self, granted, args):
+    conf = granted.conference
+    if args['conference_short_name'] != conf.shortname:
+      ret = args['conference_short_name']
+    else: ret = False
+
+    showbid='no'
+    if 'showBid' in args: showbid = args['showBid']
+    shownum='no'
+    if 'showNum' in args: shownum = args['showNum']
+
+    conf.name = args['conference_name']
+    conf.shortname = args['conference_short_name']
+    conf.general_text = args['general_text']
+    conf.component_text = args['component_text']
+    conf.show_bid = showbid == 'yes'
+    conf.show_num = shownum == 'yes'
+    conf.save()
+
+    return bcap.bcapResponse(ret)
+
 class LaunchAdminHandler(bcap.CapHandler):
   def get(self, granted):
     user = granted.user

@@ -11,7 +11,7 @@ function deleteTransform(objName,evt,cap) {
 	}));
 }
 
-function makeDecisionsTable(decisions,targetable) {
+function makeDecisionsTable(decisions,targetable,addDecision) {
 	return new ModListWidget(
 		filter(function(d) {return targetable==d.targetable;},decisions),
 		TR(TH('Abbr'),TH('Description'),TD()),

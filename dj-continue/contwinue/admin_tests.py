@@ -665,3 +665,28 @@ class TestAddPCs(Generator):
       {'name': 'Joe', 'error': 'We didn\'t recognize that email address.'}
     ])
 
+class TestConfigure(Generator):
+  def test_configure(self):
+    config_data = {
+      'conference_name': 'New Conference Name',
+      'conference_short_name': 'NCN',
+      'showBid': 'yes',
+      'showNum': 'no',
+      'general_text': 'Some general text.',
+      'component_text': 'Some component text.'
+    }
+
+    configure = bcap.grant('configure-conference', self.conference)
+
+    result = configure.post(config_data)
+
+    self.assertEqual(result, 'NCN')
+    updated = get_one(Conference.objects.filter(shortname='NCN'))
+
+    self.assertEqual(updated.name, 'New Conference Name')
+    self.assertEqual(updated.shortname, 'NCN')
+    self.assertEqual(updated.show_bid, True)
+    self.assertEqual(updated.show_num, False)
+    self.assertEqual(updated.general_text, 'Some general text.')
+    self.assertEqual(updated.component_text, 'Some component text.')
+

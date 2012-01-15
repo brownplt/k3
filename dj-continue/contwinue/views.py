@@ -149,6 +149,7 @@ class ContinueInit():
       'launch-attach-to-paper': submitter.LaunchAttachToPaperHandler,
       # End LaunchPaper handlers
 
+      'configure-conference': admin.ConfigureHandler,
       'get-admin': admin.GetAdminHandler,
       'get-papers-of-dv': admin.GetPapersOfDVHandler,
       'get-all': admin.GetAllHandler,

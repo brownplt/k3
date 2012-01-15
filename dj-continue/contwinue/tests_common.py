@@ -14,7 +14,7 @@ class Generator(TestCase):
     self.conference = Conference.get_by_shortname('SC')
 
   def tearDown(self):
-    Conference.get_by_shortname('SC').delete()
+    self.conference.delete()
 
 def has_keys(d, keys):
   return all([d.has_key(k) for k in keys])
