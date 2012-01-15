@@ -91,8 +91,8 @@ function doConfHead(basicInfoE) {
 }
 function setTitle(bi,currentTabB) {
 	currentTabB.transform_b(function(ct) {
-		if(ct && $(ct).title)
-			document.title = bi.info.shortname + ' - '+$(ct).title;
+		if(ct && getObj(ct).title)
+			document.title = bi.info.shortname + ' - '+getObj(ct).title;
 		else
 			document.title = bi.info.name;
 	});
@@ -189,3 +189,23 @@ function truncate(str, len) {
   if (str.length <= len) { return str; }
   return str.substr(0, len-3) + "...";
 }
+
+function worldB(init, handlers) 
+/*: ∀ α . α * Array<∃ β . {0: EventStream<β>, 1: α * β -> α}> -> Behavior<α> */
+{
+  return merge_e.apply(null,
+    handlers.map(function(handler)
+    /*: ∃ β . {0: EventStream<β>, 1: α * β -> α} -> EventStream<α -> α> */
+    {
+      return handler[0].transform_e(function(eventValue) /*: β -> (α -> α) */ {
+        return function(world) /*: α -> α */ {
+          return handler[1](world, eventValue);
+        };
+      });
+    }))
+   .collect_e(init, function(handler, world) /*: (α -> α) * α -> α */ {
+      return handler(world);
+    })
+   .startsWith(init);
+}
+

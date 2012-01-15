@@ -5,7 +5,7 @@ function getFieldE(liE, fld) {
 }
 
 function deleteTransform(objName,evt,cap) {
-	return post_e(
+	return postE(
 		evt.transform_e(function(dobj) {
 			return [cap, genRequest({id:dobj.id})];
 	}));
@@ -277,7 +277,7 @@ function loadComm(basicInfoE,adminInfoE,usersByRoleB) {
 				'email-from','beginning');
 }
 
-function loadUserTables(curUserE,adminInfoE,usersByRoleB) {
+function loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE) {
 	var pcTableB = lift_b(function(cu,ai) {
 		if(cu && ai)
 			return new UserTableWidget(usersByRoleB.transform_b(function(_) {return _.pc;}),true,cu,ai);
@@ -316,11 +316,15 @@ function loadUserTables(curUserE,adminInfoE,usersByRoleB) {
 		}
 	).filter_e(function(_) {return _.changed;}).transform_e(function(_) {return _.val;});
 
-	getFilteredWSO_e(dcAdmChangesE.transform_e(function(ci) {
-		return genRequest(
-			{url: 'setContact',
-			fields: {cookie:authCookie,contactID:ci}});
-		})).transform_e(function(_) {loadAdminfoE.sendEvent('Load!')});
+  var contactWorldB = worldB([null, null],
+    [[ dcAdmChangesE, function(post, ci) { return [post[0],{contactID:ci}]; }],
+     [ setContactE, function(post, sc) { return [sc, post[1]]; }]]);
+
+  var changeContactE = 
+    contactWorldB.changes().filter_e(function(post) { return post[0] && post[1]; });
+
+  postE(changeContactE).transform_e(function(_) {loadAdminfoE.sendEvent('Load!')});
+
 	insertDomB(dcAdmB,'dcadm');
 	
 	insertDomB(pcDomB,'pc_members');
@@ -376,8 +380,8 @@ function loader() {
   });
 	doConfHead(basicInfoE);
   loadAdminfoE = merge_e(onLoadTimeE);
-	var curUserE = getCurUserE(onLoadTimeE,authCookie);
-//	doLoginDivB(curUserE);
+	var curUserE = getFieldE(launchE, 'currentUser');
+	doLoginDivB(curUserE);
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
   }))
@@ -387,7 +391,7 @@ function loader() {
 				{admin:$$('admin-tab'),reviewer:[],user:[],loggedout:[]},
 				function(that) {
 					var tabClicksE = map(function(tab) {
-						return (tab == $('back_to_list_tab') ? receiver_e() :  extractEvent_e(tab,'click').constant_e(tab.id));
+						return (tab == getObj('back_to_list_tab') ? receiver_e() :  extractEvent_e(tab,'click').constant_e(tab.id));
 					},that.allTabs);
 					return merge_e.apply(this,tabClicksE).startsWith('config_tab');
 				}
@@ -398,7 +402,7 @@ function loader() {
 			AdminTabs.displayOn('customize_tab','custom_content');
 			AdminTabs.displayOn('comm_tab','comm_content');
 			AdminTabs.displayOn('info_tab','info_content');
-			$('back_to_list_tab').href = 'continue.html?cookie='+authCookie;
+			getObj('back_to_list_tab').href = 'continue.html?cookie='+authCookie;
 	},curUserE,basicInfoE);
 
 	var adminInfoE = getE(getFieldE(launchE, 'getAdmin'));
@@ -415,8 +419,9 @@ function loader() {
 	});
 	insertDomB(subDomB,'subrevlist');
 
+  var setContactE = getFieldE(launchE, 'setContact');
 	loadComm(basicInfoE,adminInfoE,usersByRoleB);
-	loadUserTables(curUserE,adminInfoE,usersByRoleB);
+	loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE);
 
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.name;}),'conference_name','value');
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.shortname;}),'conference_short_name','value');
