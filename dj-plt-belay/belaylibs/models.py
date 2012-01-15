@@ -4,9 +4,9 @@ class Grantable(models.Model):
   pass
 
 class Grant(models.Model):
-  cap_id = models.CharField(max_length=200)
+  cap_id = models.CharField(max_length=200, db_index=True)
   # internal URL passed to the cap handler
-  internal_path = models.CharField(max_length=200)
+  internal_path = models.CharField(max_length=200, db_index=True)
   # reference to DB item passed to cap handler
   #db_entity = db.ReferenceProperty(required=True)
   db_data = models.TextField(max_length=1000)
