@@ -41,9 +41,10 @@ def start_conference(admin_name, admin_email, conf_name, shortname, use_ds):
 def get_admin_launch(conf_shortname):
   ContinueInit().process_request(None)
   conf = models.Conference.objects.filter(shortname=conf_shortname)
-  admin = models.User.objects.filter(
-    conference = conf
-  )[0]
+  admin_role = models.Role.objects.filter(name='admin')[0]
+  print('Admins: %s' % len(admin_role.user_set.all()))
+  admin = admin_role.user_set.all()[0]
+  print(admin.role_names())
   launch_admin = bcap.grant('launch-admin', admin)
 
   launch_url = '%s/admin#%s' % (
