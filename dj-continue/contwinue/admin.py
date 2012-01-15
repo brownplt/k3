@@ -366,7 +366,7 @@ class LaunchAdminHandler(bcap.CapHandler):
     topics = Topic.objects.filter(conference=conf)
     topiccaps = {}
     for topic in topics:
-      topic[id] = bcap.grant('delete-topic', topic)
+      topiccaps[id] = bcap.grant('delete-topic', topic)
 
     cts = ComponentType.objects.filter(conference=conf)
     deletects = {}
