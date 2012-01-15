@@ -409,11 +409,7 @@ function loader() {
 		return out;
 	});
 
-	var subRevsB = getFilteredWSO_e(onLoadTimeE.constant_e(
-		genRequest(
-			{url: 'getSubReviewers',
-			fields: {cookie:authCookie}})
-		)).startsWith([]);
+	var subRevsB = getE(getFieldE(launchE, 'getSubreviewers')).startsWith([]);
 	var subDomB = subRevsB.transform_b(function(srs) {
 		return BLOCKQUOTE(map(function(sr) {return P({className:'pre'},sr);},srs));
 	});

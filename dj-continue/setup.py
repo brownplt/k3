@@ -57,3 +57,6 @@ def get_admin_launch(conf_shortname):
 if __name__ == '__main__':
   if sys.argv[1] == 'get_admin_launch':
     get_admin_launch(sys.argv[2])
+  if sys.argv[1] == 'sample':
+    start_conference('Joe', 'joe@cs.brown.edu', 'Sample Conference', 'SC', False)
+
