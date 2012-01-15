@@ -4,6 +4,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.core.management import setup_environ
 import settings
 import belaylibs.dj_belay as bcap
+import contwinue.generate as g
 
 import contwinue.models as models
 from contwinue.views import ContinueInit
@@ -58,5 +59,7 @@ if __name__ == '__main__':
   if sys.argv[1] == 'get_admin_launch':
     get_admin_launch(sys.argv[2])
   if sys.argv[1] == 'sample':
-    start_conference('Joe', 'joe@cs.brown.edu', 'Sample Conference', 'SC', False)
-
+    g.generate()
+  if sys.argv[1] == 'create':
+    # Fill in creation options here for make_conference above
+    pass
