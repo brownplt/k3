@@ -7,7 +7,10 @@ logger = logging.getLogger('default')
 def common_js_handler(request):
   if request.method != 'GET':
     return HttpResponseNotAllowed(['GET'])    
+  location = 'unused'
+  if hasattr(settings, 'BELAY_LOCATION'):
+    location = settings.BELAY_LOCATION
   return render(request, 'lib/js/common.js', {
-    'belay_location': settings.BELAY_LOCATION,
+    'belay_location': location,
     'site_name': settings.SITE_NAME
   }, content_type='text/javascript')
