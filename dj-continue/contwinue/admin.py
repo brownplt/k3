@@ -414,6 +414,7 @@ class LaunchAdminHandler(bcap.CapHandler):
     return bcap.bcapResponse({
       'basicInfo': conf.get_admin_basic(),
 
+      'configure': bcap.regrant('configure-conference', conf),
       'getPapersOfDV': dvcaps,
       'deleteDVs': deletedvs,
       'deleteTopics': topiccaps,

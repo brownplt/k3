@@ -4,6 +4,10 @@ function getFieldE(liE, fld) {
   });
 }
 
+function methodE(objE, methname, args) {
+  return objE.transform_e(function(obj) { return obj[methname].apply(obj, args); });
+}
+
 function deleteTransform(objName,evt,cap) {
 	return postE(
 		evt.transform_e(function(dobj) {
@@ -419,6 +423,8 @@ function loader() {
 	});
 	insertDomB(subDomB,'subrevlist');
 
+ insertValueE(methodE(getFieldE(launchE, 'configure'), 'serialize', []), 'configure', 'action');
+
   var setContactE = getFieldE(launchE, 'setContact');
   var dvCapsE = getFieldE(launchE, 'getPapersOfDV');
 	loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE);
@@ -512,10 +518,7 @@ function loader() {
 	getObj('conf_cookie').value = authCookie;
 	
 	iframeLoad_e('conftarget').transform_e(function(_) {
-		if(_)
-			window.location =  '../'+_+'/admin.html?cookie='+authCookie;
-		else
-			onLoadTimeE.sendEvent('load!');
+	  onLoadTimeE.sendEvent('load!');
 	});
 	
 	loadDS(basicInfoE,adminInfoE);
