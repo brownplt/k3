@@ -50,23 +50,6 @@ Pages
   [x] (1) [new] AuthorUpdateNameHandler
 [x] (2) Move handler usage to frontend of writer.js
 
-[] (2) Identify handlers/models for backend of continue.(html|js)
-[] (_) Move them (and unit-test each one)
-  [] (1) getPaperSummaries →
-  [] (1) getBasic →
-  [] (1) getAbstracts →
-  [] (1) Paper/<id>/getAbstract → 
-  [] (1) updateBids → 
-  [] (1) getReviewPercentages → 
-  [] (1) Paper/<id>/updateDecision → 
-  [] (1) Meeting/setOrder → 
-  [] (1) Meeting/jumpTo → 
-  [] (1) Meeting/endMeeting → 
-  [] (1) getUserBids →
-  [] (1) Meeting/getOrder →
-  [] (1) genPaperLink() [js function]
-  [] (1) compLink() [js function]
-
 [x] (2) Identify handlers/models for backend of admin.(html|js)
 [x] (_) Move them (and unit-test each one)
   [x] DecisionValue/delete → became DeleteDecisionValueHandler
@@ -88,6 +71,46 @@ Pages
   [x] User/getAll → became GetAllHandler
   [x] ?/getSubReviewers → became GetSubReviewersHandler
   [x] UnverifiedUser/addPCs
+
+[] (2) Identify handlers/models for backend of paper.(html|js)
+[] (_) Move them (and unit-test each one)
+  [] () Paper/<id>/updateDecision
+  [] () updateBids
+  [] () Paper/<id>/Review/save
+  [] () Paper/<id>/Comment/save
+  [] () Paper/setHidden
+  [] () Paper/<id>/setDeadline
+  [] () Paper/<id>/Review/get
+  [] () Paper/<id>/get
+  [] () Paper/<id>/Review/revert
+  [] () Paper/<id>/Comment/get
+  [] () Paper/<id>/Comment/revert
+  [] () User/getByRole
+  [] () Paper/<id>/getDeadlineExts
+  [] () Paper/getNextID
+  [] () Paper/<id>/assignReviews
+  [] () compLink [JS function]
+  [] () #review.id
+  [] () #comment-<id>
+  [] () continue.htl?cookie= 
+
+[] (2) Identify handlers/models for backend of continue.(html|js)
+[] (_) Move them (and unit-test each one)
+  [] (1) getPaperSummaries →
+  [] (1) getBasic →
+  [] (1) getAbstracts →
+  [] (1) Paper/<id>/getAbstract → 
+  [] (1) updateBids → 
+  [] (1) getReviewPercentages → 
+  [] (1) Paper/<id>/updateDecision → 
+  [] (1) Meeting/setOrder → 
+  [] (1) Meeting/jumpTo → 
+  [] (1) Meeting/endMeeting → 
+  [] (1) getUserBids →
+  [] (1) Meeting/getOrder →
+  [] (1) genPaperLink() [js function]
+  [] (1) compLink() [js function]
+
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)
   [] ...
