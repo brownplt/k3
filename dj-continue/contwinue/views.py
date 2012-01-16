@@ -171,7 +171,8 @@ class ContinueInit():
       'launch-admin': admin.LaunchAdminHandler,
       # End LaunchAdmin handlers
 
-      'get-abstracts': reviewer.GetAbstractsHandler
+      'get-abstracts': reviewer.GetAbstractsHandler,
+      'update-bids': reviewer.UpdateBidsHandler
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers

@@ -58,9 +58,36 @@ class GetAbstractHandler(bcap.CapHandler):
 # Updates the bids for a given user and paper set
 #
 # granted: |user:User|
-# -> { bid: Int, papers: [Int] }
+# -> { bid: Int, papers: "" U Int U [Int] }
 # <- [bidJSON]
 class UpdateBidsHandler(bcap.CapHandler):
   def post(self, granted, args):
-    pass
+    user = granted.user
+    ret = []
+    oldbid = -1
+    papers = args['papers']
+    bid = int(args['bid'])
+    if papers == '': papers = []
+    if not isinstance(papers, list): papers = [papers]
+    for paper in papers:
+      exbid = m.Bid.get_by_paper_and_bidder(paper, user)
+      if exbid:
+        oldbid = exbid.value_id
+        exbid.value_id = bid
+        exbid.save()
+        ret.append(exbid)
+      else:
+        b = m.Bid(
+          conference=user.conference,
+          bidder=user,
+          paper_id=paper,
+          value_id=bid
+        )
+        b.save()
+        ret.append(b)
+    if bid == user.conference.conflict_bid_id or \
+       oldbid == user.conference.conflict_bid_id:
+      for paper in papers:
+        self.update_last_change(paper)
+    return bcap.bcapResponse([b.to_json() for b in ret])
 

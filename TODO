@@ -100,7 +100,7 @@ Pages
   [] (1) getBasic →
   [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 
-  [] (1) updateBids → 
+  [x] (1) updateBids → UpdateBidsHandler
   [] (1) getReviewPercentages → 
   [] (1) Paper/<id>/updateDecision → 
   [] (1) Meeting/setOrder → 

@@ -536,6 +536,24 @@ class Paper(bcap.Grantable):
       self.other_cats = False
     return None
 
+class Bid(bcap.Grantable):
+  bidder = models.ForeignKey(User)
+  paper = models.ForeignKey(Paper)
+  value = models.ForeignKey(BidValue)
+  conference = models.ForeignKey(Conference)
+
+  @classmethod
+  def get_by_paper_and_bidder(cls, paper, user):
+    return get_one(Bid.objects.filter(paper=paper, bidder=user))
+
+  def to_json(self):
+    return {
+      'bidderID': self.bidder.id,
+      'paperID': self.paper.id,
+      'valueID': self.value.id
+    }
+
+
 class Component(bcap.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
