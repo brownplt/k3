@@ -32,7 +32,7 @@ def send_and_log_email(subject, msg, address, fromaddr, logger):
     logger.error('Couldn\'t send email (bad address): %s' % e)
     return notFoundResponse()
   logger.info('Trying to send e-mail')
-  if settings.DEBUG:
+  if settings.NO_MAIL:
     logger.error('send log email:\n %s (From: %s) \n %s \n%s' % (subject, fromaddr, address, msg))
     return False
   try:
