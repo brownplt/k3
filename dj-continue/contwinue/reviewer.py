@@ -1,12 +1,14 @@
 import belaylibs.dj_belay as bcap
 
+import contwinue.models as m
+
 # GetPaperSummariesHandler
 # Returns the summaries for papers, used in the filter list.
 # Indicates conflicts and avoids showing inaccessible papers
 #
 # granted: |user:User|
 # -> { lastChangeVal: Int }
-# <- [{
+# <- { changed: True, lastChangeVal: Int, summaries: [{
 #   id: Int,
 #   author: authorJSON,
 #   title: String,
@@ -21,6 +23,8 @@ import belaylibs.dj_belay as bcap
 #   dcomps: dcompsJSON,
 #   oscore: oscoreJSON
 # }]
+# U
+# {changed: False}
 
 class GetPaperSummariesHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -33,7 +37,12 @@ class GetPaperSummariesHandler(bcap.CapHandler):
 # <- [{ id: Int, value: String }]
 class GetAbstractsHandler(bcap.CapHandler):
   def get(self, granted):
-    pass
+    conf = granted.conference
+    return bcap.bcapResponse([{
+        'id': p.id,
+        'value': p.get_component(conf.display_component)['value']
+      } for p in conf.my(m.Paper) \
+    ])
 
 # GetAbstractHandler
 # Gets a particular abstract, by id

@@ -37,7 +37,7 @@ class Conference(bcap.Grantable):
     admin_role.save()
     reviewer_role = Role(conference=c, name='reviewer')
     reviewer_role.save()
-    user_role = Role(conference=c,name='user')
+    user_role = Role(conference=c,name='writer')
     user_role.save()
 
     pc_comments = ReviewComponentType(
@@ -512,6 +512,12 @@ class Paper(bcap.Grantable):
       'components': [c.to_json() for c in self.my(Component)]
     }
     return paper_json
+
+  def get_component(self, ct):
+    comp = get_one(Component.objects.filter(paper=self,type=ct))
+    print(self.get_paper())
+    if comp is None: return comp
+    return comp.to_json()
 
   def get_deadline_extensions(self):
     return [ext.to_json() for ext in

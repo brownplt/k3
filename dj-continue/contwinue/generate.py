@@ -135,6 +135,12 @@ def generate():
       component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
         value="This is actually pretty short", mimetype='text/plain', conference=c)
       component.save()
+
+      abstract = get_one(ComponentType.objects.filter(abbr='A'))
+      abs_comp = Component(type=abstract, paper=p, lastSubmitted=int(time.time()),
+        value="Paper %s abstract" % p.id, mimetype='text/plain', conference=c)
+      abs_comp.save()
+  
       t = Topic.objects.all()[random.randint(0, 9)]
       t.papers.add(p)
       t.save()

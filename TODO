@@ -98,7 +98,7 @@ Pages
 [] (_) Move them (and unit-test each one)
   [] (1) getPaperSummaries →
   [] (1) getBasic →
-  [] (1) getAbstracts →
+  [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 
   [] (1) updateBids → 
   [] (1) getReviewPercentages → 

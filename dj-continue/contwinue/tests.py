@@ -10,6 +10,7 @@ from contwinue.admin_tests import TestAdminPage, TestSetRole, TestSetContact, \
     TestSendEmails, TestGetSubReviewers, TestAddPCs, TestConfigure
 from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
+from contwinue.reviewer_test import TestGetAbstracts
 from contwinue.accounts_tests import TestCreateReviewer
 
 # Note:  These tests rely on generate.py, which creates an initial department

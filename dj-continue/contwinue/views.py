@@ -14,6 +14,7 @@ from contwinue.email import send_and_log_email, notFoundResponse
 import contwinue.email_strings as strings
 import contwinue.submitter as submitter
 import contwinue.admin as admin
+import contwinue.reviewer as reviewer
 
 import belaylibs.dj_belay as bcap
 
@@ -167,9 +168,10 @@ class ContinueInit():
       'send-emails': admin.SendEmailsHandler,
       'get-subreviewers': admin.GetSubReviewersHandler,
       'add-pcs': admin.AddPCsHandler,
-      'launch-admin': admin.LaunchAdminHandler
+      'launch-admin': admin.LaunchAdminHandler,
       # End LaunchAdmin handlers
 
+      'get-abstracts': reviewer.GetAbstractsHandler
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers
