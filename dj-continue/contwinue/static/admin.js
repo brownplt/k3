@@ -388,7 +388,20 @@ function loader() {
 	doLoginDivB(curUserE);
 	var authorTextE = getE(launchE.transform_e(function(li) {
     return li.getAuthorText;
-  }))
+  }));
+
+  var accountTabB = lift_b(function(li, bi) {
+    if(li && bi) {
+      var searchString = 'admin ' + bi.info.name;
+      return makeAccountInfoTab(
+        li,
+        searchString,
+        COMMON.urlPrefix + '/admin' + window.name
+      );
+    }
+    return SPANB();
+  }, launchE.startsWith(null), basicInfoE.startsWith(null));
+
 	lift_e(function(cu,bi) {
 			var AdminTabs = new TabSet(
 				constant_b(cu.rolenames),
@@ -406,6 +419,7 @@ function loader() {
 			AdminTabs.displayOn('customize_tab','custom_content');
 			AdminTabs.displayOn('comm_tab','comm_content');
 			AdminTabs.displayOn('info_tab','info_content');
+      AdminTabs.displayOn('account_tab', 'account_content');
 			getObj('back_to_list_tab').href = 'continue.html?cookie='+authCookie;
 	},curUserE,basicInfoE);
 
@@ -516,6 +530,8 @@ function loader() {
 	insertDomB(apcDomB,'addpc-content');
 	insertDomB(confirmB,'addpc-result');
 	getObj('conf_cookie').value = authCookie;
+
+	insertDomB(switch_b(accountTabB),'account_placeholder');
 	
 	iframeLoad_e('conftarget').transform_e(function(_) {
 	  onLoadTimeE.sendEvent('load!');

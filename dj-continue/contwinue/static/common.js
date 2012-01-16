@@ -209,3 +209,148 @@ function worldB(init, handlers)
    .startsWith(init);
 }
 
+function makeAccountInfoTab(launchInfo, searchString, launchURL) {
+  var makeEmptyGoogleDiv = function() {
+    var btn = INPUT({
+      style: {'margin-left': '35%','text-align': 'center'},
+      id:'google-attach',
+      type:'button',
+      value:'Attach to a Google Account'
+    });
+    extractEvent_e(btn, 'click').transform_e(function(_) {
+      clientkey = newUUIDv4();
+      window.open(COMMON.urlPrefix + "/glogin?clientkey=" + clientkey);
+    });
+    return DIVB(btn);
+  };
+  var makeEmptyContinueDiv = function() {
+    var password = INPUT({type:'password', size:30});
+    var repassword = INPUT({type:'password', size:30});
+    var submit = INPUT({style:{float:'right'},type:'button',value:'Submit'});
+    var error = DIV();
+    var success = DIV();
+
+    var cdiv = DIV(
+      {className: 'key-value'},
+      TR({style:{float:'right'}},TH('Password'), TD(password)),
+      TR({style:{float:'right'}},TH('Password again'), TD(repassword)),
+      BR(),
+      submit,
+      error,
+      success
+    );
+
+    var attemptsE = extractEvent_e(submit, 'click').transform_e(function() {
+      var p1 = getObj(password).value;
+      var p2 = getObj(repassword).value;
+      if (p1 !== p2) {
+        return {error: true, message: 'Passwords didn\'t match'};
+      }
+      if (p1 === '') {
+        return {error: true, message: 'Empty passwords not allowed'};
+      }
+      return {
+        success: true,
+        val: [launchInfo.addPassword, {password: p1}]
+      };
+    });
+
+    insertDomB(attemptsE.transform_e(function(r) {
+        if (r.error) {
+          return SPAN({style:{color:'red'}}, r.message);
+        }
+        else {
+          return SPAN();
+        }
+      }).startsWith(SPAN()), error);
+
+    var reqE = postE(attemptsE.filter_e(function(r) { return r.success; }).
+                       transform_e(function(r) { return r.val; }));
+
+    insertDomB(reqE.transform_e(function(_) {
+      return SPAN({style:{color:'green'}}, 'Password added');
+    }).startsWith(SPAN()), success);
+
+    return cdiv;
+  };
+
+  var googles = launchInfo.credentials.googleCreds;
+  var continues = launchInfo.credentials.continueCreds;
+  var googleDiv;
+  var continueDiv;
+
+  var googleEventsE = receiver_e();
+  window.login = function(data) {
+    googleEventsE.sendEvent(data);
+  };
+  var googlePostE = postE(googleEventsE.transform_e(function(data) {
+    var jsonData = JSON.parse(data);
+    return [launchInfo.addGoogleAccount, {
+      'key': jsonData.key,
+      'new': jsonData.newaccount
+    }];
+  }));
+
+  var googleErrorsE = googlePostE.filter_e(function(r) {
+    return r.error;
+  });
+  var googleErrorsDiv = DIVB({
+      style: {
+        display: googleErrorsE.constant_e('block').startsWith('none'),
+        color: 'red'
+      }
+    },
+    googleErrorsE.transform_e(function(r) {
+      return r.message;
+    }).startsWith(''));
+
+  var googleSuccessesE = googlePostE.filter_e(function(r) {
+    return r && !r.error;
+  });
+
+  var googlesB = googleSuccessesE.startsWith(googles);
+  var googleDivB = lift_b(function(googles) {
+    if(googles.length === 0) {
+      var btnDiv = makeEmptyGoogleDiv();
+      return DIVB(googleErrorsDiv, btnDiv);
+    }
+    else {
+      return DIVB(
+        P('This account is associated with the Gmail account for ',
+  STRONG(googles[0].email), '.  This means you can sign in with Google to get back to' +
+  ' your submissions.'));
+
+    }
+  }, googlesB);
+  
+  if(continues.length === 0) { continueDiv = makeEmptyContinueDiv(); }
+  else {
+    continueDiv = 
+      DIV(
+        P(STRONG("This account has a password, but you can add another if you like.")),
+        makeEmptyContinueDiv()
+      );
+  }
+
+  var pad = {style:{margin:'1em'}};
+  var link = DIV(pad,H3('Bookmark this link, and visit it directly: '),
+                DIV({style:{'margin':'1em'}},A({href:launchURL, target:'_blank'},launchURL)));
+
+  var search = DIV(pad,H3('Save the invitation message.  You can search your inbox for:'),
+                  DIV({style:{'text-align':'center', 'margin': '1em'}},
+                      STRONG(searchString)))
+  var accountGoogle = DIVB(pad,H3('Associate with a Google account:'),
+                            switch_b(googleDivB));
+  var accountContinue = DIV(pad,H3('Create a password:'),
+                              continueDiv);
+
+  return DIVB({style:{width:'70%','padding-left':'15%','padding-bottom':'2em'}},
+             PB('Welcome, ', STRONG(launchInfo.email), '.  ' +
+               'You have several options for returning to your account:',
+               P(),
+               ULB(
+                link,
+                search,
+                accountGoogle,
+                accountContinue)))
+}

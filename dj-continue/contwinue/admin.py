@@ -413,6 +413,9 @@ class LaunchAdminHandler(bcap.CapHandler):
 
     return bcap.bcapResponse({
       'basicInfo': conf.get_admin_basic(),
+      'addPassword': bcap.regrant('add-password', user),
+      'addGoogleAccount': bcap.regrant('add-google-account', user),
+      'credentials': user.get_credentials(),
 
       'configure': bcap.regrant('configure-conference', conf),
       'getPapersOfDV': dvcaps,
