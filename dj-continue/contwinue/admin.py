@@ -416,6 +416,7 @@ class LaunchAdminHandler(bcap.CapHandler):
       'addPassword': bcap.regrant('add-password', user),
       'addGoogleAccount': bcap.regrant('add-google-account', user),
       'credentials': user.get_credentials(),
+      'email': user.email,
 
       'configure': bcap.regrant('configure-conference', conf),
       'getPapersOfDV': dvcaps,
