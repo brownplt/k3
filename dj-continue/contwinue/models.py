@@ -519,6 +519,15 @@ class Paper(bcap.Grantable):
     } for r in self.review_set.all()]
   reviews_info = property(get_reviews_info)
 
+  def get_conflicts(self):
+    cbids = Bid.objects.filter(
+      conference=self.conference,
+      paper=self,
+      value=self.conference.conflict_bid
+    )
+    return [cbid.bidder for cbid in cbids]
+  conflicts = property(get_conflicts)
+
   def my(self, cls):
     return cls.objects.filter(paper=self)
 

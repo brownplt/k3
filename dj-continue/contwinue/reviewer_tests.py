@@ -38,14 +38,7 @@ class TestGetPaperSummaries(Generator):
       'hidden': False,
       'dcomps': [],
       'oscore': -3,
-      'reviewInfo': [{
-        'id': rev.id,
-        'reviewerID': user.id,
-        'name': user.full_name,
-        'expertise': self.conference.default_expertise.abbr,
-        'overall': self.conference.default_overall.abbr,
-        'submitted': True
-      }]
+      'reviewInfo': p1.reviews_info
     })
 
 class TestGetAbstracts(Generator):
