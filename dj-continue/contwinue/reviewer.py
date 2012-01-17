@@ -61,6 +61,7 @@ class GetAbstractHandler(bcap.CapHandler):
 # -> { bid: Int, papers: "" U Int U [Int] }
 # <- [bidJSON]
 class UpdateBidsHandler(bcap.CapHandler):
+  def post_arg_names(self): return ['bid', 'papers']
   def post(self, granted, args):
     user = granted.user
     ret = []
@@ -90,4 +91,23 @@ class UpdateBidsHandler(bcap.CapHandler):
       for paper in papers:
         self.update_last_change(paper)
     return bcap.bcapResponse([b.to_json() for b in ret])
+
+
+# GetReviewPercentagesHandler
+# Gets percentage complete for reviewers
+#
+# granted: |conference:Conference|
+# <- [{id: Int, name: Str, percentage: Str}]
+class GetReviewPercentagesHandler(bcap.CapHandler):
+  def get(self, granted):
+    rlist = m.Role.get_by_conf_and_name(granted.conference, 'reviewer').user_set.all()
+    ret = []
+    for user in rlist:
+      allrevs = list(m.Review.get_published_by_reviewer(user))
+      if len(allrevs) == 0:
+        ret.append({'id':user.id,'name':user.full_name,'percentage':'N/A'})
+      else:
+        subrevs = [x for x in allrevs if x.submitted]
+        ret.append({'id':user.id,'name':user.full_name,'percentage':str(int(float(len(subrevs))/float(len(allrevs))*100))+'%'})
+    return bcap.bcapResponse(ret)
 

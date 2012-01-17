@@ -67,3 +67,41 @@ class TestUpdateBids(Generator):
 
     self.assertEqual(b1.bidder, user)
     self.assertEqual(b2.bidder, user)
+
+class TestReviewPercentages(Generator):
+  def test_get_percentages(self):
+    def make_review(reviewer, paper, submitted):
+      rev = m.Review(
+        reviewer=reviewer,
+        paper=paper,
+        published=True,
+        submitted=submitted,
+        overall=self.conference.default_overall,
+        expertise=self.conference.default_expertise,
+        last_saved=0,
+        conference=self.conference
+      )
+      rev.save()
+      return rev
+      
+    [p1, p2] = m.Paper.objects.filter(conference=self.conference)[0:2]
+
+    admin = m.get_one(m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all())
+    r1 = make_reviewer('Bob Reviewer', 'bob@fake.org', self.conference)
+    r2 = make_reviewer('Joe Reviewer', 'joe@foo.org', self.conference)
+
+    rev1 = make_review(r1, p1, True)
+    rev2 = make_review(r1, p2, False)
+    rev3 = make_review(r2, p1, False)
+    
+    get_percents = bcap.grant('get-review-percentages', self.conference)
+    result = get_percents.get()
+
+    print(result)
+
+    self.assertEqual(result, [
+      {'id': admin.id, 'name': admin.full_name, 'percentage': 'N/A'},
+      {'id': r1.id, 'name': r1.full_name, 'percentage': '50%'},
+      {'id': r2.id, 'name': r2.full_name, 'percentage': '0%'}
+    ])
+

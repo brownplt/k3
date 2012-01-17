@@ -611,6 +611,10 @@ class Review(bcap.Grantable):
   def get_by_conference(cls, conference):
     return Review.objects.filter(conference=conference)
 
+  @classmethod
+  def get_published_by_reviewer(cls, reviewer):
+    return Review.objects.filter(published=True,reviewer=reviewer)
+
 class Launchable(bcap.Grantable):
   account = models.ForeignKey(Account)
   launchbase = models.TextField(max_length=500)

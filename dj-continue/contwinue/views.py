@@ -172,7 +172,8 @@ class ContinueInit():
       # End LaunchAdmin handlers
 
       'get-abstracts': reviewer.GetAbstractsHandler,
-      'update-bids': reviewer.UpdateBidsHandler
+      'update-bids': reviewer.UpdateBidsHandler,
+      'get-review-percentages': reviewer.GetReviewPercentagesHandler
       # End LaunchContinue handlers
 
       # End LaunchMeeting handlers

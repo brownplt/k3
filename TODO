@@ -101,15 +101,16 @@ Pages
   [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 
   [x] (1) updateBids → UpdateBidsHandler
-  [] (1) getReviewPercentages → 
+  [x] (1) getReviewPercentages → GetReviewPercentagesHandler
   [] (1) Paper/<id>/updateDecision → 
+  [] (1) genPaperLink() [js function]
+  [] (1) compLink() [js function]
+  (Meeting stuff is less important)
   [] (1) Meeting/setOrder → 
   [] (1) Meeting/jumpTo → 
   [] (1) Meeting/endMeeting → 
   [] (1) getUserBids →
   [] (1) Meeting/getOrder →
-  [] (1) genPaperLink() [js function]
-  [] (1) compLink() [js function]
 
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)
