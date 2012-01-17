@@ -44,7 +44,7 @@ class TestUpdateBids(Generator):
     self.assertEqual(len(m.Bid.objects.filter(paper=p2)), 0) 
 
     ifneeded = m.get_one(m.BidValue.objects.filter(conference=self.conference, abbr='R'))
-    loveto = m.get_one(m.BidValue.objects.filter(conference=self.conference, abbr='R'))
+    loveto = m.get_one(m.BidValue.objects.filter(conference=self.conference, abbr='Q'))
     b = m.Bid(paper=p1, conference=self.conference, bidder=user, value=loveto)
     b.save()
 

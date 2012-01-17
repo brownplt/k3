@@ -78,7 +78,7 @@ Pages
   [] () updateBids
   [] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
-  [] () Paper/setHidden
+  [] () Paper/<id>/setHidden
   [] () Paper/<id>/setDeadline
   [] () Paper/<id>/Review/get
   [] () Paper/<id>/get
