@@ -66,5 +66,5 @@ class TestCreateReviewer(Generator):
     try:
       accounts.send_new_reviewer_email(uu)
     except Exception as e:
-      self.assertEqual(str(e), 'Tried to send reviewer email to author')
+      self.assertEqual(str(e), 'Tried to send reviewer email to writer')
 
