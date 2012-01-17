@@ -221,7 +221,8 @@ class Conference(bcap.Grantable):
       'info': info
     }
 
-  def get_admin_basic(self):
+
+  def get_main_basic(self):
     wb = self.get_writer_basic()
     wb['decisions'] = [dv.to_json() for dv in self.my(DecisionValue)]
     wb['bids'] = [b.to_json() for b in self.my(BidValue)]
@@ -232,6 +233,12 @@ class Conference(bcap.Grantable):
     wb['topics'] = [t.to_json() for t in self.my(Topic)]
     wb['info']['displayComponent'] = self.display_component.to_json()
     return wb
+
+  def get_admin_basic(self):
+    return self.get_main_basic()
+
+  def get_reviewer_basic(self):
+    return self.get_main_basic()
 
   def get_author_text(self):
     return [self.general_text, self.component_text]

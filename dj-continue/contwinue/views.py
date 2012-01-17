@@ -15,6 +15,7 @@ import contwinue.email_strings as strings
 import contwinue.submitter as submitter
 import contwinue.admin as admin
 import contwinue.reviewer as reviewer
+import contwinue.paperview as paperview
 
 import belaylibs.dj_belay as bcap
 
@@ -173,11 +174,10 @@ class ContinueInit():
 
       'get-abstracts': reviewer.GetAbstractsHandler,
       'update-bids': reviewer.UpdateBidsHandler,
-      'get-review-percentages': reviewer.GetReviewPercentagesHandler
+      'get-review-percentages': reviewer.GetReviewPercentagesHandler,
       # End LaunchContinue handlers
 
-      # End LaunchMeeting handlers
-
+      'get-by-role': paperview.GetByRoleHandler
       # End LaunchPaperView handlers
     })
     return None

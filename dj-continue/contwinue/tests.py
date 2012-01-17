@@ -12,6 +12,7 @@ from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
 from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
     TestReviewPercentages
+from contwinue.paperview_tests import TestGetByRole
 from contwinue.accounts_tests import TestCreateReviewer
 
 # Note:  These tests rely on generate.py, which creates an initial department

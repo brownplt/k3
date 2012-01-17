@@ -6,7 +6,7 @@ This will require the most design effort---the submission page currently has no
 UI for this, nor does the review page.  We need to sketch the UI for both
 places, and decide on the data model that backs it.
 
-- Multiple submissions per account
+- Multiple submissions per account (done)
 
 This requires a layer of indirection.  Currently, when you visit writer.html,
 something happens that directs you to a single submission.  We need to simply
@@ -75,7 +75,7 @@ Pages
 [] (2) Identify handlers/models for backend of paper.(html|js)
 [] (_) Move them (and unit-test each one)
   [] () Paper/<id>/updateDecision
-  [] () updateBids
+  [x] () updateBids → updateBidsHandler
   [] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
   [] () Paper/<id>/setHidden
@@ -85,9 +85,9 @@ Pages
   [] () Paper/<id>/Review/revert
   [] () Paper/<id>/Comment/get
   [] () Paper/<id>/Comment/revert
-  [] () User/getByRole
+  [x] () User/getByRole → GetByRoleHandler
   [] () Paper/<id>/getDeadlineExts
-  [] () Paper/getNextID
+  [] () Paper/<id>/getNextID
   [] () Paper/<id>/assignReviews
   [] () compLink [JS function]
   [] () #review.id
@@ -97,7 +97,7 @@ Pages
 [] (2) Identify handlers/models for backend of continue.(html|js)
 [] (_) Move them (and unit-test each one)
   [] (1) getPaperSummaries →
-  [] (1) getBasic →
+  [x] (1) getBasic →
   [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 
   [x] (1) updateBids → UpdateBidsHandler
