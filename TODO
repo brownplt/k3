@@ -2,21 +2,22 @@ Actual feature requests:
 
 - Author response
 
-This will require the most design effort---the submission page currently has no
-UI for this, nor does the review page.  We need to sketch the UI for both
-places, and decide on the data model that backs it.
+This will require the most design effort---the submission page currently
+has no UI for this, nor does the review page.  We need to sketch the UI
+for both places, and decide on the data model that backs it.
 
 - Multiple submissions per account (done)
 
-This requires a layer of indirection.  Currently, when you visit writer.html,
-something happens that directs you to a single submission.  We need to simply
-not do that, and identify where in the data model the one-to-one constraint
-exists (if anywhere).
+This requires a layer of indirection.  Currently, when you visit
+writer.html, something happens that directs you to a single submission.
+We need to simply not do that, and identify where in the data model the
+one-to-one constraint exists (if anywhere).
 
 - Past Review Response Upload
 
-We need to get Robby’s opinion on whether simply using another submissions
-component is acceptable here, or we want something more elaborate.
+We need to get Robby’s opinion on whether simply using another
+submissions component is acceptable here, or we want something more
+elaborate.
 
 --------------------------------------
 
@@ -25,7 +26,8 @@ Accounts
 [x] (1) UI for already-existing jpasswords
 [] (1) Email for forgot password
 [] (1) Write instructions for new submitter page
-[] (1) Send mail to Shriram (and Robby) with instructions for new submitter page
+[] (1) Send mail to Shriram (and Robby) with instructions for new
+submitter page
 
 Pages
 
@@ -92,11 +94,13 @@ Pages
   [] () compLink [JS function]
   [] () #review.id
   [] () #comment-<id>
-  [] () continue.htl?cookie= 
+  [] () continue.htl?cookie= ...
 
 [] (2) Identify handlers/models for backend of continue.(html|js)
 [] (_) Move them (and unit-test each one)
   [] (1) getPaperSummaries →
+    [] How to handle lastChange?  Make all models inherit a superclass?
+        Superclass, when something saves, updates the lastc of conf?
   [x] (1) getBasic →
   [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 
