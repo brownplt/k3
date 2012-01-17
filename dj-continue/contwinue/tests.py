@@ -14,6 +14,7 @@ from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
     TestReviewPercentages
 from contwinue.paperview_tests import TestGetByRole
 from contwinue.accounts_tests import TestCreateReviewer
+from contwinue.model_tests import TestPaperJsons
 
 # Note:  These tests rely on generate.py, which creates an initial department
 # and fills it in with some data.

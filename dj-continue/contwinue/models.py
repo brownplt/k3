@@ -504,6 +504,21 @@ class Paper(bcap.Grantable):
   json = models.TextField(default='')
   oscore = models.IntegerField(default=-3)
 
+  def get_dcomps(self):
+    return [c for c in self.component_set.exclude(type__fmt='Text')]
+  dcomps = property(get_dcomps)
+
+  def get_reviews_info(self):
+		return [{
+      'id': r.id,
+      'reviewerID': r.reviewer.id,
+      'name': r.reviewer.full_name,
+      'expertise': r.expertise.abbr,
+      'overall': r.overall.abbr,
+      'submitted': r.submitted
+    } for r in self.review_set.all()]
+  reviews_info = property(get_reviews_info)
+
   def my(self, cls):
     return cls.objects.filter(paper=self)
 
@@ -514,7 +529,7 @@ class Paper(bcap.Grantable):
       'pcpaper': self.pc_paper,
       'title': self.title,
       'target': self.target.to_json(),
-      'author': self.author,
+      'author': self.contact.full_name,
       'topics': [t.to_json() for t in self.topic_set.all()],
       'components': [c.to_json() for c in self.my(Component)]
     }

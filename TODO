@@ -101,6 +101,7 @@ Pages
   [] (1) getPaperSummaries →
     [] How to handle lastChange?  Make all models inherit a superclass?
         Superclass, when something saves, updates the lastc of conf?
+    [] Just go through and add calls to update_last_change()...
   [x] (1) getBasic →
   [x] (1) getAbstracts → GetAbstractsHandler
   [] (1) Paper/<id>/getAbstract → 

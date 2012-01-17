@@ -5,23 +5,48 @@ import settings
 import contwinue.models as m
 from contwinue.reviewer import *
 
-from contwinue.tests_common import Generator, has_keys, make_author
-
-def make_reviewer(name, email, conf):
-  user = make_author(name, email, conf)
-  revrole = m.get_one(conf.role_set.filter(name='reviewer'))
-  user.roles.add(revrole)
-  return user
+from contwinue.tests_common import Generator, has_keys, make_author, \
+      make_reviewer, make_review
 
 class TestGetPaperSummaries(Generator):
   def test_get_summaries(self):
     user = make_reviewer('Joe Reviewer', 'joe@fake.org', self.conference)
+    
+    papers = list(m.Paper.objects.all())
+    p1 = papers[0]
 
-#    get_sums = bcap.grant('get-paper-summaries', user)
-#    result = get_sums.post({'lastChange: 0'})
+    rev = make_review(self.conference, user, p1, True)
 
-#    self.assertEqual(len(result['summaries']), 11)
-#    self.assertEqual(result['changed'], True)
+    get_sums = bcap.grant('get-paper-summaries', user)
+    result = get_sums.post({'lastChange': 0})
+
+    summaries = result['summaries']
+    self.assertEqual(len(summaries), 10)
+    self.assertEqual(result['changed'], True)
+
+    self.assertEqual(summaries[0], {
+      'id': p1.id,
+      'author': p1.contact.full_name,
+      'title': p1.title,
+      'decision': p1.decision.to_json(),
+      'target': p1.target.to_json(),
+      'othercats': p1.othercats,
+      'contactEmail': p1.contact.email,
+      'topics': [],
+      'conflicts': [],
+      'pcpaper': False,
+      'hidden': False,
+      'dcomps': [],
+      'oscore': -3,
+      'reviewInfo': [{
+        'id': rev.id,
+        'reviewerID': user.id,
+        'name': user.full_name,
+        'expertise': self.conference.default_expertise.abbr,
+        'overall': self.conference.default_overall.abbr,
+        'submitted': True
+      }]
+    })
 
 class TestGetAbstracts(Generator):
   def test_get_abstracts(self):
@@ -70,19 +95,6 @@ class TestUpdateBids(Generator):
 
 class TestReviewPercentages(Generator):
   def test_get_percentages(self):
-    def make_review(reviewer, paper, submitted):
-      rev = m.Review(
-        reviewer=reviewer,
-        paper=paper,
-        published=True,
-        submitted=submitted,
-        overall=self.conference.default_overall,
-        expertise=self.conference.default_expertise,
-        last_saved=0,
-        conference=self.conference
-      )
-      rev.save()
-      return rev
       
     [p1, p2] = m.Paper.objects.filter(conference=self.conference)[0:2]
 
@@ -90,9 +102,9 @@ class TestReviewPercentages(Generator):
     r1 = make_reviewer('Bob Reviewer', 'bob@fake.org', self.conference)
     r2 = make_reviewer('Joe Reviewer', 'joe@foo.org', self.conference)
 
-    rev1 = make_review(r1, p1, True)
-    rev2 = make_review(r1, p2, False)
-    rev3 = make_review(r2, p1, False)
+    rev1 = make_review(self.conference, r1, p1, True)
+    rev2 = make_review(self.conference, r1, p2, False)
+    rev3 = make_review(self.conference, r2, p1, False)
     
     get_percents = bcap.grant('get-review-percentages', self.conference)
     result = get_percents.get()
