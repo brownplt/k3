@@ -89,16 +89,6 @@ class TestAuthorLaunch(Generator):
     self.assertEqual(response['title'], 'Brand new work!')
     self.assertEqual(afterpaper.title, 'Brand new work!')
 
-  def test_set_author(self):
-    response = bcap.grant('paper-set-author', self.paper).post({
-      'author': 'Brand new author!'
-    })
-    afterwriter = User.objects.filter(username='writer')[0]
-    afterpaper = Paper.objects.filter(contact=afterwriter)[0]
-
-    self.assertEqual(response['author'], 'Brand new author!')
-    self.assertEqual(afterpaper.author, 'Brand new author!')
-
   def test_set_pcpaper(self):
     response = bcap.grant('paper-set-pcpaper', self.paper).post({
       'pcpaper': 'yes'
