@@ -2,7 +2,10 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import render_to_response
 import logging
 import hashlib
+import cjson
 
+def toJSON(obj):
+	return cjson.encode(obj)
 
 def logWith404(logger, msg, level='info'):
   if level == 'debug':

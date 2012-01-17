@@ -18,11 +18,13 @@ class TestGetPaperSummaries(Generator):
     rev = make_review(self.conference, user, p1, True)
 
     get_sums = bcap.grant('get-paper-summaries', user)
-    result = get_sums.post({'lastChange': 0})
+    result = get_sums.post({'lastChangeVal': 0})
 
     summaries = result['summaries']
     self.assertEqual(len(summaries), 10)
     self.assertEqual(result['changed'], True)
+
+    self.maxDiff = None
 
     self.assertEqual(summaries[0], {
       'id': p1.id,
@@ -30,15 +32,16 @@ class TestGetPaperSummaries(Generator):
       'title': p1.title,
       'decision': p1.decision.to_json(),
       'target': p1.target.to_json(),
-      'othercats': p1.othercats,
-      'contactEmail': p1.contact.email,
-      'topics': [],
+      'other_cats': p1.other_cats,
+      'contact_email': p1.contact.email,
+      'topics': [t.to_json() for t in p1.topics],
       'conflicts': [],
-      'pcpaper': False,
+      'hasconflict': False,
+      'pc_paper': False,
       'hidden': False,
       'dcomps': [],
       'oscore': -3,
-      'reviewInfo': p1.reviews_info
+      'reviews_info': p1.reviews_info
     })
 
 class TestGetAbstracts(Generator):

@@ -427,19 +427,17 @@ class TestSendEmails(Generator):
       email='potions@hogwarts.edu',
       conference=self.conference
     )
-    self.harrys_paper = Paper(
+    self.harrys_paper = Paper.newPaper(
       title='Multithreaded Patronus Composition',
       contact=self.harry,
-      target=self.conference.default_target,
       conference=self.conference 
     )
     self.harrys_paper.save()
     self.harry.papers.add(self.harrys_paper)
 
-    self.hermiones_paper = Paper(
+    self.hermiones_paper = Paper.newPaper(
       title='DuoStudy: Rewinding Education',
       contact=self.hermione,
-      target=self.conference.default_target,
       conference=self.conference
     )
     self.hermiones_paper.save()

@@ -1,4 +1,3 @@
-import belaylibs.models as bcap
 import belaylibs.dj_belay as belay
 from django.db import models
 import time
@@ -19,7 +18,7 @@ def get_one(query_dict):
   elif len(query_dict) == 1: return query_dict[0]
   else: raise FoundMoreThanOneException('Found more than one')
 
-class Conference(bcap.Grantable):
+class Conference(belay.Grantable):
   @classmethod
   def make_new(cls, name, shortname, admin_user, admin_password, admin_name, admin_email, use_ds):
     c = Conference(
@@ -297,7 +296,7 @@ class Conference(bcap.Grantable):
   def papers_of_dv(self, decision_value):
     return [p.id for p in self.my(Paper).filter(target=decision_value)]
 
-class Role(bcap.Grantable):
+class Role(belay.Grantable):
   class Meta:
     unique_together = (('name', 'conference'))
   name = models.CharField(max_length=20)
@@ -307,14 +306,14 @@ class Role(bcap.Grantable):
   def get_by_conf_and_name(self, conference, name):
     return get_one(Role.objects.filter(conference=conference, name=name))
 
-class BidValue(bcap.Grantable):
+class BidValue(belay.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   conference = models.ForeignKey(Conference)
   def to_json(self):
     return { 'abbr': self.abbr, 'description': self.description }
 
-class RatingValue(bcap.Grantable):
+class RatingValue(belay.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   number = models.IntegerField()
@@ -327,7 +326,7 @@ class RatingValue(bcap.Grantable):
       'number': self.number,
     }
 
-class ExpertiseValue(bcap.Grantable):
+class ExpertiseValue(belay.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   number = models.IntegerField()
@@ -340,7 +339,7 @@ class ExpertiseValue(bcap.Grantable):
       'number': self.number,
     }
 
-class DecisionValue(bcap.Grantable):
+class DecisionValue(belay.Grantable):
   class Meta:
     unique_together = (('targetable', 'abbr', 'description', 'conference'))
   targetable = models.BooleanField(default=True)
@@ -356,7 +355,7 @@ class DecisionValue(bcap.Grantable):
       'targetable': self.targetable
     }
 
-class ComponentType(bcap.Grantable):
+class ComponentType(belay.Grantable):
   class Meta:
     unique_together = (('abbr', 'conference'))
   def deadline_str(self):
@@ -385,7 +384,7 @@ class ComponentType(bcap.Grantable):
       'gracehours': self.grace_hours,
     }
 
-class ReviewComponentType(bcap.Grantable):
+class ReviewComponentType(belay.Grantable):
   class Meta:
     unique_together = (('description', 'conference', 'pc_only'))
   description = models.TextField()
@@ -399,7 +398,7 @@ class ReviewComponentType(bcap.Grantable):
     }
 
 
-class Account(bcap.Grantable):
+class Account(belay.Grantable):
   key = models.TextField(max_length=36)
 
   def get_launchables(self):
@@ -418,13 +417,15 @@ class Account(bcap.Grantable):
       'continueCreds': [c.to_json() for c in contwinues]
     }
 
-class User(bcap.Grantable):
+class User(belay.Grantable):
   username = models.TextField()
   full_name = models.TextField()
   email = models.EmailField(unique=True)
   conference = models.ForeignKey(Conference)
   roles = models.ManyToManyField(Role)
   account = models.ForeignKey(Account)
+
+  rolenames = property(fget=lambda s : [x.name for x in s.roles.all()])
 
   @classmethod
   def get_by_id(self, id):
@@ -464,7 +465,7 @@ class User(bcap.Grantable):
   def get_papers(self):
     return sorted(self.papers.all(), key=lambda p: p.id)
 
-class UnverifiedUser(bcap.Grantable):
+class UnverifiedUser(belay.Grantable):
   name = models.TextField()
   email = models.EmailField()
   # Note: this is directly from contwinue.py
@@ -472,7 +473,7 @@ class UnverifiedUser(bcap.Grantable):
   roletext = models.TextField(default='writer')
   conference = models.ForeignKey(Conference)
 
-class Topic(bcap.Grantable):
+class Topic(belay.Grantable):
   class Meta:
     unique_together = (('conference', 'name'))
 
@@ -490,19 +491,36 @@ class Topic(bcap.Grantable):
   def get_by_conference_and_id(cls, conf, id):
     return Topic.objects.filter(id=id, conference=conf)
 
-class Paper(bcap.Grantable):
+class Paper(belay.Grantable):
   contact = models.ForeignKey(User)
   authors = models.ManyToManyField(User, related_name='papers')
   unverified_authors = models.ManyToManyField(UnverifiedUser)
   author = models.TextField()
   title = models.TextField(default='No Paper Title Given')
   target = models.ForeignKey(DecisionValue)
+  decision = models.ForeignKey(DecisionValue, related_name='decision')
   other_cats = models.BooleanField(default=True)
   pc_paper = models.BooleanField(default=False)
   hidden = models.BooleanField(default=False)
   conference = models.ForeignKey(Conference)
   json = models.TextField(default='')
   oscore = models.IntegerField(default=-3)
+
+  @classmethod
+  def newPaper(cls, conference, contact, title=""):
+    p = Paper(
+      contact=contact,
+      title=title,
+      target=conference.default_target,
+      decision=conference.default_decision,
+      conference=conference
+    )
+    p.save()
+    return p
+
+  contact_email = property(fget=lambda p: p.contact.email)
+
+  topics = property(fget=lambda p: [t for t in p.topic_set.all()])
 
   def get_dcomps(self):
     return [c for c in self.component_set.exclude(type__fmt='Text')]
@@ -530,6 +548,15 @@ class Paper(bcap.Grantable):
 
   def my(self, cls):
     return cls.objects.filter(paper=self)
+
+  def has_conflict(self,auser):
+    return (auser.id in [x.id for x in self.conflicts])
+
+  def can_see_reviews(self, auser):
+    return not self.has_conflict(auser) and (('admin' in auser.rolenames) \
+      or not reduce(lambda x, y: x or ((not y.submitted) and \
+                                 y.reviewer.id == auser.id),
+              self.review_set.all(),False))
 
   def get_paper(self):
     paper_json = {
@@ -566,7 +593,7 @@ class Paper(bcap.Grantable):
       self.other_cats = False
     return None
 
-class Bid(bcap.Grantable):
+class Bid(belay.Grantable):
   bidder = models.ForeignKey(User)
   paper = models.ForeignKey(Paper)
   value = models.ForeignKey(BidValue)
@@ -584,7 +611,7 @@ class Bid(bcap.Grantable):
     }
 
 
-class Component(bcap.Grantable):
+class Component(belay.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
   lastSubmitted = models.IntegerField()
@@ -601,7 +628,7 @@ class Component(bcap.Grantable):
       'getComponent': get_cap
     }
 
-class DeadlineExtension(bcap.Grantable):
+class DeadlineExtension(belay.Grantable):
   type = models.ForeignKey(ComponentType)
   paper = models.ForeignKey(Paper)
   until = models.IntegerField()
@@ -620,13 +647,13 @@ class DeadlineExtension(bcap.Grantable):
     des = DeadlineExtension.objects.filter(type=ct, paper=paper)
     return get_one(des)
 
-class ReviewComponent(bcap.Grantable):
+class ReviewComponent(belay.Grantable):
   type = models.ForeignKey(ReviewComponentType)
   review = models.ForeignKey('Review')
   value = models.TextField()
   conference = models.ForeignKey(Conference)
 
-class Review(bcap.Grantable):
+class Review(belay.Grantable):
   reviewer = models.ForeignKey(User)
   paper = models.ForeignKey(Paper)
   submitted = models.BooleanField(default=False)
@@ -645,7 +672,7 @@ class Review(bcap.Grantable):
   def get_published_by_reviewer(cls, reviewer):
     return Review.objects.filter(published=True,reviewer=reviewer)
 
-class Launchable(bcap.Grantable):
+class Launchable(belay.Grantable):
   account = models.ForeignKey(Account)
   launchbase = models.TextField(max_length=500)
   launchcap = models.TextField(max_length=500)
@@ -658,17 +685,17 @@ class Launchable(bcap.Grantable):
       'display': self.display
     }
 
-class PendingAccount(bcap.Grantable):
+class PendingAccount(belay.Grantable):
   email = models.TextField(max_length=100)
 
-class PendingLogin(bcap.Grantable):
+class PendingLogin(belay.Grantable):
   # Key is for this server to trust the openID provider's request
   key = models.CharField(max_length=36)
   # ClientKey is a secret provided by the client to trust that new
   # windows were served from this server
   clientkey = models.CharField(max_length=36)
 
-class GoogleCredentials(bcap.Grantable):
+class GoogleCredentials(belay.Grantable):
   identity = models.CharField(max_length=200)
   account = models.ForeignKey(Account)
   email = models.EmailField()
@@ -678,7 +705,7 @@ class GoogleCredentials(bcap.Grantable):
       'email': self.email
     }
 
-class ContinueCredentials(bcap.Grantable):
+class ContinueCredentials(belay.Grantable):
   username = models.CharField(max_length=200)
   salt = models.CharField(max_length=200)
   hashed_password = models.CharField(max_length=200)

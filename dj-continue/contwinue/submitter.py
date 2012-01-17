@@ -404,14 +404,11 @@ class AddPaperHandler(bcap.CapHandler):
   def post(self, granted, args):
     user = granted.user
     conf = user.conference
-    paper = Paper(
+    paper = Paper.newPaper(
         contact=user,
-        author=user.full_name,
         title=args['title'],
-        target=conf.default_target,
         conference=conf
-      )
-    paper.save()
+    )
 
     paper.authors.add(user)
     paper.save()
@@ -535,11 +532,9 @@ def make_user_with_paper_launch(uu, paper):
   return (account, user)
 
 def new_paper(contact):
-  paper = Paper(
+  paper = Paper.newPaper(
     contact=contact,
     conference=contact.conference,
-    title=u'',
-    target=contact.conference.default_target
   )
   paper.save()
   paper.authors.add(contact)

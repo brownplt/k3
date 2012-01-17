@@ -128,7 +128,7 @@ def generate():
       target = targets[n % len(targets)]
       p = Paper(contact=contact, author=contact.full_name, target=target,
         other_cats=(not (odd_true(n))), pc_paper=odd_true(n), hidden=False,
-        conference=c, title=titles[n])
+        conference=c, title=titles[n], decision=c.default_decision)
       p.save()
       p.authors.add(contact)
       p.save()

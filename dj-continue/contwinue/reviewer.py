@@ -1,6 +1,9 @@
+import json
 import belaylibs.dj_belay as bcap
 
 import contwinue.models as m
+
+from lib.py.common import toJSON
 
 # GetPaperSummariesHandler
 # Returns the summaries for papers, used in the filter list.
@@ -28,7 +31,43 @@ import contwinue.models as m
 
 class GetPaperSummariesHandler(bcap.CapHandler):
   def post(self, granted, args):
-    pass
+    user = granted.user
+    conf = user.conference
+    if conf.last_change == int(args['lastChangeVal']):
+      return bcap.bcapResponse({'changed': False})
+
+    flds = ['id','author','title','decision','target','other_cats',\
+            'contact_email','topics','conflicts','pc_paper','hidden',\
+            'dcomps','oscore']
+    def getFlds(obj):
+      r = {}
+      memo = False
+      if obj.can_see_reviews(user):
+        if obj.json != '':
+          return obj.json
+        else:
+          ourflds = flds + ['reviews_info']
+          memo = True
+      else:
+        ourfld = flds
+      if obj.has_conflict(user):
+        r['hasconflict'] = True
+      else:
+        r['hasconflict'] = False
+
+      for fld in ourflds:
+        r[fld] = obj.__getattribute__(fld)
+      ourjson = r
+      if memo:
+        obj.json = ourjson
+      return ourjson
+
+    return bcap.bcapResponse({
+      "changed":True,
+      "lastChange":conf.last_change,
+      "summaries":[getFlds(obj) for obj in \
+        m.Paper.objects.filter(conference=conf)]
+    })
 
 # GetAbstractsHandler
 # Gets all the abstracts for a conference

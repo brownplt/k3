@@ -131,6 +131,8 @@ def dataPreProcess(data):
     def default(self, obj):
       if isinstance(obj, Capability):
         return {'@': obj.serialize()}
+      elif hasattr(obj, 'to_json'):
+        return obj.to_json()
       else:
         return obj
 

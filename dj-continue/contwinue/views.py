@@ -72,12 +72,11 @@ def create_user(request):
   user.save()
   user.roles.add(get_one(Role.objects.filter(name='user')))
 
-  paper = Paper(contact=user,
-                author=args['email'],
-                title=u'',
-                target=conf.default_target,
-                conference=conf)
-  paper.save()
+  paper = Paper.newPaper(
+    contact=user,
+    title=u'',
+    conference=conf
+  )
 
   paper.authors.add(user)
   paper.save()
@@ -174,6 +173,7 @@ class ContinueInit():
 
       'get-abstracts': reviewer.GetAbstractsHandler,
       'update-bids': reviewer.UpdateBidsHandler,
+      'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
       # End LaunchContinue handlers
 

@@ -375,13 +375,11 @@ class TestAuthorLaunch(Generator):
     )
     uu.save()
 
-    paper = Paper(
+    paper = Paper.newPaper(
       contact=self.writer,
       title=u'Potions and Stuff',
       conference=self.conference,
-      target=self.conference.default_target
     )
-    paper.save()
     paper.authors.add(self.writer)
     paper.unverified_authors.add(uu)
     self.assertTrue(uu in paper.unverified_authors.all())
@@ -422,11 +420,10 @@ class TestAuthorLaunch(Generator):
     )
     uu.save()
 
-    paper = Paper(
+    paper = Paper.newPaper(
       contact=self.writer,
       title=u'Multicore Polyjuice Potion',
       conference=self.conference,
-      target=self.conference.default_target
     )
     paper.save()
 
@@ -492,10 +489,9 @@ class TestRemoveAuthor(Generator):
       conference=self.conference
     )
 
-    paper = Paper(
+    paper = Paper.newPaper(
       contact=user,
       title=u'Defense Against the Dark Farts',
-      target=self.conference.default_target,
       conference=self.conference
     )
     paper.save()
@@ -525,10 +521,9 @@ class TestRemoveAuthor(Generator):
       conference=self.conference
     )
 
-    paper = Paper(
+    paper = Paper.newPaper(
       contact=minerva,
       title=u'Transmuting Groundskeepers to Professors',
-      target=self.conference.default_target,
       conference=self.conference
     )
     paper.save()

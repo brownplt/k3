@@ -11,7 +11,7 @@ from contwinue.admin_tests import TestAdminPage, TestSetRole, TestSetContact, \
 from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
 from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
-    TestReviewPercentages
+    TestReviewPercentages, TestGetPaperSummaries
 from contwinue.paperview_tests import TestGetByRole
 from contwinue.accounts_tests import TestCreateReviewer
 from contwinue.model_tests import TestPaperJsons
@@ -49,3 +49,4 @@ class TestBasic(Generator):
     self.assertEqual(len(response['decisions']), 1)
     # make_new makes 2
     self.assertEqual(len(response['components']), 4)
+
