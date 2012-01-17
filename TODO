@@ -98,7 +98,7 @@ Pages
 
 [] (2) Identify handlers/models for backend of continue.(html|js)
 [] (_) Move them (and unit-test each one)
-  [] (1) getPaperSummaries →
+  [x] (1) getPaperSummaries →
     [] How to handle lastChange?  Make all models inherit a superclass?
         Superclass, when something saves, updates the lastc of conf?
     [] Just go through and add calls to update_last_change()...
