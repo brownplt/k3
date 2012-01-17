@@ -86,7 +86,7 @@ def invokeCapURL(capURL, meth, data=""):
       return result
     else:
       if result.status_code >= 400:
-        raise BelayException('invokeCapURL Failed')
+        raise BelayException('invokeCapURL Failed: %s ' % result)
       return dataPostProcess(result.content)
   else:
     # TODO: https
