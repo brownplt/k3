@@ -303,7 +303,7 @@ class TestAuthorLaunch(Generator):
       name='Hermione Granger',
       email='hermione@hogwarts.edu',
       conference=self.writer.conference,
-      roletext='user'
+      roletext='writer'
     )
     uu.save()
 
@@ -357,7 +357,7 @@ class TestAuthorLaunch(Generator):
     uu = UnverifiedUser(
       name='Ron Different',
       email='ron@hogwarts.edu',
-      roletext='user',
+      roletext='writer',
       conference=self.conference
     )
     uu.save()
@@ -381,7 +381,7 @@ class TestAuthorLaunch(Generator):
       name='Severus Snape',
       email='jerk@hogwarts.edu',
       conference=self.writer.conference,
-      roletext='user'
+      roletext='writer'
     )
     uu.save()
 
@@ -427,7 +427,7 @@ class TestAuthorLaunch(Generator):
     uu = UnverifiedUser(
       name='Luna Lovebad',
       email='luna@hogwarts.edu',
-      roletext='user',
+      roletext='writer',
       conference=self.conference
     )
     uu.save()

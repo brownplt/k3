@@ -306,7 +306,7 @@ class AddAuthorHandler(bcap.CapHandler):
           name=name,
           email=email,
           conference=conf,
-          roletext=u'user'
+          roletext=u'writer'
         )
         uu.save()
       else:

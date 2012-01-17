@@ -462,7 +462,7 @@ class UnverifiedUser(bcap.Grantable):
   email = models.EmailField()
   # Note: this is directly from contwinue.py
   # role is not a foreign key to role, just a text field
-  roletext = models.TextField(default='user')
+  roletext = models.TextField(default='writer')
   conference = models.ForeignKey(Conference)
 
 class Topic(bcap.Grantable):
@@ -515,7 +515,6 @@ class Paper(bcap.Grantable):
 
   def get_component(self, ct):
     comp = get_one(Component.objects.filter(paper=self,type=ct))
-    print(self.get_paper())
     if comp is None: return comp
     return comp.to_json()
 

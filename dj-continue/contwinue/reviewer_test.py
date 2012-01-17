@@ -97,8 +97,6 @@ class TestReviewPercentages(Generator):
     get_percents = bcap.grant('get-review-percentages', self.conference)
     result = get_percents.get()
 
-    print(result)
-
     self.assertEqual(result, [
       {'id': admin.id, 'name': admin.full_name, 'percentage': 'N/A'},
       {'id': r1.id, 'name': r1.full_name, 'percentage': '50%'},

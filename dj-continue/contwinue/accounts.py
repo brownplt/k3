@@ -88,7 +88,7 @@ def request_account(request):
   user = UnverifiedUser(
     name=u'',
     email=email,
-    roletext=u'user',
+    roletext=u'writer',
     conference=conf
   )
   user.save()

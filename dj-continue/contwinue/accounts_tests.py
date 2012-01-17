@@ -60,7 +60,7 @@ class TestCreateReviewer(Generator):
       conference=self.conference,
       name='Not-a-rev',
       email='not-rev@fake.edu',
-      roletext='author'
+      roletext='writer'
     )
     uu.save()
     try:
