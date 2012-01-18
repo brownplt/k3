@@ -315,7 +315,7 @@ class AddAuthorHandler(bcap.CapHandler):
       paper.unverified_authors.add(uu)
       paper.save()
 
-      launch = bcap.grant('launch-attach-to-paper', {
+      launch = bcap.dbgrant('launch-attach-to-paper', {
         'newuser': True,
         'unverified': uu,
         'paper': paper
@@ -348,7 +348,7 @@ class AddAuthorHandler(bcap.CapHandler):
     else:
       paper.authors.add(existing_user)
       paper.save()
-      launch = bcap.grant('launch-paper', {
+      launch = bcap.dbgrant('launch-paper', {
         'user': existing_user,
         'paper': paper
       })

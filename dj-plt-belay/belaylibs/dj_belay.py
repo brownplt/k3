@@ -23,6 +23,7 @@ import json
 import re
 import httplib
 import settings
+from cryptcaps import Crypt
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpRequest
 from lib.py.common import logWith404
@@ -38,6 +39,12 @@ def this_server_url_prefix():
 def cap_url(cap):
   return '%s%s' % (handlerData.prefix, cap)
 
+def is_crypt_cap(capURL):
+  return capURL.find(handlerData.crypt_prefix) == 0
+
+def crypt_cap_url(cap):
+  return '%s%s' % (handlerData.crypt_prefix, cap)
+
 def cap_id_from_url(capURL):
   return capURL[handlerData.prefix_strip_length:]
 
@@ -46,8 +53,6 @@ def cap_for_hash(cap):
 
 class BelayException(Exception):
   pass
-  
-
 
 #
 # Capabilities
@@ -67,7 +72,7 @@ def invokeCapURL(capURL, meth, data=""):
   parsed_prefix = parsed.scheme + "://" + parsed.netloc
 
   if parsed_prefix == prefix:
-    result = handle(cap_id_from_url(capURL), meth, data, {})
+    result = handle(capURL, meth, data, {})
     # TODO(jpolitz): other Content-Types
     if re.match('image/.*', result['Content-Type']):
       # TODO(jpolitz): is this sufficient wrapping?
@@ -232,7 +237,7 @@ class CapHandler(object):
   def delete(self, grantable):
     return self.notAllowedResponse()
 
-default_prefix = '/cap/'
+default_prefix = 'cap'
 
 class HandlerData(object):
   def __init__(self):
@@ -269,18 +274,26 @@ def set_handlers(cap_prefix, path_map):
   if handlerData.is_set:
     return
 
+  crypt_prefix = 'crypt' + cap_prefix
   if not cap_prefix.startswith('/'):
     cap_prefix = '/' + cap_prefix
+    crypt_prefix = '/' + crypt_prefix
   if not cap_prefix.endswith('/'):
     cap_prefix += '/'
+    crypt_prefix += '/'
   
   handlerData.prefix = this_server_url_prefix() + cap_prefix
+  handlerData.crypt_prefix = this_server_url_prefix() + crypt_prefix
   handlerData.cap_prefix = cap_prefix
   handlerData.prefix_strip_length = len(handlerData.prefix)
+  handlerData.crypt_prefix_strip_length = len(handlerData.crypt_prefix)
   handlerData.is_set = True
 
   for url in path_map:
     set_handler(url, path_map[url])
+
+def set_crypt_secret(secret):
+  handlerData.crypt = Crypt(secret)
 
 def get_handler(path):
   return handlerData.path_to_handler[path]
@@ -288,8 +301,7 @@ def get_handler(path):
 def set_handler(path, handler):
   handlerData.path_to_handler[path] = handler
 
-
-def handle(cap_id, method, args, files):
+def handle_cap_id(cap_id, method, args, files):
   grants = Grant.objects.filter(cap_id=cap_id)
 
   if len(grants) == 0:
@@ -305,10 +317,23 @@ def handle(cap_id, method, args, files):
     raise BelayException('%s, %s' % (self.request.path_info, cap_id))
 
   grant = grants[0]   
-  handler_class = get_handler(str(grant.internal_path))
+  path = str(grant.internal_path)
+  handler_class = get_handler(path)
   handler = handler_class()
   handler.setCurrentGrant(grant)
 
+  item = dbPostProcess(grant.db_data)
+  return cap_invoke(item, args, handler, method, path, files)
+
+def handle_crypt_cap(cryptdata, method, args, files):
+  data = dbPostProcess(handlerData.crypt.unprepare(cryptdata))
+  path = str(data['p'])
+  handler_class = get_handler(path)
+  handler = handler_class()
+  item = data['d']
+  return cap_invoke(item, args, handler, method, path, files)
+
+def cap_invoke(item, args, handler, method, path, files, log=True):
   files_needed = handler.files_needed()
   using_files = len(files_needed) > 0
   if using_files:
@@ -316,17 +341,10 @@ def handle(cap_id, method, args, files):
   elif handler.all_files():
     using_files = True
     files_granted = files
-    
-
-  item = dbPostProcess(grant.db_data)
-
   handler_log = ""
-  handler_log += 'Handler: %s\n' % str(grant.internal_path)
+  handler_log += 'Handler: %s\n' % str(path)
   handler_log += '  Time: %s\n' % datetime.datetime.now() 
-  if files_needed > 1:
-    handler_log += ('  Files_needed: %s\n' % str(handler.files_needed()))
-  if args and (grant.internal_path != 'create-account'):
-    handler_log += ('  Args: %s\n' % str(args))
+  handler_log += ('  Args: %s\n' % str(args))
 
   try:
     if method == 'GET':
@@ -396,10 +414,39 @@ def proxyHandler(request):
   if request.method == 'OPTIONS':
     return options()
   else:
-    return handle(request.path_info[len(handlerData.cap_prefix):], \
-        request.method, args, req_files)
+    fullpath = this_server_url_prefix() + request.path_info
+    logger.error('Path ' + fullpath)
+    return handle(fullpath, request.method, args, req_files)
 
+def handle(fullpath, method, args, files):
+  maybe_cap = fullpath
+  if is_crypt_cap(maybe_cap):
+    return handle_crypt_cap(
+      fullpath[len(handlerData.crypt_prefix):],
+      method,
+      args,
+      files
+    )
+  else:
+    return handle_cap_id(
+      fullpath[handlerData.prefix_strip_length:],
+      method,
+      args,
+      files
+    )
+
+# The default can be swapped around.  The longer names won't change.
 def grant(path, data):
+  return cryptgrant(path, data)
+  
+def cryptgrant(path, data):
+  data = {'p': path, 'd': data}
+  encrypted = handlerData.crypt.prepare(dbPreProcess(data))
+  cap = crypt_cap_url(encrypted)
+  logger.error('Cap: %s' % cap)
+  return Capability(crypt_cap_url(encrypted))
+
+def dbgrant(path, data):
   cap_id = str(uuid.uuid4())
   serialized = dbPreProcess(data)
   item = Grant(cap_id=cap_id, internal_path=path, db_data=serialized)

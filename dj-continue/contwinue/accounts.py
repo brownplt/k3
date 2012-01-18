@@ -247,7 +247,7 @@ def send_new_reviewer_email(unverified_user):
   if unverified_user.roletext != 'reviewer':
     raise Exception('Tried to send reviewer email to %s' % unverified_user.roletext)
 
-  launch_cap = bcap.grant('launch-reviewer', {
+  launch_cap = bcap.dbgrant('launch-reviewer', {
     'newuser': True,
     'unverified': unverified_user
   })

@@ -180,4 +180,5 @@ class ContinueInit():
       'get-by-role': paperview.GetByRoleHandler
       # End LaunchPaperView handlers
     })
+    bcap.set_crypt_secret(settings.PRIVATE_KEY)
     return None

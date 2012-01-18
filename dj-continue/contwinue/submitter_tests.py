@@ -297,7 +297,7 @@ class TestAuthorLaunch(Generator):
     )
     uu.save()
 
-    launch_new_cap = bcap.grant('launch-new-paper', {
+    launch_new_cap = bcap.dbgrant('launch-new-paper', {
       'create': True,
       'unverified': uu
     })
@@ -354,7 +354,7 @@ class TestAuthorLaunch(Generator):
 
     users_before = User.objects.all()
 
-    launch_new_cap = bcap.grant('launch-new-paper', {
+    launch_new_cap = bcap.dbgrant('launch-new-paper', {
       'create': True,
       'unverified': uu
     })
@@ -429,7 +429,7 @@ class TestAuthorLaunch(Generator):
 
     authors_before = list(paper.authors.all())
     
-    launch_cap = bcap.grant('launch-attach-to-paper', {
+    launch_cap = bcap.dbgrant('launch-attach-to-paper', {
       'newuser': True,
       'unverified': uu,
       'paper': paper

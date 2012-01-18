@@ -2,6 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('',
   (r'^cap/.*', 'belaylibs.dj_belay.proxyHandler'),
+  (r'^cryptcap/.*', 'belaylibs.dj_belay.proxyHandler'),
 
   (r'^.*/home$', 'contwinue.views.index_handler'),
   (r'^.*/getBasic$', 'contwinue.views.get_basic'),

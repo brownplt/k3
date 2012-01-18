@@ -26,7 +26,7 @@ def start_conference(admin_name, admin_email, conf_name, shortname, use_ds):
     email=admin_email,
     conference=conf
   ))
-  launch_admin = bcap.grant('launch-admin', admin)
+  launch_admin = bcap.dbgrant('launch-admin', admin)
 
   launch_url = '%s/admin#%s' % (
     bcap.this_server_url_prefix(),
@@ -45,7 +45,7 @@ def get_admin_launch(conf_shortname):
   print('Admins: %s' % len(admin_role.user_set.all()))
   admin = admin_role.user_set.all()[0]
   print(admin.role_names())
-  launch_admin = bcap.grant('launch-admin', admin)
+  launch_admin = bcap.dbgrant('launch-admin', admin)
 
   launch_url = '%s/admin#%s' % (
     bcap.this_server_url_prefix(),
