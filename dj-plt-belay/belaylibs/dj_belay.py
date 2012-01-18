@@ -225,6 +225,9 @@ class CapHandler(object):
     self.current_grant.db_data = dbPreProcess(new_data)
     self.current_grant.save()
 
+  def setArgs(self, args): self.args = args
+  def getArgs(self):       return self.args
+
   def notAllowedResponse(self):
     return HttpResponseNotAllowed(self.allowedMethods())
   def get(self, grantable):
@@ -347,6 +350,8 @@ def cap_invoke(item, args, handler, method, path, files, log=True):
   handler_log += '  Time: %s\n' % datetime.datetime.now() 
   handler_log += ('  Args: %s\n' % str(args))
 
+  handler.setArgs(args)
+
   try:
     if method == 'GET':
       response = handler.get(item)
@@ -385,7 +390,7 @@ def cap_invoke(item, args, handler, method, path, files, log=True):
 
 def proxyHandler(request):
 
-  # Allow cross-origin requests on capablities
+  # Allow cross-origin requests on capablities based on settings.ORIGINS
   def options():
     response = HttpResponse()
 
@@ -404,13 +409,21 @@ def proxyHandler(request):
 
   req_files = request.FILES
   post_args = request.POST
+  get_args = request.GET
   args = dataPostProcess(request.read())
 
-  if len(post_args) > 0:
-    if args is None:
-      args = post_args
-    else:
-      args.update(post_args)
+  def update_with(args, new_args):
+    if len(new_args) > 0:
+      if args is None:
+        args = new_args
+      else:
+        args.update(new_args)
+    return args
+
+  args = update_with(args, get_args)
+  args = update_with(args, post_args)
+
+  logger.error('Args: %s' % args)
 
   if request.method == 'OPTIONS':
     return options()
