@@ -61,7 +61,7 @@ def generate():
     extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
-  if len(writer_users) != 10:
+  if len(writer_users) != 300:
     account = Account(key=str(uuid.uuid4()))
     account.save()
     writer_user = User(username='writer', full_name='Joe Writer',
@@ -74,7 +74,7 @@ def generate():
     writer_user.roles.add(writer_role)
     writer_user.save()
     
-    for n in range(2, 11):
+    for n in range(2, 101):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       nstr = str(n)
@@ -100,7 +100,7 @@ def generate():
       t = Topic(name=topics[n], conference=c)
       t.save()
 
-  if not check_size(Paper, 10):
+  if not check_size(Paper, 100):
     titles = [
       'A synchronized real-time cache related to a virtual secure technology',
       'An interactive secure compiler related to a synchronized binary interface',
@@ -118,7 +118,7 @@ def generate():
       else: return True
 
     targets = DecisionValue.objects.filter(targetable=True)
-    for n in range(10):
+    for n in range(100):
       if n == 0:
         username = 'writer'
       else:
@@ -128,7 +128,7 @@ def generate():
       target = targets[n % len(targets)]
       p = Paper(contact=contact, author=contact.full_name, target=target,
         other_cats=(not (odd_true(n))), pc_paper=odd_true(n), hidden=False,
-        conference=c, title=titles[n], decision=c.default_decision)
+        conference=c, title=titles[n % len(titles)], decision=c.default_decision)
       p.save()
       p.authors.add(contact)
       p.save()

@@ -12,7 +12,6 @@ from contwinue.models import *
 from contwinue.submitter import *
 import contwinue.email_strings as strings
 
-
 class TestAuthorLaunch(Generator):
   def setUp(self):
     super(TestAuthorLaunch, self).setUp()
@@ -332,6 +331,7 @@ class TestAuthorLaunch(Generator):
     del response['newUser']
     del response2['newUser']
     
+    # TODO(joe): test this better, it fails b/c of salt in cryptocaps
     self.assertEqual(bcap.dataPreProcess(response), bcap.dataPreProcess(response2))
 
 

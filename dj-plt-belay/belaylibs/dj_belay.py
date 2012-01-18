@@ -17,6 +17,7 @@
 import datetime
 import logging
 import os
+import base64
 import uuid
 import urlparse
 import json
@@ -440,7 +441,8 @@ def grant(path, data):
   return cryptgrant(path, data)
   
 def cryptgrant(path, data):
-  data = {'p': path, 'd': data}
+  salt = os.urandom(8)
+  data = {'p': path, 'd': data, 's': base64.b64encode(salt)}
   encrypted = handlerData.crypt.prepare(dbPreProcess(data))
   cap = crypt_cap_url(encrypted)
   logger.error('Cap: %s' % cap)
