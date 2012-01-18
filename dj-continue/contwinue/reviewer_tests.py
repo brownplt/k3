@@ -73,6 +73,15 @@ class TestGetAbstracts(Generator):
     for i in range(0,10):
       self.assertEqual(abstracts[i]['value'], "Paper %s abstract" % abstracts[i]['id'])
 
+  def test_get_abstract(self):
+    p = m.Paper.objects.filter(conference=self.conference)[0]
+    get_abstract = bcap.grant('get-abstract', p)
+    abstract = get_abstract.get()
+    self.assertEqual(
+      abstract,
+      "Paper %s abstract" % p.id
+    )
+
 class TestUpdateBids(Generator):
   def test_update(self):
     user = make_reviewer('Bob Reviewer', 'bob@fake.org', self.conference)

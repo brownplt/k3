@@ -104,7 +104,7 @@ Pages
     [] Just go through and add calls to update_last_change()...
   [x] (1) getBasic →
   [x] (1) getAbstracts → GetAbstractsHandler
-  [] (1) Paper/<id>/getAbstract → 
+  [x] (1) Paper/<id>/getAbstract → 
   [x] (1) updateBids → UpdateBidsHandler
   [x] (1) getReviewPercentages → GetReviewPercentagesHandler
   [] (1) Paper/<id>/updateDecision → 

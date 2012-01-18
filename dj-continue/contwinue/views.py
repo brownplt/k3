@@ -172,6 +172,7 @@ class ContinueInit():
       # End LaunchAdmin handlers
 
       'get-abstracts': reviewer.GetAbstractsHandler,
+      'get-abstract': reviewer.GetAbstractHandler,
       'update-bids': reviewer.UpdateBidsHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,

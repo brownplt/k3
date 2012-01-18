@@ -68,6 +68,7 @@ class GetPaperSummariesHandler(bcap.CapHandler):
       "summaries":[getFlds(obj) for obj in conf.my(m.Paper)]
     })
 
+
 # GetAbstractsHandler
 # Gets all the abstracts for a conference
 #
@@ -149,3 +150,14 @@ class GetReviewPercentagesHandler(bcap.CapHandler):
         ret.append({'id':user.id,'name':user.full_name,'percentage':str(int(float(len(subrevs))/float(len(allrevs))*100))+'%'})
     return bcap.bcapResponse(ret)
 
+# GetAbstractHandler
+# Gets the abstract for a single paper
+#
+# granted: |paper:Paper|
+# <- Str U None
+class GetAbstractHandler(bcap.CapHandler):
+  def get(self, granted):
+    paper = granted.paper
+    return bcap.bcapResponse(
+      paper.get_component(paper.conference.display_component)['value']
+    )
