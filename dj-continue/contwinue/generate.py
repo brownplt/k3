@@ -25,7 +25,7 @@ def simple_generate():
       t.save()
   
 
-def generate():
+def generate(numusers=10):
   """
   Generates sample data.
   Creates an admin/reviewer user (username: admin, pw: admin) and several 
@@ -61,7 +61,7 @@ def generate():
     extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
-  if len(writer_users) != 10:
+  if len(writer_users) != numusers:
     account = Account(key=str(uuid.uuid4()))
     account.save()
     writer_user = User(username='writer', full_name='Joe Writer',
@@ -74,7 +74,7 @@ def generate():
     writer_user.roles.add(writer_role)
     writer_user.save()
     
-    for n in range(2, 11):
+    for n in range(2, numusers+1):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       nstr = str(n)
@@ -100,7 +100,7 @@ def generate():
       t = Topic(name=topics[n], conference=c)
       t.save()
 
-  if not check_size(Paper, 100):
+  if not check_size(Paper, numusers):
     titles = [
       'A synchronized real-time cache related to a virtual secure technology',
       'An interactive secure compiler related to a synchronized binary interface',
@@ -118,7 +118,7 @@ def generate():
       else: return True
 
     targets = DecisionValue.objects.filter(targetable=True)
-    for n in range(10):
+    for n in range(numusers):
       if n == 0:
         username = 'writer'
       else:

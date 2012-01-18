@@ -61,6 +61,8 @@ if __name__ == '__main__':
     get_admin_launch(sys.argv[2])
   if sys.argv[1] == 'sample':
     g.generate()
+  if sys.argv[1] == 'bigsample':
+    g.generate(numusers=int(sys.argv[2]))
   if sys.argv[1] == 'create':
     # Fill in creation options here for make_conference above
     pass
