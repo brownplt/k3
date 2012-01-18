@@ -108,7 +108,7 @@ Pages
   [x] (1) updateBids → UpdateBidsHandler
   [x] (1) getReviewPercentages → GetReviewPercentagesHandler
   [x] (1) getUserBids →
-  [] (1) Paper/<id>/updateDecision → 
+  [x] (1) Paper/<id>/updateDecision → 
   [] (1) genPaperLink() [js function]
   [] (1) compLink() [js function]
   (Meeting stuff is less important)

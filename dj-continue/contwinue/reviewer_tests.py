@@ -166,3 +166,16 @@ class TestReviewPercentages(Generator):
       {'id': r2.id, 'name': r2.full_name, 'percentage': '0%'}
     ])
 
+class TestUpdateDecision(Generator):
+  def test_update_decision(self):
+    paper = m.Paper.objects.all()[0]
+    self.assertEqual(paper.decision, self.conference.default_decision)
+    update = bcap.grant('update-decision', paper)
+    decision = m.DecisionValue.objects.filter(abbr='A')[0]
+    self.assertNotEqual(decision, self.conference.default_decision)
+    result = update.post(decision.id)
+
+    self.assertTrue(result)
+    paper = m.Paper.objects.all()[0]
+    self.assertEqual(paper.decision, decision)
+

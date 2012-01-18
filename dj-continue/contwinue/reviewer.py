@@ -173,3 +173,15 @@ class GetUserBidsHandler(bcap.CapHandler):
       x.to_json() for x in granted.user.unhidden_bids()
     ])
 
+# UpdateDecisionHandler
+# Changes the decision on a paper based on id
+#
+# granted: |paper:Paper|
+# <- True
+class UpdateDecisionHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    d = m.DecisionValue.get_by_id(int(args))
+    granted.paper.decision = d
+    granted.paper.save()
+    return bcap.bcapResponse(True)
+

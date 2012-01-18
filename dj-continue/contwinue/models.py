@@ -346,6 +346,10 @@ class DecisionValue(belay.Grantable):
   abbr = models.CharField(max_length=1)
   description = models.TextField()
   conference = models.ForeignKey(Conference)
+
+  @classmethod
+  def get_by_id(cls, id):
+    return get_one(DecisionValue.objects.filter(id=id))
   
   def to_json(self):
     return {

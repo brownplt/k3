@@ -175,6 +175,7 @@ class ContinueInit():
       'get-abstract': reviewer.GetAbstractHandler,
       'get-user-bids': reviewer.GetUserBidsHandler,
       'update-bids': reviewer.UpdateBidsHandler,
+      'update-decision': reviewer.UpdateDecisionHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
       # End LaunchContinue handlers
