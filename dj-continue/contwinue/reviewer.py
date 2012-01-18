@@ -65,8 +65,7 @@ class GetPaperSummariesHandler(bcap.CapHandler):
     return bcap.bcapResponse({
       "changed":True,
       "lastChange":conf.last_change,
-      "summaries":[getFlds(obj) for obj in \
-        m.Paper.objects.filter(conference=conf)]
+      "summaries":[getFlds(obj) for obj in conf.my(m.Paper)]
     })
 
 # GetAbstractsHandler
