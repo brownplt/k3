@@ -61,7 +61,7 @@ def generate():
     extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
-  if len(writer_users) != 300:
+  if len(writer_users) != 10:
     account = Account(key=str(uuid.uuid4()))
     account.save()
     writer_user = User(username='writer', full_name='Joe Writer',
@@ -74,7 +74,7 @@ def generate():
     writer_user.roles.add(writer_role)
     writer_user.save()
     
-    for n in range(2, 101):
+    for n in range(2, 11):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       nstr = str(n)
@@ -118,7 +118,7 @@ def generate():
       else: return True
 
     targets = DecisionValue.objects.filter(targetable=True)
-    for n in range(100):
+    for n in range(10):
       if n == 0:
         username = 'writer'
       else:

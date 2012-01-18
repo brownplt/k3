@@ -1,3 +1,4 @@
+from datetime import datetime
 import belaylibs.dj_belay as bcap
 
 import settings
@@ -9,8 +10,10 @@ from contwinue.tests_common import Generator, has_keys, make_author, \
       make_reviewer, make_review
 
 class TestGetPaperSummaries(Generator):
-  def test_get_summaries(self):
-    user = make_reviewer('Joe Reviewer', 'joe@fake.org', self.conference)
+  def get_summaries(self, lastChangeVal=0):
+    user = m.get_one(m.User.objects.filter(email='joe@fake.org'))
+    if user is None:
+      user = make_reviewer('Joe Reviewer', 'joe@fake.org', self.conference)
     
     papers = list(m.Paper.objects.all())
     p1 = papers[0]
@@ -18,7 +21,12 @@ class TestGetPaperSummaries(Generator):
     rev = make_review(self.conference, user, p1, True)
 
     get_sums = bcap.grant('get-paper-summaries', user)
-    result = get_sums.post({'lastChangeVal': 0})
+    result = get_sums.post({'lastChangeVal': lastChangeVal})
+
+    return (p1, result)
+
+  def test_get_summaries(self):
+    (p1, result) = self.get_summaries()
 
     summaries = result['summaries']
     self.assertEqual(len(summaries), 10)
@@ -43,6 +51,16 @@ class TestGetPaperSummaries(Generator):
       'oscore': -3,
       'reviews_info': p1.reviews_info
     })
+
+  def test_get_summaries_twice(self):
+    start = datetime.now()
+    (p1, result) = self.get_summaries()
+    end = datetime.now()
+    print('First took %s' % (end - start))
+    self.get_summaries(lastChangeVal=result['lastChange'])
+    end2 = datetime.now()
+    print('Second took %s' % (end2 - end))
+    
 
 class TestGetAbstracts(Generator):
   def test_get_abstracts(self):
