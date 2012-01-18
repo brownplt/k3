@@ -60,8 +60,36 @@ class TestGetPaperSummaries(Generator):
     self.get_summaries(lastChangeVal=result['lastChange'])
     end2 = datetime.now()
     print('Second took %s' % (end2 - end))
-    
 
+class TestGetUserBids(Generator):
+  def test_get_bids(self):
+    [p1, p2] = m.Paper.objects.filter(conference=self.conference)[0:2]
+    r = make_reviewer('Joe Reviewer', 'joe@fake.org', self.conference)
+    p2.hidden = True
+    p2.save()
+
+    bv = m.get_one(m.BidValue.objects.filter(abbr='R'))
+
+    bid1 = m.Bid(
+      bidder=r,
+      paper=p1,
+      value=bv,
+      conference=self.conference
+    )
+    bid1.save()
+    bid2 = m.Bid(
+      bidder=r,
+      paper=p2,
+      value=bv,
+      conference=self.conference
+    )
+    bid2.save()
+
+    get_bids = bcap.grant('get-user-bids', r)
+    result = get_bids.get()
+
+    self.assertItemsEqual(result, [ bid1.to_json() ])
+    
 class TestGetAbstracts(Generator):
   def test_get_abstracts(self):
     p = m.Paper.objects.filter(conference=self.conference)[0]

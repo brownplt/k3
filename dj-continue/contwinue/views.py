@@ -173,6 +173,7 @@ class ContinueInit():
 
       'get-abstracts': reviewer.GetAbstractsHandler,
       'get-abstract': reviewer.GetAbstractHandler,
+      'get-user-bids': reviewer.GetUserBidsHandler,
       'update-bids': reviewer.UpdateBidsHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,

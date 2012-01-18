@@ -107,6 +107,7 @@ Pages
   [x] (1) Paper/<id>/getAbstract → 
   [x] (1) updateBids → UpdateBidsHandler
   [x] (1) getReviewPercentages → GetReviewPercentagesHandler
+  [x] (1) getUserBids →
   [] (1) Paper/<id>/updateDecision → 
   [] (1) genPaperLink() [js function]
   [] (1) compLink() [js function]
@@ -114,7 +115,6 @@ Pages
   [] (1) Meeting/setOrder → 
   [] (1) Meeting/jumpTo → 
   [] (1) Meeting/endMeeting → 
-  [] (1) getUserBids →
   [] (1) Meeting/getOrder →
 
 

@@ -465,6 +465,9 @@ class User(belay.Grantable):
   def get_papers(self):
     return sorted(self.papers.all(), key=lambda p: p.id)
 
+  def unhidden_bids(self):
+    return Bid.objects.filter(paper__hidden=False, bidder=self)
+
 class UnverifiedUser(belay.Grantable):
   name = models.TextField()
   email = models.EmailField()

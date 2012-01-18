@@ -161,3 +161,15 @@ class GetAbstractHandler(bcap.CapHandler):
     return bcap.bcapResponse(
       paper.get_component(paper.conference.display_component)['value']
     )
+
+# GetUserBidsHandler
+# Gets all of a user's bids on non-hidden papers
+#
+# granted: |user:User|
+# <- [ bidJSON ]
+class GetUserBidsHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse([
+      x.to_json() for x in granted.user.unhidden_bids()
+    ])
+
