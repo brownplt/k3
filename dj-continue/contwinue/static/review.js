@@ -434,7 +434,7 @@ function makeAllTable(papersB,basicInfo) {
 	return tbl.dom;
 }
 
-function makeReviewTable(papersB,basicInfo,cuser) {
+function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages) {
 	var downloadCols = map(function(dc) {
 			return new Column('download',dc.description,function(a,b) {return 0;},
 		function (paper,cookie,tab) {return TD(paper.dcobj[dc.id] ? A({href:compLink(cookie,paper.id,paper.title,dc.id,paper.dcobj[dc.id].value)},'Download') : '');});},
@@ -478,11 +478,8 @@ function makeReviewTable(papersB,basicInfo,cuser) {
 	var displayTableB = collect_b('none',merge_e(othersLinkClicked.constant_e(true),closeLinkClicked.constant_e(false)),function(action,oval) {
 			return action ? (oval == 'none' ? 'block' : 'none') : 'none';
 		});
-	var allReviewsE = getFilteredWSO_e(othersLinkClicked.constant_e(
-					genRequest(
-						{url: 'getReviewPercentages',
-						fields: {cookie:authCookie}})
-					));
+	var allReviewsE = getE(othersLinkClicked
+    .constant_e(getReviewPercentages));
 	var reviewTableB = lift_b(function(doDisplay,pcts) {
 			return DIV({style:{display:doDisplay}},
 				TABLE({className:'progress-bar',width:'90%'},TBODY(
@@ -716,7 +713,7 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 				if(!atb) atb = constant_b(makeAllTable(ncSummariesB,basicInfo));
 				return atb;
 			case 'review_tab':
-				if(!rtb) rtb = constant_b(makeReviewTable(ncSummariesB,basicInfo,curUser));
+				if(!rtb) rtb = constant_b(makeReviewTable(ncSummariesB,basicInfo,curUser,launchInfo.getPercentages));
 				return rtb;
 			case 'assign_tab':
 				if(!astb) astb = constant_b(makeAssignTable(ncSummariesB,basicInfo));
