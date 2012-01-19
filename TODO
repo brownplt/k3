@@ -76,7 +76,7 @@ Pages
 
 [] (2) Identify handlers/models for backend of paper.(html|js)
 [] (_) Move them (and unit-test each one)
-  [] () Paper/<id>/updateDecision
+  [x] () Paper/<id>/updateDecision
   [x] () updateBids → updateBidsHandler
   [] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
@@ -110,7 +110,7 @@ Pages
   [x] (1) getUserBids →
   [x] (1) Paper/<id>/updateDecision → 
   [] (1) genPaperLink() [js function]
-  [] (1) compLink() [js function] → GetComponentFileHandler
+  [x] (1) compLink() [js function] → GetComponentFileHandler
   (Meeting stuff is less important)
   [] (1) Meeting/setOrder → 
   [] (1) Meeting/jumpTo → 
