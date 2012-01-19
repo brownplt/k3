@@ -707,6 +707,10 @@ class Review(belay.Grantable):
   def get_published_by_reviewer(cls, reviewer):
     return Review.objects.filter(published=True,reviewer=reviewer)
 
+  @classmethod
+  def get_published_by_user_and_paper(cls, user, paper):
+    return get_one(cls.objects.filter(published=True,reviewer=user,paper=paper))
+
   def get_draft(self):
     return get_one(Review.objects.filter(
       published=False,

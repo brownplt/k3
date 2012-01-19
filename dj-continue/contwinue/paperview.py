@@ -42,3 +42,21 @@ class SaveReviewHandler(bcap.CapHandler):
       prev.save()
 
     return bcap.bcapResponse(therev.to_json())
+
+class GetReviewHandler(bcap.CapHandler):
+  def get(self, granted):
+    user = granted['user'].user
+    paper = granted['paper'].paper
+
+    review = m.Review.get_published_by_user_and_paper(user, paper)
+    if review:
+      therev = review.get_draft()
+      if not therev:
+        therev = review.make_draft() 
+      return bcap.bcapResponse({
+        'hasPublished': review.submitted,
+        'review': therev.to_json()
+      })
+    else:
+      return bcap.bcapResponse(False)
+

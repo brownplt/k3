@@ -183,6 +183,7 @@ class ContinueInit():
       # End LaunchContinue handlers
 
       'get-paper': paperview.GetPaperHandler,
+      'get-review': paperview.GetReviewHandler,
       'save-review': paperview.SaveReviewHandler,
       'get-by-role': paperview.GetByRoleHandler
       # End LaunchPaperView handlers

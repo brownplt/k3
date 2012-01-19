@@ -79,3 +79,39 @@ class TestSaveReview(Generator):
     self.assertEqual(pc_comp.value, 'Honestly, pretty dumb')
     self.assertEqual(author_comp.value, 'Great work! Not this time')
 
+class TestGetReview(Generator):
+  def test_get_review(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+    rev = make_reviewer('Joe Reviewer', 'joe@fak.edu', self.conference)
+    review = make_review(conf, rev, paper, False)
+
+    reviews = m.Review.objects.filter(paper=paper)
+    self.assertEqual(len(reviews), 1)
+
+    get_review = bcap.grant('get-review', {'user': rev, 'paper': paper})
+    result = get_review.get()
+
+    # A draft should have been created
+    reviews = m.Review.objects.filter(paper=paper)
+    self.assertEqual(len(reviews), 2)
+
+    draft = m.get_one(m.Review.objects.filter(
+      paper=paper,
+      published=False
+    ))
+
+    self.assertEqual(result, {
+      'hasPublished': False,
+      'review': draft.to_json()
+    })
+
+  def test_get_no_review(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+    rev = make_reviewer('Joe Reviewer', 'joe@fak.edu', conf)
+    get_review = bcap.grant('get-review', {'user': rev, 'paper': paper})
+    result = get_review.get()
+    
+    self.assertEqual(result, False)
+
