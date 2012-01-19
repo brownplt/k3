@@ -681,6 +681,13 @@ class ReviewComponent(belay.Grantable):
   value = models.TextField()
   conference = models.ForeignKey(Conference)
 
+  def to_json(self):
+    return {
+      'reviewID': self.review_id,
+      'value': self.value,
+      'typeID': self.type_id
+    }
+
 class Review(belay.Grantable):
   reviewer = models.ForeignKey(User)
   paper = models.ForeignKey(Paper)
@@ -699,6 +706,79 @@ class Review(belay.Grantable):
   @classmethod
   def get_published_by_reviewer(cls, reviewer):
     return Review.objects.filter(published=True,reviewer=reviewer)
+
+  def get_draft(self):
+    return get_one(Review.objects.filter(
+      published=False,
+      paper=self.paper,
+      reviewer=self.reviewer
+    ))
+
+  def fill(self, overallrating, expertiserating, subreviewer, **kwargs):
+    for key, val in kwargs.iteritems():
+      if key[:5] == 'comp-':
+        thect = get_one(ReviewComponentType.objects.filter(
+          conference=self.conference,
+          id=int(key[5:])
+        ))
+        if thect:
+          thecomp = get_one(ReviewComponent.objects.filter(
+            conference=self.conference,
+            type=thect,
+            review=self
+          ))
+          if thecomp:
+            thecomp.value=val
+            thecomp.save()
+          else:
+            rc = ReviewComponent(conference=self.conference,type=thect,review=self,value=val)
+            rc.save()
+    self.overall = get_one(RatingValue.objects.filter(
+      id=overallrating
+    ))
+    self.expertise = get_one(ExpertiseValue.objects.filter(
+      id=expertiserating
+    ))
+    self.subreviewers = subreviewer
+    self.last_saved = int(time.time())
+    self.save()
+
+  def make_draft(self):
+    draft = Review(
+      conference=self.conference,
+      reviewer=self.reviewer,
+      paper=self.paper,
+      submitted=False,
+      published=False,
+      overall=self.overall,
+      expertise=self.expertise,
+      subreviewers=self.subreviewers,
+      last_saved=0
+    )
+    draft.save()
+    for c in self.reviewcomponent_set.all():
+      c2 = ReviewComponent(
+        conference=self.conference,
+        type=c.type,
+        review=draft,
+        value=c.value
+      )
+      c2.save()
+    return draft
+
+
+  def to_json(self):
+    return {
+      'id': self.id,
+      'reviewer': self.reviewer.to_json(),
+      'paperID': self.paper_id,
+      'submitted': self.submitted,
+      'overall': self.overall.to_json(),
+      'expertise': self.expertise.to_json(),
+      'components': [c.to_json() for c in self.reviewcomponent_set.all()],
+      'subreviewers': self.subreviewers,
+      'lastSaved': self.last_saved
+    }
 
 class Launchable(belay.Grantable):
   account = models.ForeignKey(Account)
