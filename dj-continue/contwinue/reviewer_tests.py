@@ -174,7 +174,7 @@ class TestUpdateDecision(Generator):
     update = bcap.grant('update-decision', paper)
     decision = m.DecisionValue.objects.filter(abbr='A')[0]
     self.assertNotEqual(decision, self.conference.default_decision)
-    result = update.post(decision.id)
+    result = update.post({'decision':decision.id})
 
     self.assertTrue(result)
     paper = m.Paper.objects.all()[0]

@@ -516,6 +516,8 @@ class Topic(belay.Grantable):
     return Topic.objects.filter(id=id, conference=conf)
 
 class Paper(belay.Grantable):
+  class Meta:
+    ordering = ['id']
   contact = models.ForeignKey(User)
   authors = models.ManyToManyField(User, related_name='papers')
   unverified_authors = models.ManyToManyField(UnverifiedUser)

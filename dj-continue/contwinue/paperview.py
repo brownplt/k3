@@ -113,3 +113,7 @@ class GetDeadlinesHandler(bcap.CapHandler):
       [de.to_json() for de in granted.paper.deadlineextension_set.all()]
     )
 
+class LaunchPaperViewHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse({})
+
