@@ -221,9 +221,16 @@ class Conference(belay.Grantable):
       'info': info
     }
 
+  def users_by_role_name(self, rolename):
+    r = get_one(Role.objects.filter(name=rolename))
+    return r.user_set.all()
+
 
   def get_main_basic(self):
     wb = self.get_writer_basic()
+    wb['info']['showBid'] = self.show_bid
+    wb['info']['displayComponent'] = self.display_component.to_json()
+    wb['info']['defaultBidID'] = self.default_bid.id
     wb['decisions'] = [dv.to_json() for dv in self.my(DecisionValue)]
     wb['bids'] = [b.to_json() for b in self.my(BidValue)]
     wb['expertises'] = [e.to_json() for e in self.my(ExpertiseValue)]
@@ -231,7 +238,6 @@ class Conference(belay.Grantable):
     wb['ratings'] = [r.to_json() for r in self.my(RatingValue)]
     wb['rcomponents'] = [rct.to_json() for rct in self.my(ReviewComponentType)]
     wb['topics'] = [t.to_json() for t in self.my(Topic)]
-    wb['info']['displayComponent'] = self.display_component.to_json()
     return wb
 
   def get_admin_basic(self):
@@ -312,7 +318,7 @@ class BidValue(belay.Grantable):
   description = models.TextField()
   conference = models.ForeignKey(Conference)
   def to_json(self):
-    return { 'abbr': self.abbr, 'description': self.description }
+    return { 'id': self.id, 'abbr': self.abbr, 'description': self.description }
 
 class RatingValue(belay.Grantable):
   abbr = models.CharField(max_length=1)
@@ -322,6 +328,7 @@ class RatingValue(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'abbr': self.abbr,
       'description': self.description,
       'number': self.number,
@@ -335,6 +342,7 @@ class ExpertiseValue(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'abbr': self.abbr,
       'description': self.description,
       'number': self.number,
@@ -398,6 +406,7 @@ class ReviewComponentType(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'description' : self.description,
       'pcOnly' : self.pc_only
     }
@@ -613,6 +622,7 @@ class Bid(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'bidderID': self.bidder.id,
       'paperID': self.paper.id,
       'valueID': self.value.id
@@ -630,6 +640,7 @@ class Component(belay.Grantable):
   def to_json(self):
     get_cap = belay.grant('get-component-file', self)
     return {
+      'id': self.id,
       'typeID': self.type.id,
       'lsStr': convertTime(self.lastSubmitted),
       'value': self.value,
@@ -644,6 +655,7 @@ class DeadlineExtension(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'typeID': self.type.id,
       'paperID': self.paper.id,
       'until': self.until,

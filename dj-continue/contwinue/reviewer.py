@@ -36,8 +36,8 @@ class GetPaperSummariesHandler(bcap.CapHandler):
     if conf.last_change == int(args['lastChangeVal']):
       return bcap.bcapResponse({'changed': False})
 
-    if conf.summaries_json is not None and conf.summaries_json != '':
-      return bcap.bcapStringResponse(conf.summaries_json)
+#    if conf.summaries_json is not None and conf.summaries_json != '':
+#      return bcap.bcapStringResponse(conf.summaries_json)
 
     flds = ['id','author','title','decision','target','other_cats',\
             'contact_email','topics','conflicts','pc_paper','hidden',\
@@ -62,9 +62,9 @@ class GetPaperSummariesHandler(bcap.CapHandler):
         r[fld] = obj.__getattribute__(fld)
       ourjson = r
       if memo:
-        obj.json = bcap.dataPreProcess(ourjson)
+        obj.json = bcap.dataPreProcessV(ourjson)
         obj.save()
-      return bcap.dataPreProcess(ourjson)
+      return bcap.dataPreProcessV(ourjson)
 
     resp = '{"value":{"changed":true,"lastChange":%d,"summaries":[%s]}}' %\
         (conf.last_change, ','.join([getFlds(obj) for obj in conf.my(m.Paper)]))
@@ -209,13 +209,14 @@ class LaunchReviewerHandler(bcap.CapHandler):
 #          'user': reviewer,
 #          'paper': paper
 #        })
+        comps_caps = {}
         for component in paper.dcomps:
-          comps_caps = {}
-          view_comp = bcap.grant('get-component-file', component)
+          view_comp = bcap.dbgrant('get-component-file', component)
           comps_caps[component.type.id] = view_comp
+        paper_caps['compsCaps'] = comps_caps
       papers_caps[paper.id] = paper_caps
 
-    users = conf.my(m.User, True)
+    users = conf.users_by_role_name('reviewer')
     users_caps = {}
     for user in users:
       user_caps = {
@@ -229,9 +230,11 @@ class LaunchReviewerHandler(bcap.CapHandler):
       'addGoogleAccount': bcap.grant('add-google-account', reviewer),
       'credentials': reviewer.get_credentials(),
       'email': reviewer.email,
+      'currentUser': user.to_json(),
 
       'paperCaps': papers_caps,
       'userCaps': users_caps,
+      'getUserBids': bcap.grant('get-user-bids', reviewer),
       'getPaperSummaries':bcap.grant('get-paper-summaries',reviewer),
       'getPercentages': bcap.grant('get-review-percentages', conf),
       'getAbstracts': bcap.grant('get-abstracts', conf),

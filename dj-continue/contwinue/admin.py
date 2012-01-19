@@ -417,6 +417,7 @@ class LaunchAdminHandler(bcap.CapHandler):
       'addGoogleAccount': bcap.regrant('add-google-account', user),
       'credentials': user.get_credentials(),
       'email': user.email,
+      'currentUser': user.to_json(),
 
       'launchReview':
          bcap.cap_for_hash(bcap.dbgrant('launch-reviewer', user)),
@@ -440,5 +441,4 @@ class LaunchAdminHandler(bcap.CapHandler):
       'addReviewComponentType': bcap.regrant('add-review-component-type', conf),
       'getSubreviewers': bcap.regrant('get-subreviewers', conf),
       'getAuthorText': bcap.regrant('author-text', conf),
-      'currentUser': user.to_json()
     })

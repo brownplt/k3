@@ -365,3 +365,8 @@ function methodE(objE, methname, args) {
   return objE.transform_e(function(obj) { return obj[methname].apply(obj, args); });
 }
 
+function one_e(val) {
+  var rec = receiver_e();
+  rec.sendEvent(val);
+  return rec;
+}

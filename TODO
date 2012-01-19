@@ -110,7 +110,7 @@ Pages
   [x] (1) getUserBids →
   [x] (1) Paper/<id>/updateDecision → 
   [] (1) genPaperLink() [js function]
-  [] (1) compLink() [js function]
+  [] (1) compLink() [js function] → GetComponentFileHandler
   (Meeting stuff is less important)
   [] (1) Meeting/setOrder → 
   [] (1) Meeting/jumpTo → 

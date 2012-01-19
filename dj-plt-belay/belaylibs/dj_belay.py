@@ -148,6 +148,22 @@ def dataPreProcess(data):
     logging.debug(str(exn))
     logging.debug("Unserializable: " + str(data))
 
+def dataPreProcessV(data):
+  class Decapitator(json.JSONEncoder):
+    def default(self, obj):
+      if isinstance(obj, Capability):
+        return {'@': obj.serialize()}
+      elif hasattr(obj, 'to_json'):
+        return obj.to_json()
+      else:
+        return obj
+
+  try:
+    return json.dumps(data, cls=Decapitator)
+  except TypeError as exn:
+    logging.debug(str(exn))
+    logging.debug("Unserializable: " + str(data))
+
 def dataPostProcess(serialized):
   def capitate(obj):
     if '@' in obj:

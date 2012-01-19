@@ -6,7 +6,7 @@ function getLogoutEventsE() {
 			);
 	logoutsE.transform_e(function(_) {window.location = 'login.html?logout='+authCookie;});
 }
-function getSummariesE(onLoadTimeE,currentTabB) {
+function getSummariesE(onLoadTimeE,currentTabB,summariesCap) {
 	var reloadSummariesE = merge_e(iframeLoad_e('dectarget'),iframeLoad_e('astarget'));
 	var periodicReloadE = timer_e(20000);
 	var pqTimesE = merge_e(onLoadTimeE,reloadSummariesE,periodicReloadE);
@@ -14,13 +14,11 @@ function getSummariesE(onLoadTimeE,currentTabB) {
 	return rec_e(function(serverRetE) {
 		var lastChangeValB = serverRetE.transform_e(function(_) {return _.lcv;}).startsWith(-1);
 
-		var paperQueryE = pqTimesE.snapshot_e(lastChangeValB.transform_b(function(lcv) {
-			return genRequest(
-				{url: 'getPaperSummaries',
-					fields: {cookie:authCookie,lastChangeVal:lcv}});
-		}));
+		var paperQueryE = pqTimesE.snapshot_e(lift_b(function(lcv) {
+			return [summariesCap, genRequest({lastChangeVal:lcv})];
+		}, lastChangeValB));
 	
-		return getFilteredWSO_e(paperQueryE).transform_e(
+		return postE(paperQueryE).transform_e(
 			function(sums) {
 				if(sums == null || !sums.changed) 
 					return null;
@@ -301,12 +299,10 @@ function PaperEntry(basicInfo,paper,cookie,tab,columns,getSecondRow) {
 	this.getObj = function() {return this.paper;}
 }
 
-function makeBidTable(papersB,bidvals,basicInfo) {
+function makeBidTable(papersB,bidvals,basicInfo,updateBids) {
 	var bidClicksE = consumer_e();
-	var setOneE = getFilteredWSO_e(bidClicksE.transform_e(function(bc) {
-		return genRequest(
-			{url:'updateBids',
-			fields:{cookie:authCookie,bid:bc.value,papers:[bc.id]}});
+	var setOneE = postE(bidClicksE.transform_e(function(bc) {
+		return [updateBids, {bid:bc.value,papers:[bc.id]}];
 	}));
 	demoEventsE.add_e(setOneE.transform_e(function(so) {return {action:'setbid',paper:so.paperID};}));
 
@@ -343,7 +339,8 @@ function makeBidTable(papersB,bidvals,basicInfo) {
 				insertValueE(
 					setAllE
 						.transform_e(function(abs) {
-							return fold(function(v, acc) {return acc ? acc : (v.paperID == paper.id ? v.valueID : null)},null,abs);
+							return fold(function(v, acc) {
+                return acc ? acc : (v.paperID == paper.id ? v.valueID : null)},null,abs);
 						})
 						.filter_e(function(_) {return _;}),
 					bidselect.behaviors.inputElems.valueNow()[0],
@@ -353,7 +350,9 @@ function makeBidTable(papersB,bidvals,basicInfo) {
 					.transform_e(function(_) {return bidselect.behaviors.inputElems.valueNow()[0].value;});
 				var greyB = merge_e(bvalE.constant_e(true),bidChangesE.constant_e(false)).startsWith(false);
 				bidselect = bidselect.greyOutable(greyB);
-				bidClicksE.add_e(bvalE.transform_e(function(bv) {return {id:paper.id,value:bv};}));
+				bidClicksE.add_e(bvalE.transform_e(function(bv) {
+          return {id:paper.id,value:bv};
+        }));
 				return TD({name:'bidcolumn'},bidselect.dom);
 			})
 	];
@@ -373,13 +372,14 @@ function makeBidTable(papersB,bidvals,basicInfo) {
 	},bidValsB,paperEntriesB);
 
 	var topfilt = new TopicFilterWidget(basicInfo,authCookie);
-	var setAllE = getFilteredWSO_e(combine_eb(function(nbid,pl,filt) {
-			return genRequest(
-				{url:'updateBids',
-					fields:{
-						cookie:authCookie,
-						papers: map(function(p) {return p.paper.id;},filter(filt,pl[1])),bid:nbid}
-				});
+	var setAllE = postE(combine_eb(function(nbid,pl,filt) {
+			return [updateBids, genRequest({
+			  papers: map(
+          function(p) {return p.paper.id;},
+          filter(filt,pl[1])
+        ),
+        bid:nbid
+      })];
 		},topfilt.events.setbid,paperListsB,topfilt.behaviors.filterFn));
 	allChangesE.plug_e(setAllE);
 
@@ -675,7 +675,7 @@ function makeGotoTab(summariesB,basicInfo,cuser) {
 			hiddenTbl);
 }
 
-function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetingInfoE) {
+function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetingInfoE,launchInfo) {
 	var summariesB = summariesE.startsWith([]);
 	var nhSummariesB = summariesB.transform_b(function(ps) {return filter(function(p) {return !p.hidden;},ps);});
 	var ncSummariesB = nhSummariesB.transform_b(function(ps) {return filter(function(p) {return !p.hasconflict;},ps);});
@@ -691,7 +691,7 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 	var currentObjB = switch_b(switch_b(currentTabB.transform_b(function(tab) {
 		switch(tab) {
 			case 'bidding_tab':
-				if(!btb) btb = lift_b(function(b) {if (b) return makeBidTable(nhSummariesB,b,basicInfo); else return constant_b(getLoadingDiv());},bidValsB);
+				if(!btb) btb = lift_b(function(b) {if (b) return makeBidTable(nhSummariesB,b,basicInfo,launchInfo.updateBids); else return constant_b(getLoadingDiv());},bidValsB);
 				return btb;
 			case 'all_tab':
 				if(!atb) atb = constant_b(makeAllTable(ncSummariesB,basicInfo));
@@ -719,14 +719,12 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 	demoEventsE.add_e(currentTabB.changes().transform_e(function(ct) {return {action:'changetab',tab:ct};}));
 }
 
-function loadPaperLists(MainTabs,onLoadTimeE,curUser,basicInfo) {
-	var summariesE = getSummariesE(onLoadTimeE,MainTabs.currentTabB);
+function loadPaperLists(MainTabs,onLoadTimeE,curUser,basicInfo,launchInfo) {
+  var summariesCapE = launchInfo.getPaperSummaries;
+	var summariesE = getSummariesE(onLoadTimeE,MainTabs.currentTabB,summariesCapE);
 	showLoadBoxE.add_e(summariesE.constant_e(false));
 
-	var bidValsE = getFilteredWSO_e(
-			onLoadTimeE.constant_e(genRequest(
-				{url: 'getUserBids',
-				fields: {cookie:authCookie}})))
+	var bidValsE = getE(onLoadTimeE.constant_e(launchInfo.getUserBids))
 	.transform_e(function(bidsin) {
 		var bidarr = {};
 		map(function(bid) {
@@ -748,7 +746,7 @@ function loadPaperLists(MainTabs,onLoadTimeE,curUser,basicInfo) {
 		defaultCols[1] = summaryCol;
 	}
 
-	var contentInfo = setMainContent(MainTabs.currentTabB,curUser,basicInfo,summariesE,bidValsE,meetingInfoE);
+	var contentInfo = setMainContent(MainTabs.currentTabB,curUser,basicInfo,summariesE,bidValsE,meetingInfoE,launchInfo);
 }
 
 function loader() {
@@ -769,7 +767,8 @@ function loader() {
 	var basicInfoE = getFieldE(launchE, 'basicInfo');
 
 	doConfHead(basicInfoE);
-	var userInfoE = getCurUserE(onLoadTimeE,authCookie);
+//	var userInfoE = getCurUserE(onLoadTimeE,authCookie);
+	var userInfoE = getFieldE(launchE, 'currentUser');
 	var doLogoutE = getLogoutEventsE();
 	doLoginDivB(userInfoE);
 
@@ -778,7 +777,7 @@ function loader() {
 
 	var loadInitTab = $URL('tab') ? $URL('tab') : false;
 	
-	lift_e(function(basicInfo,userInfo) {
+	lift_e(function(basicInfo,userInfo,launchInfo) {
 			var revTabs = $$('reviewer-tab');
 			if(basicInfo.info.showBid) revTabs = revTabs.concat($$('bid-tab'));
 			
@@ -789,7 +788,7 @@ function loader() {
 					other:$$('bid-tab')},
 				function(that) {
 					var tabClicksE = map(function(tab) {
-						if(tab != $('admin_tab')) return extractEvent_e(tab,'click').constant_e(tab.id); else return receiver_e();
+						if(tab != getObj('admin_tab')) return extractEvent_e(tab,'click').constant_e(tab.id); else return receiver_e();
 					},that.allTabs);
 					var defaultTab = null;
 					if(loadInitTab) {
@@ -804,12 +803,12 @@ function loader() {
 				});
 			setTitle(basicInfo,MainTabs.currentTabB);
 			insertValueB(MainTabs.currentTabB.transform_b(function(ct){return (ct == null || ct == 'logout_tab') ? 'none' : 'block';}),'maintabs','style','display');
-			$('admin_tab').href = 'admin.html?cookie='+authCookie;
+			getObj('admin_tab').href = 'admin.html?cookie='+authCookie;
 			insertValueB(showLoadBoxE.transform_e(function(_) {return _ ? 'block' : 'none'}).startsWith('none'),'loadbox','style','display');
 			var olt2E = receiver_e();
-			loadPaperLists(MainTabs,olt2E,userInfo,basicInfo);
+			loadPaperLists(MainTabs,olt2E,userInfo,basicInfo,launchInfo);
 			olt2E.sendEvent('loaded!');
-	},basicInfoE,userInfoE);
+	},basicInfoE,userInfoE,launchE);
 	onLoadTimeE.sendEvent('loaded!');
 }
 
