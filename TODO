@@ -84,7 +84,7 @@ Pages
   [] () Paper/<id>/setDeadline
   [x] () Paper/<id>/Review/get
   [] () Paper/<id>/get
-  [] () Paper/<id>/Review/revert
+  [x] () Paper/<id>/Review/revert
   [] () Paper/<id>/Comment/get
   [] () Paper/<id>/Comment/revert
   [x] () User/getByRole → GetByRoleHandler

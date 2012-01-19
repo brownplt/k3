@@ -14,7 +14,7 @@ from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
     TestReviewPercentages, TestGetPaperSummaries, TestGetUserBids, \
     TestUpdateDecision
 from contwinue.paperview_tests import TestGetByRole, TestGetPaper, \
-    TestSaveReview, TestGetReview
+    TestSaveReview, TestGetReview, TestRevertReview
 from contwinue.accounts_tests import TestCreateReviewer
 from contwinue.model_tests import TestPaperJsons, TestCJSONSpeed
 from contwinue.crypt_tests import TestEnDecrypt

@@ -1,6 +1,7 @@
 
 import contwinue.models as m
 import belaylibs.dj_belay as bcap
+import time
 
 class GetByRoleHandler(bcap.CapHandler):
   def post_arg_names(self): return ['role']
@@ -60,3 +61,18 @@ class GetReviewHandler(bcap.CapHandler):
     else:
       return bcap.bcapResponse(False)
 
+class RevertReviewHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    prev = granted.review
+    therev = prev.get_draft()
+    if therev:
+      for c in therev.reviewcomponent_set.all():
+        c.delete()
+      therev.delete()
+    therev = prev.make_draft()
+    therev.last_saved = int(time.time())
+    therev.save()
+    return bcap.bcapResponse({
+      'hasPublished': prev.submitted,
+      'review': therev.to_json()
+    })

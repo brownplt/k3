@@ -115,3 +115,32 @@ class TestGetReview(Generator):
     
     self.assertEqual(result, False)
 
+class TestRevertReview(Generator):
+  def test_revert_review(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+    rev = make_reviewer('Joe Reviewer', 'joe@fak.edu', self.conference)
+    review = make_review(conf, rev, paper, False)
+    draft = review.make_draft()
+
+    rating = m.get_one(m.RatingValue.objects.filter(abbr='A'))
+    draft.overall = rating
+    draft.save()
+    pc_comments = m.get_one(
+      m.ReviewComponentType.objects.filter(pc_only=True)
+    )
+    comp = m.ReviewComponent(conference=conf,review=draft,type=pc_comments,value='stuff')
+    comp.save()
+
+    self.maxDiff = None
+    revert_cap = bcap.grant('revert-review', review)
+    response = revert_cap.post()
+
+    draft2 = review.get_draft()
+    self.assertEqual(draft2.overall, conf.default_overall)
+    self.assertEqual(len(draft2.reviewcomponent_set.all()), 0)
+    self.assertEqual(response, {
+      'hasPublished': False,
+      'review': draft2.to_json()
+    })
+
