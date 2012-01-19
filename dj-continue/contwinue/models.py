@@ -591,6 +591,11 @@ class Paper(belay.Grantable):
     }
     return paper_json
 
+  def get_paper_with_decision(self):
+    paper_json = self.get_paper()
+    paper_json['decision'] = self.decision.to_json()
+
+
   def get_component(self, ct):
     comp = get_one(Component.objects.filter(paper=self,type=ct))
     if comp is None: return comp

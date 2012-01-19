@@ -11,3 +11,7 @@ class GetByRoleHandler(bcap.CapHandler):
     else:
       return bcap.bcapResponse([])
 
+class GetPaperHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(granted.paper.get_paper_with_decision())
+

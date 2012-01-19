@@ -182,6 +182,7 @@ class ContinueInit():
       'launch-reviewer' : reviewer.LaunchReviewerHandler,
       # End LaunchContinue handlers
 
+      'get-paper': paperview.GetPaperHandler,
       'get-by-role': paperview.GetByRoleHandler
       # End LaunchPaperView handlers
     })

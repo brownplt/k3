@@ -5,7 +5,8 @@ import settings
 import contwinue.models as m
 from contwinue.reviewer import *
 
-from contwinue.tests_common import Generator, has_keys, make_author
+from contwinue.tests_common import Generator, has_keys, make_author, \
+    make_reviewer
 
 def make_reviewer(name, email, conf):
   user = make_author(name, email, conf)
@@ -25,3 +26,12 @@ class TestGetByRole(Generator):
       admin.to_json(),
       r1.to_json()
     ])
+
+class TestGetPaper(Generator):
+  def test_get_paper(self):
+    p1 = m.Paper.objects.all()[0]
+    get_paper = bcap.grant('get-paper', p1)
+    self.assertEqual(get_paper.get(), p1.get_paper_with_decision())
+
+
+    
