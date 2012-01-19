@@ -280,7 +280,7 @@ class Conference(belay.Grantable):
       pc_only=pc_only, conference=self))
 
   def update_last_change(self,paper=None):
-    self.lastChange = int(time.time())
+    self.last_change = int(time.time())
     self.summaries_json = ''
     self.save()
     if paper == None:
@@ -712,6 +712,10 @@ class Review(belay.Grantable):
   @classmethod
   def get_published_by_reviewer(cls, reviewer):
     return Review.objects.filter(published=True,reviewer=reviewer)
+
+  @classmethod
+  def get_published_by_paper(cls, paper):
+    return cls.objects.filter(published=True,paper=paper)
 
   @classmethod
   def get_published_by_user_and_paper(cls, user, paper):

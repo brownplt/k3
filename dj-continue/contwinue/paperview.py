@@ -113,6 +113,40 @@ class GetDeadlinesHandler(bcap.CapHandler):
       [de.to_json() for de in granted.paper.deadlineextension_set.all()]
     )
 
+class AssignReviewersHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    paper = granted.paper
+    conf = paper.conference
+    assign = args['assign']
+    if assign == '': assign = []
+    if not isinstance(assign, list): assign = [assign]
+    assign = [int(x) for x in assign]
+    cur_reviews = m.Review.get_published_by_paper(paper)
+    cur_reviewers = [r.reviewer for r in cur_reviews]
+    cur_reviewer_ids = [r.id for r in cur_reviewers]
+
+    for u in assign:
+      if u not in cur_reviewer_ids:
+        rev = m.Review(
+          conference=conf,
+          reviewer_id=u,
+          paper=paper,
+          overall=conf.default_overall,
+          expertise=conf.default_expertise,
+          published=True,
+          last_saved=0
+        )
+        rev.save()
+        draft = rev.get_draft()
+        if draft is None: rev.make_draft()
+
+    for u in cur_reviews:
+      if u.reviewer.id not in assign:
+        u.delete()
+
+    conf.update_last_change(paper)
+    return bcap.bcapResponse(True)
+
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
     return bcap.bcapResponse({})

@@ -200,3 +200,33 @@ class TestGetDeadlines(Generator):
       m.get_one(m.DeadlineExtension.objects.all()).to_json()
     ])
 
+# TODO(joe): This test is awful.  I'm close to a deadline.
+class TestAssignReviewers(Generator):
+  def test_assign_reviewers(self):
+    conf = self.conference
+    p = m.Paper.objects.all()[0]
+    r1 = make_reviewer('Joe Reviewer', 'joe@foo.bar', conf)
+    r2 = make_reviewer('Arjun Reviewer', 'arjun@baz.baz', conf)
+    original_change = conf.last_change
+
+    assign = bcap.grant('assign-reviewers', p)
+    assign.post({'assign': [r1.id, r2.id]})
+
+    reviews = m.Review.objects.filter(paper=p)
+    self.assertEqual(len(reviews), 4)
+
+    p.json = 'non-empty'
+    p.save()
+    # This should remove the published review for r2, but keep the
+    # draft around (copying existing continue semantics)
+    assign.post({'assign': [r1.id]})
+    p = m.Paper.objects.all()[0]
+    
+    reviews = m.Review.objects.filter(paper=p)
+    r2revs = m.Review.objects.filter(reviewer=r2)
+    self.assertEqual(len(r2revs), 1)
+    self.assertEqual(len(reviews), 3)
+    conf = m.get_one(m.Conference.objects.filter(id=conf.id))
+    self.assertTrue(conf.last_change >= original_change)
+    self.assertEqual(p.json, '')
+

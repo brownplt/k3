@@ -90,7 +90,7 @@ Pages
   [x] () User/getByRole → GetByRoleHandler
   [x] () Paper/<id>/getDeadlineExts
   [] () Paper/<id>/getNextID
-  [] () Paper/<id>/assignReviews
+  [x] () Paper/<id>/assignReviews
   [x] () compLink [JS function]
   [] () #review.id
   [] () #comment-<id>
