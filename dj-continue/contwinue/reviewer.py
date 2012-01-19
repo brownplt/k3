@@ -36,6 +36,9 @@ class GetPaperSummariesHandler(bcap.CapHandler):
     if conf.last_change == int(args['lastChangeVal']):
       return bcap.bcapResponse({'changed': False})
 
+    if conf.summaries_json is not None and conf.summaries_json != '':
+      return bcap.bcapStringResponse(conf.summaries_json)
+
     flds = ['id','author','title','decision','target','other_cats',\
             'contact_email','topics','conflicts','pc_paper','hidden',\
             'dcomps','oscore']
@@ -59,14 +62,16 @@ class GetPaperSummariesHandler(bcap.CapHandler):
         r[fld] = obj.__getattribute__(fld)
       ourjson = r
       if memo:
-        obj.json = ourjson
-      return ourjson
+        obj.json = bcap.dataPreProcess(ourjson)
+        obj.save()
+      return bcap.dataPreProcess(ourjson)
 
-    return bcap.bcapResponse({
-      "changed":True,
-      "lastChange":conf.last_change,
-      "summaries":[getFlds(obj) for obj in conf.my(m.Paper)]
-    })
+    resp = '{"value":{"changed":true,"lastChange":%d,"summaries":[%s]}}' %\
+        (conf.last_change, ','.join([getFlds(obj) for obj in conf.my(m.Paper)]))
+    conf.summaries_json = resp
+    conf.save()
+
+    return bcap.bcapStringResponse(resp)
 
 
 # GetAbstractsHandler
@@ -185,3 +190,50 @@ class UpdateDecisionHandler(bcap.CapHandler):
     granted.paper.save()
     return bcap.bcapResponse(True)
 
+
+# LaunchReviewerHandler
+# Gets info and caps for launching the reviewer page
+class LaunchReviewerHandler(bcap.CapHandler):
+  def get(self, granted):
+    conf = granted.user.conference
+    papers = conf.my(m.Paper, True)
+    reviewer = granted.user
+    papers_caps = {}
+    for paper in papers:
+      paper_caps = {}
+      if paper.can_see_reviews(reviewer):
+        paper_caps['updateDecision'] = bcap.grant('update-decision', paper)
+        paper_caps['getAbstract'] = bcap.grant('get-abstract', paper)
+        paper_caps['launch'] = 'No_launching_papers_yet',
+#        bcap.grant('launch-paper', {
+#          'user': reviewer,
+#          'paper': paper
+#        })
+        for component in paper.dcomps:
+          comps_caps = {}
+          view_comp = bcap.grant('get-component-file', component)
+          comps_caps[component.type.id] = view_comp
+      papers_caps[paper.id] = paper_caps
+
+    users = conf.my(m.User, True)
+    users_caps = {}
+    for user in users:
+      user_caps = {
+        'getUserBids': bcap.grant('get-user-bids', user)
+      }
+      users_caps[user.id] = user_caps
+
+    return bcap.bcapResponse({
+      'basicInfo': conf.get_admin_basic(),
+      'addPassword': bcap.grant('add-password', reviewer),
+      'addGoogleAccount': bcap.grant('add-google-account', reviewer),
+      'credentials': reviewer.get_credentials(),
+      'email': reviewer.email,
+
+      'paperCaps': papers_caps,
+      'userCaps': users_caps,
+      'getPaperSummaries':bcap.grant('get-paper-summaries',reviewer),
+      'getPercentages': bcap.grant('get-review-percentages', conf),
+      'getAbstracts': bcap.grant('get-abstracts', conf),
+      'updateBids': bcap.grant('update-bids', reviewer),
+    })

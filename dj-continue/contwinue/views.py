@@ -123,6 +123,7 @@ def get_basic(request):
 
 paper = make_get_handler('writer.html', {})
 admin_handler = make_get_handler('admin.html', {})
+review_handler = make_get_handler('review.html', {})
 
 class ContinueInit():
   def process_request(self, request):
@@ -178,6 +179,7 @@ class ContinueInit():
       'update-decision': reviewer.UpdateDecisionHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
+      'launch-reviewer' : reviewer.LaunchReviewerHandler,
       # End LaunchContinue handlers
 
       'get-by-role': paperview.GetByRoleHandler

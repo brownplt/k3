@@ -1,13 +1,3 @@
-function getFieldE(liE, fld) {
-  return liE.transform_e(function(li) {
-    return li[fld];
-  });
-}
-
-function methodE(objE, methname, args) {
-  return objE.transform_e(function(obj) { return obj[methname].apply(obj, args); });
-}
-
 function deleteTransform(objName,evt,cap) {
 	return postE(
 		evt.transform_e(function(dobj) {
@@ -402,7 +392,7 @@ function loader() {
     return SPANB();
   }, launchE.startsWith(null), basicInfoE.startsWith(null));
 
-	lift_e(function(cu,bi) {
+	lift_e(function(cu,bi,li) {
 			var AdminTabs = new TabSet(
 				constant_b(cu.rolenames),
 				{admin:$$('admin-tab'),reviewer:[],user:[],loggedout:[]},
@@ -420,8 +410,9 @@ function loader() {
 			AdminTabs.displayOn('comm_tab','comm_content');
 			AdminTabs.displayOn('info_tab','info_content');
       AdminTabs.displayOn('account_tab', 'account_content');
-			getObj('back_to_list_tab').href = 'continue.html?cookie='+authCookie;
-	},curUserE,basicInfoE);
+			getObj('back_to_list_tab').href =
+        COMMON.urlPrefix + "/review#" + li.launchReview;
+	},curUserE,basicInfoE,launchE);
 
 	var adminInfoE = getE(getFieldE(launchE, 'getAdmin'));
 	var usersInfoB = getE(getFieldE(launchE, 'getAll')).startsWith([]);

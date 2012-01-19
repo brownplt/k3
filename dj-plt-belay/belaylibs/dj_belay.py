@@ -271,6 +271,12 @@ def bcapResponse(content):
   xhr_content(response, content, "text/plain;charset=UTF-8")
   return response
 
+def bcapStringResponse(content):
+  response = HttpResponse()
+  xhr_content(response, content, "text/plain;charset=UTF-8")
+  return response
+  
+
 handlerData = HandlerData()
 
 def set_handlers(cap_prefix, path_map):

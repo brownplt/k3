@@ -418,6 +418,9 @@ class LaunchAdminHandler(bcap.CapHandler):
       'credentials': user.get_credentials(),
       'email': user.email,
 
+      'launchReview':
+         bcap.cap_for_hash(bcap.dbgrant('launch-reviewer', user)),
+
       'configure': bcap.regrant('configure-conference', conf),
       'getPapersOfDV': dvcaps,
       'deleteDVs': deletedvs,

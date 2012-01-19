@@ -354,3 +354,14 @@ function makeAccountInfoTab(launchInfo, searchString, launchURL) {
                 accountGoogle,
                 accountContinue)))
 }
+
+function getFieldE(liE, fld) {
+  return liE.transform_e(function(li) {
+    return li[fld];
+  });
+}
+
+function methodE(objE, methname, args) {
+  return objE.transform_e(function(obj) { return obj[methname].apply(obj, args); });
+}
+

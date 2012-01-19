@@ -185,8 +185,9 @@ class Conference(belay.Grantable):
   ds_cutoff_hi = models.FloatField(default=7.0)
   ds_cutoff_lo = models.FloatField(default=2.0)
   ds_conflict_cut = models.FloatField(default=0.05)
+  summaries_json = models.TextField(default='')
 
-  def my(self, cls):
+  def my(self, cls, related=False):
     return cls.objects.filter(conference=self)
   def get_title_and_contact(self):
     return {

@@ -25,6 +25,15 @@ class TestGetPaperSummaries(Generator):
 
     return (p1, result)
 
+  def test_get_summaries_twice(self):
+    start = datetime.now()
+    (p1, result) = self.get_summaries()
+    end = datetime.now()
+    print('First took %s' % (end - start))
+    self.get_summaries(lastChangeVal=0)
+    end2 = datetime.now()
+    print('Second took %s' % (end2 - end))
+
   def test_get_summaries(self):
     (p1, result) = self.get_summaries()
 
@@ -52,14 +61,6 @@ class TestGetPaperSummaries(Generator):
       'reviews_info': p1.reviews_info
     })
 
-  def test_get_summaries_twice(self):
-    start = datetime.now()
-    (p1, result) = self.get_summaries()
-    end = datetime.now()
-    print('First took %s' % (end - start))
-    self.get_summaries(lastChangeVal=result['lastChange'])
-    end2 = datetime.now()
-    print('Second took %s' % (end2 - end))
 
 class TestGetUserBids(Generator):
   def test_get_bids(self):

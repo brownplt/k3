@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Loading...</title>
+		<link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+<script src="/static/lib/js/flapjax/flapjax.js"></script>
+<script src="/static/lib/js/flapjax/json.js"></script>
+<script src="/static/lib/js/flapjax/plug.js"></script>
+<script src="/static/lib/js/flapjax/myfjws.js"></script>
+<script src="/static/gcommon.js"></script>
+<script src="/static/common.js"></script>
+<script src="common.js"></script>
+<script src="/static/lib/js/caps.js"></script>
+<script src="/static/lib/js/flapjax-belay.js"></script>
+<script src="/static/review.js"></script>
+		<style type="text/css">
+			P.centered {text-align: center;}
+			DIV.loading {
+				font-style: italic;
+				font-size: medium;
+			}
+			.small {font-size: small;}
+			TD.normal{}
+			TD.yes-submitted{
+				color: #00aa00;
+				font-size: x-large;
+			}
+			.unfinished-review {
+				color: rgb(102,102,102);
+			}
+			.filter-element {
+				border-right: 1px dashed grey;
+				vertical-align: top;
+			}
+		</style>
+	</head>
+	<body onload="loader();">
+		<h1 id="confhead"></h1>
+		<div id="login"></div>
+		<div class="tabs" id="maintabs" style="display:none;">
+			<h4>Navigation:</h4>
+			<ul>
+				<li class="left-tab"><a href="javascript://All Tab" class="reviewer-tab" id="all_tab" title="All Papers">All</a></li>
+				<li class="left-tab"><a href="javascript://Review Tab" class="reviewer-tab" id="review_tab" title="Your Reviews">Review</a></li>
+				<li class="left-tab"><a href="javascript://Bidding Tab" class="bid-tab" id="bidding_tab" title="Bidding">Bidding</a></li>
+				<li class="left-tab"><a href="javascript://Assign Tab" class="admin-tab" id="assign_tab" title="Assignments">Assign</a></li>
+				<li class="left-tab"><a href="javascript://Decide Tab" class="admin-tab" id="decide_tab" title="Acceptance Decisions">Decide</a></li>
+				<li class="left-tab"><a href="javascript://Meeting Tab" class="reviewer-tab" id="meeting_tab" title="PC Meeting">Meeting</a></li>
+				<li class="left-tab"><a href="javascript://Goto Tab" class="reviewer-tab" id="goto_tab" title="Goto Specific Paper">Goto...</a></li>
+
+				<li class="right-tab"><a href="javascript://Logout Tab" class="logout admin-tab reviewer-tab" id="logout_tab">Log Out</a></li>
+				<li class="right-tab"><a href="javascript://Admin Tab" class="admin-tab" id="admin_tab">Admin</a></li>
+			</ul>
+		</div>
+
+		<div id="main_content">
+		</div>
+
+		<hr noshade="noshade" size="1" />
+		<table id="footer">
+			<tbody>
+				<tr>
+					<td align="left">Please send questions, comments, <br> problems, etc to <a href="mailto:arjun@cs.brown.edu">arjun@cs.brown.edu</a>.</td>
+					<td align="right"><a href="http://continue2.cs.brown.edu/">Continue conference management server</a><br>Powered by <a href="http://www.flapjax-lang.org/">Flapjax</a></td>
+				</tr>
+			</tbody>
+		</table>
+		<iframe id="dectarget" name="dectarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+		<iframe id="bidtarget" name="bidtarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+		<iframe id="astarget" name="astarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+		<div id="loadbox" style="display: none;position: absolute; top: 0; left: 0; background: white; border: 1px black solid; width: 100%; height: 100%">
+			<div style="margin: 5em auto; width: 80%; border: 2px solid black; background: #cef">
+				<h2 style="text-align: center; padding: 1em">Please Wait!</h2>
+				<p>Continue is loading...</p>
+			</div>
+		</div>
+	</body>
+</html>
