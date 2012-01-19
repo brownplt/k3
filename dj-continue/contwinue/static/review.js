@@ -106,7 +106,7 @@ function FilterWidget(basicInfo) {
 }
 FilterWidget.prototype = new Widget();
 
-function TopicFilterWidget(basicInfo,cookie) {
+function TopicFilterWidget(basicInfo,cookie,getAbstracts) {
 	Widget.apply(this);
 
 	var topicKvs = map(function(t) {return {k:t.id,v:t.name};},basicInfo.topics).concat({k:-1,v:SPAN({style:{fontStyle:'italic'}},'No Topics Selected')});
@@ -125,8 +125,8 @@ function TopicFilterWidget(basicInfo,cookie) {
 	var authorCb = INPUT({type:'checkbox'});
 	var abstractCb = INPUT({type:'checkbox'});
 	var abstA = A({href:'javascript://Get Abstrcts'},'Click to load abstracts for searching');
-	getAbstractsB = getFilteredWSO_e(
-			extractEvent_e(abstA,'click').once_e().constant_e(genRequest({url:'getAbstracts',fields:{cookie:cookie}}))
+	var getAbstractsB = getE(
+			extractEvent_e(abstA,'click').once_e().constant_e(getAbstracts)
 		).transform_e(function(al) {return toObj(al,function(o) {return o.id;});}).startsWith(null);
 
 	var searchBoxB = getAbstractsB.transform_b(function(ga) {
@@ -209,15 +209,13 @@ function MirrorFilterWidget(fw) {
 }
 MirrorFilterWidget.prototype = new Widget();
 
-function genAbstractRow(numCols) {
+function genAbstractRow(numCols,getAbstract) {
 	return function(paper,cookie) {
 		var shabs = new ToggleWidget('Show Abstract','Hide Abstract');
 		var shabs2 = new ToggleWidget('Show Abstract','Hide Abstract');
 		shabs2.events.toggleOn.transform_e(function(to) {shabs.events.toggleOn.sendEvent(true);});
 		shabs2.events.toggleOff.transform_e(function(to) {shabs.events.toggleOff.sendEvent(false);});
-		var abstrE = getFilteredWSO_e(shabs.events.toggleOn.constant_e(
-			genRequest({url: 'Paper/'+paper.id+'/getAbstract',
-			fields: {cookie:cookie}})));
+		var abstrE = getE(shabs.events.toggleOn.constant_e(getAbstract));
 		var abstrB = merge_e(
 			shabs.events.toggleOff.constant_e(SPAN()),
 			abstrE.transform_e(function(_) {
@@ -299,7 +297,7 @@ function PaperEntry(basicInfo,paper,cookie,tab,columns,getSecondRow) {
 	this.getObj = function() {return this.paper;}
 }
 
-function makeBidTable(papersB,bidvals,basicInfo,updateBids) {
+function makeBidTable(papersB,bidvals,basicInfo,updateBids,getAbstracts,paperCaps) {
 	var bidClicksE = consumer_e();
 	var setOneE = postE(bidClicksE.transform_e(function(bc) {
 		return [updateBids, {bid:bc.value,papers:[bc.id]}];
@@ -358,7 +356,17 @@ function makeBidTable(papersB,bidvals,basicInfo,updateBids) {
 	];
 	
 	var paperEntriesB = papersB.transform_b(function(papers) {
-			return map(function(p) {return new PaperEntry(basicInfo,p,authCookie,'bidding_tab',bcolumns,genAbstractRow(bcolumns.length));},papers)});
+			return map(function(p) {
+        return new PaperEntry(
+          basicInfo,
+          p,
+          authCookie,
+          'bidding_tab',
+          bcolumns,
+          genAbstractRow(bcolumns.length, paperCaps[p.id].getAbstract)
+        );
+      },papers)
+    });
 	
 	var paperListsB = lift_b(function(bvs,paperEntries) {
 		var l = [[],[]];
@@ -371,7 +379,7 @@ function makeBidTable(papersB,bidvals,basicInfo,updateBids) {
 		return l;
 	},bidValsB,paperEntriesB);
 
-	var topfilt = new TopicFilterWidget(basicInfo,authCookie);
+	var topfilt = new TopicFilterWidget(basicInfo,authCookie,getAbstracts);
 	var setAllE = postE(combine_eb(function(nbid,pl,filt) {
 			return [updateBids, genRequest({
 			  papers: map(
@@ -688,7 +696,21 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 	var currentObjB = switch_b(switch_b(currentTabB.transform_b(function(tab) {
 		switch(tab) {
 			case 'bidding_tab':
-				if(!btb) btb = lift_b(function(b) {if (b) return makeBidTable(nhSummariesB,b,basicInfo,launchInfo.updateBids); else return constant_b(getLoadingDiv());},bidValsB);
+				if(!btb) {
+          btb = lift_b(function(b) {
+            if (b) {
+              return makeBidTable(
+                nhSummariesB,
+                b,
+                basicInfo,
+                launchInfo.updateBids,
+                launchInfo.getAbstracts,
+                launchInfo.paperCaps
+              );
+            }
+            else { return constant_b(getLoadingDiv());}
+          },bidValsB);
+        }
 				return btb;
 			case 'all_tab':
 				if(!atb) atb = constant_b(makeAllTable(ncSummariesB,basicInfo));
