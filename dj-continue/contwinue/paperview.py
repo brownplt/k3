@@ -106,3 +106,10 @@ class SetDeadlineHandler(bcap.CapHandler):
         de.save()
         return bcap.bcapResponse(de.to_json())
     return bcap.bcapNullResponse()
+
+class GetDeadlinesHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(
+      [de.to_json() for de in granted.paper.deadlineextension_set.all()]
+    )
+

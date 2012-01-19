@@ -185,3 +185,18 @@ class TestSetDeadline(Generator):
     self.assertEqual(int(exts[0].until), int(extension2))
     self.assertEqual(result2, exts[0].to_json())
 
+class TestGetDeadlines(Generator):
+  def test_get_deadlines(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+    extension = int(time.time()) + 10000
+    typ = m.get_one(m.ComponentType.objects.filter(abbr='P'))
+    extend = bcap.grant('set-deadline', paper)
+    extend.post({'typeid': typ.id, 'until': extension})
+
+    get_deadlines = bcap.grant('get-deadlines', paper)
+    result = get_deadlines.get()
+    self.assertEqual(result, [
+      m.get_one(m.DeadlineExtension.objects.all()).to_json()
+    ])
+

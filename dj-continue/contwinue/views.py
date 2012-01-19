@@ -188,7 +188,8 @@ class ContinueInit():
       'get-by-role': paperview.GetByRoleHandler,
       'revert-review': paperview.RevertReviewHandler,
       'set-hidden': paperview.SetHiddenHandler,
-      'set-deadline': paperview.SetDeadlineHandler
+      'set-deadline': paperview.SetDeadlineHandler,
+      'get-deadlines': paperview.GetDeadlinesHandler
       # End LaunchPaperView handlers
     })
     bcap.set_crypt_secret(settings.PRIVATE_KEY)
