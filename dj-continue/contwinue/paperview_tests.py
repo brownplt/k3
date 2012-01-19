@@ -144,3 +144,16 @@ class TestRevertReview(Generator):
       'review': draft2.to_json()
     })
 
+class TestSetHidden(Generator):
+  def test_set_hidden(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+    self.assertEqual(paper.hidden, False)
+
+    hide_cap = bcap.grant('set-hidden', paper)
+    hide_cap.post({'hidden': 'yes'})
+
+    paper2 = m.Paper.objects.all()[0]
+    self.assertEqual(paper2.hidden, True)
+
+

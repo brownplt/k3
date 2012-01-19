@@ -76,3 +76,11 @@ class RevertReviewHandler(bcap.CapHandler):
       'hasPublished': prev.submitted,
       'review': therev.to_json()
     })
+
+class SetHiddenHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    paper = granted.paper
+    paper.hidden = args['hidden'] == 'yes'
+    paper.conference.update_last_change(paper)
+    paper.save()
+    return bcap.bcapResponse(True)

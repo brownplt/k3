@@ -186,7 +186,8 @@ class ContinueInit():
       'get-review': paperview.GetReviewHandler,
       'save-review': paperview.SaveReviewHandler,
       'get-by-role': paperview.GetByRoleHandler,
-      'revert-review': paperview.RevertReviewHandler
+      'revert-review': paperview.RevertReviewHandler,
+      'set-hidden': paperview.SetHiddenHandler
       # End LaunchPaperView handlers
     })
     bcap.set_crypt_secret(settings.PRIVATE_KEY)

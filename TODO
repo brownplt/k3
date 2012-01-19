@@ -80,7 +80,7 @@ Pages
   [x] () updateBids → updateBidsHandler
   [x] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
-  [] () Paper/<id>/setHidden
+  [x] () Paper/<id>/setHidden
   [] () Paper/<id>/setDeadline
   [x] () Paper/<id>/Review/get
   [] () Paper/<id>/get
