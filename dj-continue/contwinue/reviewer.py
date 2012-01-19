@@ -182,12 +182,15 @@ class GetUserBidsHandler(bcap.CapHandler):
 # Changes the decision on a paper based on id
 #
 # granted: |paper:Paper|
+# -> {decision: Int}
 # <- True
 class UpdateDecisionHandler(bcap.CapHandler):
   def post(self, granted, args):
-    d = m.DecisionValue.get_by_id(int(args))
-    granted.paper.decision = d
-    granted.paper.save()
+    d = m.DecisionValue.get_by_id(int(args['decision']))
+    paper = granted.paper
+    paper.decision = d
+    paper.save()
+    paper.conference.update_last_change(paper)
     return bcap.bcapResponse(True)
 
 

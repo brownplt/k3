@@ -281,12 +281,15 @@ class Conference(belay.Grantable):
 
   def update_last_change(self,paper=None):
     self.lastChange = int(time.time())
+    self.summaries_json = ''
+    self.save()
     if paper == None:
       pl = Paper.objects.filter(conference=self)
     else:
       pl = [paper]
     for p in pl:
       p.json = ''
+      p.save()
 
   def get_admin(self):
     return {

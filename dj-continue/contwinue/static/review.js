@@ -514,25 +514,22 @@ function makeAssignTable(papersB,basicInfo) {
 		return u ? P({className:'action-link'},SPAN({className:'error'},u+' unassigned')) : SPAN(' ');
 	});
 	return DIVB(unassignedB,
-				P({className:'action-link'},A({href:'spreadsheet.html?cookie='+authCookie,target:'_blank',rel:'presentation'},'Spreadsheet View')),
+				//P({className:'action-link'},A({href:'spreadsheet.html?cookie='+authCookie,target:'_blank',rel:'presentation'},'Spreadsheet View')),
 				new TableWidget(paperEntriesB,'paper',acolumns).dom);
 }
 
-function makeDecideTable(papersB,basicInfo) {
+function makeDecideTable(papersB,basicInfo,updateCaps) {
 	var decEventsE = receiver_e();
 	var dcolumns = defaultCols.concat([
 			new Column('decision','Decision',function(a,b) {return a.decision.id - b.decision.id;},
 				function(paper,cookie,tab) {
-					var dsWidg = new SelectWidget(paper.target.id,
+					var dsWidg = new SelectWidget(paper.decision.id,
 							map(function(de) {
 								return OPTION({value:de.id, selected:(de.id == paper.decision.id)},de.description);
 							},filter(function(de) {return (!de.targetable || paper.othercats || de.id == paper.target.id);}, basicInfo.decisions))
-						).serverSaving(function(dval) {
-							return genRequest(
-								{url:'Paper/'+paper.id+'/updateDecision',
-								 fields:{cookie:authCookie,decision:dval}}
-							);
-						});
+						).belayServerSaving(function(dval) {
+							return genRequest({fields:{decision:dval}});
+						}, true, updateCaps[paper.id].updateDecision);
 					return TD(dsWidg.dom);
 				})]);
 	var paperEntriesB = papersB.transform_b(function(papers) {return map(function(p) {return new PaperEntry(basicInfo,p,authCookie,'decide_tab',dcolumns);},papers)});
@@ -703,7 +700,8 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 				if(!astb) astb = constant_b(makeAssignTable(ncSummariesB,basicInfo));
 				return astb;
 			case 'decide_tab':
-				if(!detb) detb = constant_b(makeDecideTable(ncSummariesB,basicInfo));
+				if(!detb)
+          detb = constant_b(makeDecideTable(ncSummariesB,basicInfo,launchInfo.paperCaps));
 				return detb;
 			case 'meeting_tab':
 				if(!mtb) mtb = lift_b(function(m) {if (m) return makeMeetingTable(nhSummariesB,basicInfo,curUser,m); else return constant_b(getLoadingDiv());},meetingInfoB);
