@@ -78,11 +78,11 @@ Pages
 [] (_) Move them (and unit-test each one)
   [x] () Paper/<id>/updateDecision
   [x] () updateBids → updateBidsHandler
-  [] () Paper/<id>/Review/save
+  [x] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
   [] () Paper/<id>/setHidden
   [] () Paper/<id>/setDeadline
-  [] () Paper/<id>/Review/get
+  [x] () Paper/<id>/Review/get
   [] () Paper/<id>/get
   [] () Paper/<id>/Review/revert
   [] () Paper/<id>/Comment/get
@@ -91,7 +91,7 @@ Pages
   [] () Paper/<id>/getDeadlineExts
   [] () Paper/<id>/getNextID
   [] () Paper/<id>/assignReviews
-  [] () compLink [JS function]
+  [x] () compLink [JS function]
   [] () #review.id
   [] () #comment-<id>
   [] () continue.htl?cookie= ...
