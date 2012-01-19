@@ -84,3 +84,25 @@ class SetHiddenHandler(bcap.CapHandler):
     paper.conference.update_last_change(paper)
     paper.save()
     return bcap.bcapResponse(True)
+
+class SetDeadlineHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    paper = granted.paper
+    tid = int(args['typeid'])
+    thedl = m.get_one(paper.deadlineextension_set.filter(type__id=tid))
+    if thedl:
+      thedl.until = int(args['until'])
+      thedl.save()
+      return bcap.bcapResponse(thedl.to_json())
+    else:
+      thetype = m.ComponentType.get_by_id(int(args['typeid']))
+      if thetype:
+        de = m.DeadlineExtension(
+          until=int(args['until']),
+          conference=paper.conference,
+          paper=paper,
+          type=thetype
+        )
+        de.save()
+        return bcap.bcapResponse(de.to_json())
+    return bcap.bcapNullResponse()

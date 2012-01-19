@@ -5,6 +5,8 @@ import settings
 import contwinue.models as m
 from contwinue.reviewer import *
 
+import time
+
 from contwinue.tests_common import Generator, has_keys, make_author, \
     make_reviewer, make_review
 
@@ -156,4 +158,30 @@ class TestSetHidden(Generator):
     paper2 = m.Paper.objects.all()[0]
     self.assertEqual(paper2.hidden, True)
 
+class TestSetDeadline(Generator):
+  def test_set_deadline(self):
+    conf = self.conference
+    paper = m.Paper.objects.all()[0]
+
+    self.assertEqual(len(paper.deadlineextension_set.all()), 0)
+
+    extension = int(time.time()) + 10000
+    typ = m.get_one(m.ComponentType.objects.filter(abbr='P'))
+
+    extend = bcap.grant('set-deadline', paper)
+    result = extend.post({'typeid': typ.id, 'until': extension})
+
+    paper = m.Paper.objects.all()[0]
+    exts = paper.deadlineextension_set.all()
+    self.assertEqual(len(exts), 1)
+    self.assertEqual(int(exts[0].until), int(extension))
+    self.assertEqual(result, exts[0].to_json())
+
+    extension2 = int(time.time()) + 30000
+    result2 = extend.post({'typeid': typ.id, 'until': extension2})
+    paper = m.Paper.objects.all()[0]
+    exts = paper.deadlineextension_set.all()
+    self.assertEqual(len(exts), 1)
+    self.assertEqual(int(exts[0].until), int(extension2))
+    self.assertEqual(result2, exts[0].to_json())
 

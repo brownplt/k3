@@ -81,7 +81,7 @@ Pages
   [x] () Paper/<id>/Review/save
   [] () Paper/<id>/Comment/save
   [x] () Paper/<id>/setHidden
-  [] () Paper/<id>/setDeadline
+  [x] () Paper/<id>/setDeadline
   [x] () Paper/<id>/Review/get
   [] () Paper/<id>/get
   [x] () Paper/<id>/Review/revert
@@ -110,6 +110,7 @@ Pages
   [x] (1) getUserBids →
   [x] (1) Paper/<id>/updateDecision → 
   [] (1) genPaperLink() [js function]
+    [] How to launch papers?
   [x] (1) compLink() [js function] → GetComponentFileHandler
   (Meeting stuff is less important)
   [] (1) Meeting/setOrder → 

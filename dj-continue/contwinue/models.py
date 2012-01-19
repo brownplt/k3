@@ -400,6 +400,10 @@ class ComponentType(belay.Grantable):
       'gracehours': self.grace_hours,
     }
 
+  @classmethod
+  def get_by_id(cls, id):
+    return get_one(cls.objects.filter(id=id))
+
 class ReviewComponentType(belay.Grantable):
   class Meta:
     unique_together = (('description', 'conference', 'pc_only'))
