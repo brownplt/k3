@@ -258,3 +258,29 @@ class TestGetComments(Generator):
 
     self.assertEqual(result, [c2.to_json(), c1.to_json()])
 
+class TestPostComment(Generator):
+  def test_post_comment(self):
+    conf = self.conference
+    p = m.Paper.objects.all()[0]
+    r1 = make_reviewer('Joe Reviewer', 'joe@foo.bar', conf)
+
+    add_comment = bcap.grant('post-comment', {
+      'user': r1, 'paper': p
+    })
+    add_comment.post({
+      'value': 'This is my super-awesome comment'
+    })
+    add_comment.post({
+      'value': 'This is my super-awesomer comment'
+    })
+
+    comments = m.Comment.objects.all()
+    self.assertEqual(len(comments), 2)
+    self.assertEqual(
+      comments[0].value,
+      'This is my super-awesome comment'
+    )
+    self.assertEqual(
+      comments[0].value,
+      'This is my super-awesomer comment'
+    )

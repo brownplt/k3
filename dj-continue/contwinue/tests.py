@@ -16,7 +16,7 @@ from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
 from contwinue.paperview_tests import TestGetByRole, TestGetPaper, \
     TestSaveReview, TestGetReview, TestRevertReview, TestSetHidden, \
     TestSetDeadline, TestGetDeadlines, TestAssignReviewers, \
-    TestGetComments
+    TestGetComments, TestPostComment
 from contwinue.accounts_tests import TestCreateReviewer
 from contwinue.model_tests import TestPaperJsons, TestCJSONSpeed
 from contwinue.crypt_tests import TestEnDecrypt

@@ -166,6 +166,18 @@ class GetCommentsHandler(bcap.CapHandler):
       [c.to_json() for c in granted.paper.comment_set.all()]
     )
 
+class PostCommentHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    p = granted['paper'].paper
+    user = granted['user'].user
+    c = m.Comment(
+      commenter=user,
+      paper=p,
+      posted_at=int(time.time()),
+      value=args['value']
+    )
+    c.save()
+
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
     user = granted['user'].user
