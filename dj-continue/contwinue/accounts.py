@@ -14,7 +14,8 @@ from lib.py.common import logWith404
 import belaylibs.dj_belay as bcap
 
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
- ContinueCredentials, Account, Conference, UnverifiedUser, User, get_one, Paper
+ ContinueCredentials, Account, Conference, UnverifiedUser, User, \
+ get_one, Paper, Role
 from contwinue.email import send_and_log_email
 import contwinue.email_strings as strings
 
@@ -229,14 +230,19 @@ def glogin_landing(request):
 
 # new_reviewer : Conference, String, String -> UnverifiedUser
 def new_reviewer(conf, name, email):
-  uu = UnverifiedUser(
+  a = Account(key=uuid.uuid4())
+  a.save()
+  u = User(
+    username=email,
     conference=conf,
-    name=name,
+    full_name=name,
     email=email,
-    roletext='reviewer'
+    account=a
   )
-  uu.save()
-  return uu
+  u.save()
+  revrole = get_one(Role.objects.filter(name='reviewer'))
+  u.roles.add(revrole)
+  return u
 
 # send_new_reviewer_email : UnverifiedUser -> EmailResponse
 # Sends an account creation email to the given UnverifiedUser
@@ -244,13 +250,8 @@ def new_reviewer(conf, name, email):
 # an error.  Thows Exceptions if emails are invalid or cannot
 # be sent
 def send_new_reviewer_email(unverified_user):
-  if unverified_user.roletext != 'reviewer':
-    raise Exception('Tried to send reviewer email to %s' % unverified_user.roletext)
 
-  launch_cap = bcap.dbgrant('launch-reviewer', {
-    'newuser': True,
-    'unverified': unverified_user
-  })
+  launch_cap = bcap.dbgrant('launch-reviewer', unverified_user)
 
   fromaddr = "%s <%s>" % \
     (unverified_user.conference.name,
@@ -262,7 +263,7 @@ def send_new_reviewer_email(unverified_user):
     },
     msg=strings.new_reviewer_body % {
       'confname': unverified_user.conference.name,
-      'name': unverified_user.name,
+      'name': unverified_user.full_name,
       'base': bcap.this_server_url_prefix(),
       'key': bcap.cap_for_hash(launch_cap)
     },

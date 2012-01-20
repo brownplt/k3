@@ -478,7 +478,7 @@ function loader() {
 		}
 		return pcs;
 	});
-	var pcAddedE = getFilteredWSO_e(
+	var pcDataE = 
 		apcYes.events.click.snapshot_e(apcEmailsB).transform_e(function(pcs) {
 			var names = [];
 			var emails = [];
@@ -486,8 +486,15 @@ function loader() {
 				names.push(pc.name);
 				emails.push(pc.email);
 			},pcs);
-			return genRequest({url:'UnverifiedUser/addPCs',
-					fields:{cookie:authCookie,names:names,emails:emails}});}));
+      return {names: names, emails: emails};
+    });
+  var addPCsCapE = getFieldE(launchE, 'addPCs');
+  var pcAddedE = postE(lift_b(function(cap, data) {
+      if (cap && data) { return [cap, data]; }
+      return null
+    }, addPCsCapE.startsWith(null), pcDataE.startsWith(null)).
+    changes().
+    filter_e(id));
 	var confirmB = merge_e(
 		apcEmailsB.changes().transform_e(function(pcs) {
 			return P(

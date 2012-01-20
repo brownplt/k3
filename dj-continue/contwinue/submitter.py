@@ -518,7 +518,7 @@ def make_user(uu):
 
 def make_user_with_paper_launch(uu, paper):
   (account, user) = make_user(uu)
-  launch = bcap.grant('launch-paper', {
+  launch = bcap.dbgrant('launch-paper', {
     'user': user,
     'paper': paper
   })
@@ -579,7 +579,7 @@ class LaunchNewPaperHandler(bcap.CapHandler):
     launchable = Launchable(
       account=user.account,
       launchbase='%s/paper' % bcap.this_server_url_prefix(),
-      launchcap=bcap.cap_for_hash(bcap.grant('launch-paper', {
+      launchcap=bcap.cap_for_hash(bcap.dbgrant('launch-paper', {
         'user': user,
         'paper': paper
       })),

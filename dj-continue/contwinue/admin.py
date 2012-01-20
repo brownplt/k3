@@ -339,16 +339,17 @@ class AddPCsHandler(bcap.CapHandler):
 
     ret = []
     for i in range(len(names)):
-      unverified_rev = accounts.new_reviewer(conf, names[i], emails[i])
       try:
+        unverified_rev = accounts.new_reviewer(conf, names[i], emails[i])
         email_response = accounts.send_new_reviewer_email(unverified_rev)
         if not email_response:
           appendage = {'name': names[i]}
         else:
           appendage = {'error': 'We didn\'t recognize that email address.', 'name': names[i]}
+          ret.append(appendage)
       except Exception as e:
         appendage = {'error': str(e), 'name': names[i]}
-      ret.append(appendage)
+        ret.append(appendage)
 
     return bcap.bcapResponse(ret)
 
