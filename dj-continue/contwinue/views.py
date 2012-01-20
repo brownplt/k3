@@ -70,7 +70,7 @@ def create_user(request):
               conference=conf,
               account=account)
   user.save()
-  user.roles.add(get_one(Role.objects.filter(name='user')))
+  user.roles.add(get_one(Role.objects.filter(name='writer')))
 
   paper = Paper.newPaper(
     contact=user,

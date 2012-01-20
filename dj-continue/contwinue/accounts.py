@@ -50,7 +50,7 @@ class VerifyHandler(bcap.CapHandler):
 
 def request_account(request):
   def remind(user, conf):
-    launch = bcap.grant('launch-paper', {
+    launch = bcap.dbgrant('launch-paper', {
       'user': user,
       'paper': get_one(Paper.objects.filter(contact=user))
     })
@@ -93,7 +93,7 @@ def request_account(request):
   )
   user.save()
 
-  launch = bcap.grant('launch-new-paper', {'create': True, 'unverified': user})
+  launch = bcap.dbgrant('launch-new-paper', {'create': True, 'unverified': user})
 
   filled_message = strings.request_account_str % {
     'confname': conf.name,
