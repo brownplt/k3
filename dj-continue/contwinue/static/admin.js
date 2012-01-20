@@ -1,7 +1,7 @@
-function deleteTransform(objName,evt,cap) {
-	return postE(
+function deleteTransform(caps,evt) {
+	return removeE(
 		evt.transform_e(function(dobj) {
-			return [cap, genRequest({id:dobj.id})];
+			return caps[dobj.id];
 	}));
 }
 
@@ -50,7 +50,7 @@ function makeTopicsTable(topics) {
 		}).dom;
 }
 
-function makeRCompsTable(rcomps) {
+function makeRCompsTable(rcomps, addcomp, deletecomps) {
 	return new ModListWidget(
 		rcomps,
 		TR(TH('Name'),TH('PC Only?'),TD()),
@@ -59,7 +59,7 @@ function makeRCompsTable(rcomps) {
 				{del:new LinkWidget('Delete')},
 				function() {return obj;},
 				function(_,bob) {return TR(TD(obj.description),TD(obj.pconly ? 'Y' : 'N'),TD(bob.del));});
-			ret.events.del = deleteTransform('ReviewComponentType',ret.events.del);
+			ret.events.del = deleteTransform(deletecomps,ret.events.del);
 			return ret;
 		},
 		function() {
@@ -69,11 +69,12 @@ function makeRCompsTable(rcomps) {
 				{value:new ButtonWidget('Add')},
 				function(d,p) {return {cookie:authCookie,description:d,pconly:(p ? 'yes' : 'no')};},
 				function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(bs.value));})
-			.serverSaving(function(v) {return genRequest({url:'ReviewComponentType/add',fields:v});},true);
+			.capStreamServerSaving(function(v) {return genRequest({fields:v});},
+         true, function(v) { return addcomp[v.id]; });
 		}).dom;
 }
 
-function makeComponentsTable(basicInfo) {
+function makeComponentsTable(basicInfo, addComp, changeComp, deleteComp) {
 	return new ModListWidget(
 		basicInfo.components,
 		TR(TH('Abbr'),TH('Description'),TH('Format'),TH('Deadline (DD-MM-YYYY)'),TH('Grace'),TH('Man'),TH('Max'),TD(),TD()),
@@ -95,10 +96,11 @@ function makeComponentsTable(basicInfo) {
 					return TR(TD(is[0]),TD(is[1]),TD(obj.format),
 						TD(is[2]),TD(is[3],' Hours'),TD(obj.mandatory ? 'Y' : 'N'),TD(is[4]),
 						TD(bs.value),TD(obj.id == basicInfo.info.displayComponent.id ? '' : bs.del));})
-			.serverSaving(function(v) {
-				return genRequest({url:'ComponentType/change',fields:v});
-			},true);
-			ret.events.del = deleteTransform('ComponentType',ret.events.del);
+			.capStreamServerSaving(function(v) {
+				return genRequest({fields:v});
+			},true,function(v) {
+        return changeComp[v.id]; });
+			ret.events.del = deleteTransform(deleteComp,ret.events.del);
 			return ret;
 		},
 		function() {
@@ -119,7 +121,8 @@ function makeComponentsTable(basicInfo) {
 				function(is,bs) {
 					return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(is[3]),TD(is[4],' Hours'),
 							TD(is[5]),TD(is[6]),TD(bs.value));})
-				.serverSaving(function(v) {return genRequest({url:'ComponentType/add',fields:v});},true);
+				.belayServerSaving(function(v) {return genRequest({fields:v});},
+          true, addComp);
 		}).dom;
 }
 
@@ -445,8 +448,15 @@ function loader() {
 	var categoriesTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeDecisionsTable(bi.decisions,true);}).startsWith(DIVB()));
 	var decisionsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeDecisionsTable(bi.decisions,false);}).startsWith(DIVB()));
 	var topicsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeTopicsTable(bi.topics);}).startsWith(DIVB()));
-	var componentsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeComponentsTable(bi);}).startsWith(DIVB()));
-	var rcompsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeRCompsTable(bi.rcomponents);}).startsWith(DIVB()));
+	var componentsTableB = switch_b(lift_e(function(bi, li) {
+    return makeComponentsTable(bi, li.addComponentType,
+      li.changeComponentTypes,
+      li.deleteComponentTypes);
+  }, basicInfoE, launchE).startsWith(DIVB()));
+	var rcompsTableB = switch_b(lift_e(function(bi, li) {
+    // TODO(joe): can't delete rcomps?
+    return makeRCompsTable(bi.rcomponents, li.addReviewComponentType, li.deleteComponentTypes);
+  }, basicInfoE, launchE).startsWith(DIVB()));
 
 	insertDomB(categoriesTableB,'categories');
 	insertDomB(decisionsTableB,'decisions');

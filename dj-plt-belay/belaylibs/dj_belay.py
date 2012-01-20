@@ -56,7 +56,7 @@ def cap_for_hash(cap):
   ser = cap.serialize()
   if ser.find(handlerData.prefix) == 0:
     return handlerData.cap_prefix + cap_id_from_url(ser)
-  return '/cryptcap/' + crypt_info_from_url(ser)
+  return '/ycap/' + crypt_info_from_url(ser)
 
 class BelayException(Exception):
   pass
@@ -306,7 +306,7 @@ def set_handlers(cap_prefix, path_map):
   if handlerData.is_set:
     return
 
-  crypt_prefix = 'crypt' + cap_prefix
+  crypt_prefix = 'y' + cap_prefix
   if not cap_prefix.startswith('/'):
     cap_prefix = '/' + cap_prefix
     crypt_prefix = '/' + crypt_prefix

@@ -108,7 +108,7 @@ function onlyErrors(_) {return _.error;}
  * Return true if input is not error
  */
 function noErrors(_) {
-return !_.error;}
+return typeof _ !== 'object' || _ === null || !_.error;}
 
 /*
  * Take an unformatted string, and format it using paragraphs and linebreaks

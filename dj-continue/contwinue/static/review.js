@@ -260,7 +260,7 @@ authorCol = new Column('authors','Authors',function(a,b) {return a.authorSort < 
 		function(paper,cookie,tab) {return TD({className:'authors'},paper.author);});
 titleCol = new Column('title','Title',function(a,b) {return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0);},
 		function (paper,cookie,tab) {
-			var pl = paper.hasconflict ? paper.title : A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,false,paper.launch)},paper.title);
+			var pl = paper.hasconflict ? paper.title : A({target:'_blank',href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,false,paper.launch)},paper.title);
 			if(!paper.hasconflict) demoEventsE.add_e(extractEvent_e(pl,'click').constant_e({action:'paperclick'}));
 			return TD({className:'title'},pl);
 		});
@@ -278,7 +278,7 @@ function PaperEntry(basicInfo,paper,cookie,tab,columns,getSecondRow) {
 			fold(function(v, acc) {	if (!acc) return [v]; else return acc.concat([', ',v]); },
 				null,map(function(review) {
 					if(review.submitted) {
-						return A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,review.id)},
+						return A({target:'_blank',href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,review.id)},
                     review.name+' ('+review.overall+'/'+review.expertise+')', paper.launch);
 					}
 					else {
@@ -512,7 +512,7 @@ function makeAssignTable(papersB,basicInfo) {
 	var acolumns = [numberCol,summaryCol,authorCol,
 		new Column('title','Title',function(a,b) {return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0);},
 				function(paper,cookie,tab) {return TD(paper.hasconflict ? 
-					paper.title : A({href:genPaperLink(paper.id,cookie,'paper_assign_tab',tab,false,paper.launch)},paper.title));}),
+					paper.title : A({target:'_blank',href:genPaperLink(paper.id,cookie,'paper_assign_tab',tab,false,paper.launch)},paper.title));}),
 		new Column('reviewers','Rvwrs',function(a,b) {return a.reviewStats.rev - b.reviewStats.rev;},
 				function(paper,cookie,tab) {return TD(paper.reviewStats.rev+'');})];
 	var paperEntriesB = papersB.transform_b(function(papers) {
