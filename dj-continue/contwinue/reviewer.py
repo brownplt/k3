@@ -36,8 +36,8 @@ class GetPaperSummariesHandler(bcap.CapHandler):
     if conf.last_change == int(args['lastChangeVal']):
       return bcap.bcapResponse({'changed': False})
 
-#    if conf.summaries_json is not None and conf.summaries_json != '':
-#      return bcap.bcapStringResponse(conf.summaries_json)
+    if conf.summaries_json is not None and conf.summaries_json != '':
+      return bcap.bcapStringResponse(conf.summaries_json)
 
     flds = ['id','author','title','decision','target','other_cats',\
             'contact_email','topics','conflicts','pc_paper','hidden',\
