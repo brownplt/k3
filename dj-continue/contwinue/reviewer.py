@@ -207,11 +207,9 @@ class LaunchReviewerHandler(bcap.CapHandler):
       if paper.can_see_reviews(reviewer):
         paper_caps['updateDecision'] = bcap.grant('update-decision', paper)
         paper_caps['getAbstract'] = bcap.grant('get-abstract', paper)
-        paper_caps['launch'] = 'No_launching_papers_yet',
-#        bcap.grant('launch-paper', {
-#          'user': reviewer,
-#          'paper': paper
-#        })
+        paper_caps['launch'] = bcap.cap_for_hash(
+          bcap.grant('launch-paperview', {'user': reviewer, 'paper': paper})
+        )
         comps_caps = {}
         for component in paper.dcomps:
           view_comp = bcap.dbgrant('get-component-file', component)

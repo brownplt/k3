@@ -149,5 +149,43 @@ class AssignReviewersHandler(bcap.CapHandler):
 
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
-    return bcap.bcapResponse({})
+    user = granted['user'].user
+    conf = user.conference
+    paper = granted['paper'].paper
+    caps = {}
+    if 'admin' in user.rolenames:
+      caps['setDeadline'] = bcap.grant('set-deadline', paper)
+      caps['getDeadlines'] = bcap.grant('get-deadlines', paper)
+      caps['assignReviewers'] = bcap.grant('assign-reviewers', paper)
+      caps['getByRole'] = bcap.grant('get-by-role', conf)
 
+    caps['getPaper'] = bcap.grant('get-paper', paper)
+
+    restpapers = m.Paper.objects.filter(id__gt=paper.id)
+
+    #TODO(joe): abstract this pattern into a function
+    caps['nextPaper'] = "%s/paperview/#%s" % (
+      bcap.this_server_url_prefix(),
+      bcap.cap_for_hash(bcap.grant('launch-paperview', {
+        'user': user, 'paper': paper
+      }))
+    )
+    caps['backToList'] = "%s/review/#%s" % (
+      bcap.this_server_url_prefix(),
+      bcap.cap_for_hash(bcap.grant('launch-reviewer', user))
+    )
+
+    rev = m.Review.get_published_by_user_and_paper(user, paper)
+    if rev:
+      caps['saveReview'] = bcap.grant('save-review', rev)
+      caps['revertReview'] = bcap.grant('revert-review', rev)
+    return bcap.bcapResponse({
+      'basicInfo': conf.get_admin_basic(),
+      'addPassword': bcap.regrant('add-password', user),
+      'addGoogleAccount': bcap.regrant('add-google-account', user),
+      'credentials': user.get_credentials(),
+      'email': user.email,
+      'currentUser': user.to_json(),
+
+      'paperCaps': caps
+    })

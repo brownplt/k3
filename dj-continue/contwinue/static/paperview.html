@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Loading...</title>
+		<link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+		<script src="/static/lib/js/flapjax/flapjax.js"></script>
+		<script src="/static/lib/js/flapjax/json.js"></script>
+		<script src="/static/lib/js/flapjax/plug.js"></script>
+		<script src="/static/lib/js/flapjax/myfjws.js"></script>
+		<script src="/static/gcommon.js"></script>
+		<script src="/static/common.js"></script>
+		<script src="common.js"></script>
+		<script src="/static/paperview.js"></script>
+		<style>
+			P.component-info {font-size: 55%;}
+			P.centered {text-align: center;}
+			DIV.loading {
+				font-style: italic;
+				font-size: medium;
+			}
+			.small {font-size: small;}
+			TD.normal{}
+			TD.yes-submitted{
+				color: rgb(255,255,0);
+				background-color:rgb(48,110,255);
+				font-size: x-large;
+			}
+			.unfinished-review {
+				color: rgb(102,102,102);
+			}
+		</style>
+	</head>
+	<body onload="loader();">
+		<h1 id="confhead"></h1>
+		<div id="login"></div>
+		<div id="paperhead"></div>
+
+		<div class="tabs" id="ptabs">
+			<h4>Navigation:</h4>
+			<ul>
+				<li class="left-tab"><a href="javascript://Info Tab" class="paper-tab" id="paper_info_tab" title="Info">Info</a></li>
+				<li class="left-tab"><a href="javascript://Review Tab" id="paper_review_form_tab" title="Edit Review">Edit Review</a></li>
+				<li class="left-tab"><a href="javascript://Comment Tab" id="paper_comment_form_tab" title="Comment">Comment</a></li>
+				<li class="left-tab"><a href="javascript://Assign Tab" class="admin-tab" id="paper_assign_tab" title="Assign">Assign</a></li>
+				<li class="left-tab"><a href="javascript://Edit/Delete Tab" class="admin-tab" id="paper_options_tab" title="Options">Options</a></li>
+				<li class="right-tab"><a href="javascript://Back to List" id="back_to_list_tab" title="Back to List">Back to List</a></li>
+			</ul>
+		</div>
+
+		<div id="paper_content">
+		</div>
+
+		<hr noshade="noshade" size="1" />
+		<table id="footer">
+			<tbody>
+				<tr>
+					<td align="left">Please send questions, comments, <br> problems, etc to <a href="mailto:arjun@cs.brown.edu">arjun@cs.brown.edu</a>.</td>
+					<td align="right"><a href="http://continue2.cs.brown.edu/">Continue conference management server</a><br>Powered by <a href="http://www.flapjax-lang.org/">Flapjax</a></td>
+				</tr>
+			</tbody>
+		</table>
+		<iframe id="dectarget" name="dectarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+		<iframe id="revtarget" name="revtarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+		<iframe id="astarget" name="astarget" style="position:absolute; left: -999px; top: 0;"></iframe>
+	</body>
+</html>

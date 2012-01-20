@@ -49,8 +49,14 @@ def crypt_cap_url(cap):
 def cap_id_from_url(capURL):
   return capURL[handlerData.prefix_strip_length:]
 
+def crypt_info_from_url(capURL):
+  return capURL[handlerData.crypt_prefix_strip_length:]
+
 def cap_for_hash(cap):
-  return handlerData.cap_prefix + cap_id_from_url(cap.serialize())
+  ser = cap.serialize()
+  if ser.find(handlerData.prefix) == 0:
+    return handlerData.cap_prefix + cap_id_from_url(ser)
+  return '/crypt/' + crypt_info_from_url(ser)
 
 class BelayException(Exception):
   pass

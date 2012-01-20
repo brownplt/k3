@@ -6,7 +6,7 @@ function getLogoutEventsE() {
 			);
 	logoutsE.transform_e(function(_) {window.location = 'login.html?logout='+authCookie;});
 }
-function getSummariesE(onLoadTimeE,currentTabB,summariesCap) {
+function getSummariesE(onLoadTimeE,currentTabB,summariesCap,paperCaps) {
 	var reloadSummariesE = merge_e(iframeLoad_e('dectarget'),iframeLoad_e('astarget'));
 	var periodicReloadE = timer_e(20000);
 	var pqTimesE = merge_e(onLoadTimeE,reloadSummariesE,periodicReloadE);
@@ -27,6 +27,7 @@ function getSummariesE(onLoadTimeE,currentTabB,summariesCap) {
 							pinfo: map(function(paper) {
 								paper.reviewStats = getReviewStats(paper.reviewsInfo);
 								paper.authorSort = parseAuthorList(paper.author);
+                paper.launch = paperCaps[paper.id]['launch'];
 							return paper;},sums.summaries)};
 				}
 			}
@@ -228,7 +229,9 @@ function genAbstractRow(numCols,getAbstract) {
 				TDB({className:'blank-line',colSpan:numCols-2},DIVB({className:'reviewer-list',style:{textAlign:'right'}},shabs.dom),abstrB));
 	}
 }
-function genPaperLink(id,cookie,mode,tab,review) {return 'paper.html?id='+id+'&mode='+mode+'&cookie='+cookie+'&tab='+tab+(review?'&review='+review:'')}
+function genPaperLink(id,cookie,mode,tab,review,launch) {
+  return 'paperview?id='+id+'&mode='+mode+'&tab='+tab+(review?'&review='+review:'')+"#"+launch;
+}
 
 numberCol = new Column('number','#',function(a,b) {return a.id - b.id;},
 	function (paper,cookie,tab) {return TD({style:{color:paper.completed?'#000':'#900'}},paper.id,BR(),B(paper.decision.abbr));});
@@ -257,7 +260,7 @@ authorCol = new Column('authors','Authors',function(a,b) {return a.authorSort < 
 		function(paper,cookie,tab) {return TD({className:'authors'},paper.author);});
 titleCol = new Column('title','Title',function(a,b) {return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0);},
 		function (paper,cookie,tab) {
-			var pl = paper.hasconflict ? paper.title : A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab)},paper.title);
+			var pl = paper.hasconflict ? paper.title : A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,false,paper.launch)},paper.title);
 			if(!paper.hasconflict) demoEventsE.add_e(extractEvent_e(pl,'click').constant_e({action:'paperclick'}));
 			return TD({className:'title'},pl);
 		});
@@ -275,7 +278,8 @@ function PaperEntry(basicInfo,paper,cookie,tab,columns,getSecondRow) {
 			fold(function(v, acc) {	if (!acc) return [v]; else return acc.concat([', ',v]); },
 				null,map(function(review) {
 					if(review.submitted) {
-						return A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,review.id)},review.name+' ('+review.overall+'/'+review.expertise+')');
+						return A({href:genPaperLink(paper.id,cookie,'paper_info_tab',tab,review.id)},
+                    review.name+' ('+review.overall+'/'+review.expertise+')', paper.launch);
 					}
 					else {
 						return SPAN({className:'missing'},review.name)
@@ -508,7 +512,7 @@ function makeAssignTable(papersB,basicInfo) {
 	var acolumns = [numberCol,summaryCol,authorCol,
 		new Column('title','Title',function(a,b) {return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0);},
 				function(paper,cookie,tab) {return TD(paper.hasconflict ? 
-					paper.title : A({href:genPaperLink(paper.id,cookie,'paper_assign_tab',tab)},paper.title));}),
+					paper.title : A({href:genPaperLink(paper.id,cookie,'paper_assign_tab',tab,false,paper.launch)},paper.title));}),
 		new Column('reviewers','Rvwrs',function(a,b) {return a.reviewStats.rev - b.reviewStats.rev;},
 				function(paper,cookie,tab) {return TD(paper.reviewStats.rev+'');})];
 	var paperEntriesB = papersB.transform_b(function(papers) {
@@ -657,7 +661,7 @@ function makeGotoTab(summariesB,basicInfo,cuser) {
 
 	snapshot_e(clkE,paperExistsB).transform_e(function(pn) {
 		if(!pn.invalid && !pn.hasconflict)
-			window.location = genPaperLink(pn.id,authCookie,'paper_info_tab','goto_tab');
+			window.location = genPaperLink(pn.id,authCookie,'paper_info_tab','goto_tab',false, pn.launch);
 	});
 
 	var hiddenHead = '';
@@ -738,7 +742,8 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 
 function loadPaperLists(MainTabs,onLoadTimeE,curUser,basicInfo,launchInfo) {
   var summariesCapE = launchInfo.getPaperSummaries;
-	var summariesE = getSummariesE(onLoadTimeE,MainTabs.currentTabB,summariesCapE);
+	var summariesE = getSummariesE(onLoadTimeE,MainTabs.currentTabB,summariesCapE,
+      launchInfo.paperCaps);
 	showLoadBoxE.add_e(summariesE.constant_e(false));
 
 	var bidValsE = getE(onLoadTimeE.constant_e(launchInfo.getUserBids))

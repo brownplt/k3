@@ -124,6 +124,7 @@ def get_basic(request):
 paper = make_get_handler('writer.html', {})
 admin_handler = make_get_handler('admin.html', {})
 review_handler = make_get_handler('review.html', {})
+paperview_handler = make_get_handler('paperview.html', {})
 
 class ContinueInit():
   def process_request(self, request):
@@ -191,6 +192,7 @@ class ContinueInit():
       'set-deadline': paperview.SetDeadlineHandler,
       'get-deadlines': paperview.GetDeadlinesHandler,
       'assign-reviewers': paperview.AssignReviewersHandler,
+      'launch-paperview': paperview.LaunchPaperViewHandler
       # End LaunchPaperView handlers
     })
     bcap.set_crypt_secret(settings.PRIVATE_KEY)
