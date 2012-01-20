@@ -155,6 +155,7 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
     def check_deadlines_and_save(args, saver):
       ret = False
       for key, val in args.iteritems():
+        if isinstance(val, list): val = val[0]
         ct = conf.component_type_by_abbr(key)
         if ct is None: continue
         deadline = ct.deadline
@@ -184,9 +185,9 @@ class PaperUpdateComponentsHandler(bcap.CapHandler):
           mimetype='text/plain'
         )
         newcomp.save()
-      else:
-        if val != '':
-          raise Exception('Non-text component in args dictionary')
+#      else:
+#        if val != '':
+#          raise Exception('Non-text component in args dictionary')
 
     def save_files(ct, excomp, f):
       val = f.read()

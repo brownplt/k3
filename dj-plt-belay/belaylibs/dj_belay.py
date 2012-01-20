@@ -440,17 +440,11 @@ def proxyHandler(request):
   get_args = request.GET
   args = dataPostProcess(request.read())
 
-  def update_with(args, new_args):
-    if len(new_args) > 0:
-      if args is None:
-        args = new_args
-      else:
-        args.update(new_args)
-    return args
-
-#  args = update_with(args, get_args)
-  if args is None: args = {}
-  args = update_with(args, post_args)
+  if len(post_args) > 0:
+    if args is None:
+      args = dict(post_args.lists())
+    else:
+      args.update(post_args)
 
   logger.error('Args: %s' % args)
 

@@ -15,7 +15,7 @@ import belaylibs.dj_belay as bcap
 
 from contwinue.models import PendingLogin, PendingAccount, GoogleCredentials,\
  ContinueCredentials, Account, Conference, UnverifiedUser, User, \
- get_one, Paper, Role
+ get_one, Paper, Role, Launchable
 from contwinue.email import send_and_log_email
 import contwinue.email_strings as strings
 
@@ -242,6 +242,14 @@ def new_reviewer(conf, name, email):
   u.save()
   revrole = get_one(Role.objects.filter(name='reviewer'))
   u.roles.add(revrole)
+  launchcap = bcap.dbgrant('launch-reviewer', u)
+  launchbase = '%s/review' % bcap.this_server_url_prefix()
+
+  launchable = Launchable(account=a,
+                          launchbase=launchbase,
+                          launchcap=bcap.cap_for_hash(launchcap),
+                          display='See my reviews')
+  launchable.save()
   return u
 
 # send_new_reviewer_email : UnverifiedUser -> EmailResponse

@@ -794,6 +794,18 @@ function loader() {
 	var doLogoutE = getLogoutEventsE();
 	doLoginDivB(userInfoE);
 
+  var accountTabB = lift_b(function(li, bi) {
+    if(li && bi) {
+      var searchString = 'reviewer ' + bi.info.name;
+      return makeAccountInfoTab(
+        li,
+        searchString,
+        COMMON.urlPrefix + '/review' + window.name
+      );
+    }
+    return SPANB();
+  }, launchE.startsWith(null), basicInfoE.startsWith(null));
+
   var summariesE = postE(getFieldE(launchE,'getPaperSummaries')
     .transform_e(function(c) { return [c,{lastChangeVal: 0}];}));
 
@@ -828,6 +840,9 @@ function loader() {
 			getObj('admin_tab').href = 'admin.html?cookie='+authCookie;
 			insertValueB(showLoadBoxE.transform_e(function(_) {return _ ? 'block' : 'none'}).startsWith('none'),'loadbox','style','display');
 			var olt2E = receiver_e();
+      
+	    insertDomB(switch_b(accountTabB),'account_placeholder');
+      MainTabs.displayOn('account_tab', 'account_content');
 			loadPaperLists(MainTabs,olt2E,userInfo,basicInfo,launchInfo);
 			olt2E.sendEvent('loaded!');
 	},basicInfoE,userInfoE,launchE);
