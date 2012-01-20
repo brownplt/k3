@@ -158,7 +158,6 @@ def generate(numusers=10):
       p.save()
       p.authors.add(contact)
       p.save()
-      pcomp = get_one(ComponentType.objects.filter(abbr='P'))
       f = open('testdata/testpdf.pdf', 'r')
       filesDict = {
         'P': f
