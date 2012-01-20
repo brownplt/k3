@@ -192,7 +192,7 @@ class LaunchPaperViewHandler(bcap.CapHandler):
         ),
         'id': restpapers[0].id
       }
-    caps['backToList'] = "%s/review/#%s" % (
+    caps['backToList'] = "%s/review#%s" % (
       bcap.this_server_url_prefix(),
       bcap.cap_for_hash(bcap.grant('launch-reviewer', user))
     )

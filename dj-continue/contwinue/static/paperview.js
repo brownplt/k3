@@ -562,7 +562,8 @@ function loader() {
         return _; }).
     startsWith(0);
 
-	getObj('back_to_list_tab').href = 'continue.html?cookie='+$URL('cookie')+'&tab='+$URL('tab');
+  insertValueE(getFieldE(paperCapsE, 'backToList'), 'back_to_list_tab',
+      'href');
 
 	setPaperContent(
 			PaperTabs.currentTabB,paperInfoE.startsWith(null),curUserE.startsWith(null),
