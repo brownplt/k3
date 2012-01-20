@@ -281,6 +281,6 @@ class TestPostComment(Generator):
       'This is my super-awesome comment'
     )
     self.assertEqual(
-      comments[0].value,
+      comments[1].value,
       'This is my super-awesomer comment'
     )

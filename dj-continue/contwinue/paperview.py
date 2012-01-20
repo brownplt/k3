@@ -177,6 +177,7 @@ class PostCommentHandler(bcap.CapHandler):
       value=args['value']
     )
     c.save()
+    return bcap.bcapResponse(c.to_json())
 
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
