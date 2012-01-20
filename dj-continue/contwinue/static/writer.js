@@ -263,9 +263,7 @@ function loader() {
 
 	var exceptsE = captureServerExcepts();
 	handleExcepts(exceptsE);
-	var basicInfoE = getE(launchE.transform_e(function(li) {
-    return li.getBasic;
-  }));
+	var basicInfoE = getFieldE(launchE, 'basicInfo');
 	basicInfoE.transform_e(function(bi) {
 		document.title = bi.info.shortname + ' - Paper Submission';
   });

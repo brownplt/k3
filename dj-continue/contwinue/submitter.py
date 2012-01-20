@@ -453,21 +453,21 @@ def paper_launch_info(user, paper, newuser):
     paper_json = {
       'paperContactName': p.contact.full_name,
       'paperContactEmail': p.contact.email,
-      'getPaper': bcap.regrant('writer-paper-info', {
+      'getPaper': bcap.grant('writer-paper-info', {
         'writer': user,
         'paper': p
       }),
-      'setTitle': bcap.regrant('paper-set-title', p),
-      'setAuthor': bcap.regrant('paper-set-author', p),
-      'addAuthor': bcap.regrant('paper-add-author', {
+      'setTitle': bcap.grant('paper-set-title', p),
+      'setAuthor': bcap.grant('paper-set-author', p),
+      'addAuthor': bcap.grant('paper-add-author', {
         'user': user,
         'paper': paper
       }),
-      'setPcPaper': bcap.regrant('paper-set-pcpaper', p),
-      'setTarget': bcap.regrant('paper-set-target', p),
-      'setTopics': bcap.regrant('paper-set-topics', p),
-      'getDeadlineExtensions': bcap.regrant('paper-deadline-extensions', p),
-      'updateComponents': bcap.regrant('paper-update-components', p),
+      'setPcPaper': bcap.grant('paper-set-pcpaper', p),
+      'setTarget': bcap.grant('paper-set-target', p),
+      'setTopics': bcap.grant('paper-set-topics', p),
+      'getDeadlineExtensions': bcap.grant('paper-deadline-extensions', p),
+      'updateComponents': bcap.grant('paper-update-components', p),
       'title': p.title,
       'id': p.id
     }
@@ -477,16 +477,16 @@ def paper_launch_info(user, paper, newuser):
     'newUser': newuser,
     'name': user.full_name,
     'email': user.email,
-    'updateName': bcap.regrant('user-update-name', user),
+    'updateName': bcap.grant('user-update-name', user),
     'accountkey': account.key,
-    'addPassword': bcap.regrant('add-password', user),
-    'addGoogleAccount': bcap.regrant('add-google-account', user),
+    'addPassword': bcap.grant('add-password', user),
+    'addGoogleAccount': bcap.grant('add-google-account', user),
     'credentials': user.get_credentials(),
     'papers': paper_jsons,
     'mainTitle': paper.title,
-    'addPaper': bcap.regrant('add-paper', user),
-    'getBasic': bcap.regrant('writer-basic', paper.conference),
-    'getAuthorText': bcap.regrant('author-text', paper.conference),
+    'addPaper': bcap.grant('add-paper', user),
+    'basicInfo': bcap.grant('writer-basic', paper.conference).get(),
+    'getAuthorText': bcap.grant('author-text', paper.conference),
   })
 
 # make_user: UnverifiedUser -> (Account, User)

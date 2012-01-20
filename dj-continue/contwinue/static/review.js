@@ -4,7 +4,7 @@ function getLogoutEventsE() {
 			map(function(b) {return extractEvent_e(b,'click');},
 				lbuts)
 			);
-	logoutsE.transform_e(function(_) {window.location = 'login.html?logout='+authCookie;});
+	return logoutsE;
 }
 function getSummariesE(onLoadTimeE,currentTabB,summariesCap,paperCaps) {
 	var reloadSummariesE = merge_e(iframeLoad_e('dectarget'),iframeLoad_e('astarget'));
@@ -789,13 +789,22 @@ function loader() {
 	handleExcepts(exceptsE);
   var launchCap = launchCapFromKey(COMMON.urlPrefix, capServer);
   var launchE = getE(onLoadTimeE.constant_e(launchCap));
+  
+  if(!launchCap || launchCap==="" || launchCap ==="#") {
+    window.location = "logout";
+  }
 	var basicInfoE = getFieldE(launchE, 'basicInfo');
 
 	doConfHead(basicInfoE);
 //	var userInfoE = getCurUserE(onLoadTimeE,authCookie);
 	var userInfoE = getFieldE(launchE, 'currentUser');
 	var doLogoutE = getLogoutEventsE();
-	doLoginDivB(userInfoE);
+  doLogoutE.snapshot_e(basicInfoE.startsWith(null)).
+    filter_e(id).transform_e(function(bi) {
+      window.name = "";
+      window.location = COMMON.urlPrefix + '/' + bi.info.shortname + '/' + 'home';
+    });
+  doLoginDivB(userInfoE);
 
   var accountTabB = lift_b(function(li, bi) {
     if(li && bi) {

@@ -353,8 +353,6 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 							review.subreviewers != '' ? TR(TH('Subreviewers:'),TD(paraString(review.subreviewers,'pre'))) : ''))) : '';
 			},this.paper.reviews) : '',
       DIV({style:{'padding-bottom': '2em'}},HR(),H3('Comments'),
-        P('This space is for informal comments and discussion about ' +
-          'the paper.  Comments are not official reviews.'),
         this.paper.comments.length ? 
           TABLE({className:'key-value'},
             TBODY(
