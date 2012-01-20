@@ -630,7 +630,20 @@ class Paper(belay.Grantable):
     return None
 
 class Comment(belay.Grantable):
+  class Meta:
+    ordering = ['posted_at']
   paper = models.ForeignKey(Paper)
+  commenter = models.ForeignKey(User)
+  posted_at = models.IntegerField()
+  value = models.TextField()
+
+  def to_json(self):
+    return {
+      'id': self.id,
+      'paperID': self.paper.id,
+      'commenterID': self.commenter.id,
+      'value': self.value
+    }
 
 class Bid(belay.Grantable):
   bidder = models.ForeignKey(User)

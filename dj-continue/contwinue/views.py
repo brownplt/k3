@@ -192,6 +192,7 @@ class ContinueInit():
       'set-deadline': paperview.SetDeadlineHandler,
       'get-deadlines': paperview.GetDeadlinesHandler,
       'assign-reviewers': paperview.AssignReviewersHandler,
+      'get-comments': paperview.GetCommentsHandler,
       'launch-paperview': paperview.LaunchPaperViewHandler
       # End LaunchPaperView handlers
     })

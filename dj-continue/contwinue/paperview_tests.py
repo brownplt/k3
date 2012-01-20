@@ -231,3 +231,30 @@ class TestAssignReviewers(Generator):
     self.assertTrue(conf.last_change >= original_change)
     self.assertEqual(p.json, '')
 
+class TestGetComments(Generator):
+  def test_get_comments(self):
+    conf = self.conference
+    p = m.Paper.objects.all()[0]
+    r1 = make_reviewer('Joe Reviewer', 'joe@foo.bar', conf)
+
+    c1 = m.Comment(
+      paper=p,
+      commenter=r1,
+      posted_at=int(time.time()),
+      value="This is a comment"
+    )
+    c1.save()
+
+    c2 = m.Comment(
+      paper=p,
+      commenter=r1,
+      posted_at=int(time.time() - 4000),
+      value="This is another"
+    )
+    c2.save()
+
+    get_comments = bcap.grant('get-comments', p)
+    result = get_comments.get()
+
+    self.assertEqual(result, [c2.to_json(), c1.to_json()])
+

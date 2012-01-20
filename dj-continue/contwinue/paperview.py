@@ -160,6 +160,12 @@ class AssignReviewersHandler(bcap.CapHandler):
     conf.update_last_change(paper)
     return bcap.bcapResponse(True)
 
+class GetCommentsHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(
+      [c.to_json() for c in granted.paper.comment_set.all()]
+    )
+
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
     user = granted['user'].user
