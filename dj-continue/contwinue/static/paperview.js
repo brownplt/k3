@@ -297,7 +297,8 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 				}));
 			},30000,(userReviewInfo.hasPublished),true);
 		revForm.events.submitted.transform_e(function(_) {
-			window.location = 'continue.html?cookie='+authCookie+'&tab='+$URL('tab');
+      window.location.reload();
+//			window.location = 'continue.html?cookie='+authCookie+'&tab='+$URL('tab');
 		});
 		revertE.add_e(revForm.events.revert);
 		demoEventsE.add_e(revForm.behaviors.value.changes().transform_e(function(_) {return {action:'reviewchanged'};}));
@@ -387,10 +388,8 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 				map(function(ct) {
 					var deadw = new DateWidget(extns[ct.id]?extns[ct.id].until:ct.deadline);
 					var okb = INPUT({type:'button',value:'Grant Extension'});
-					var setE = getFilteredWSO_e(snapshot_e(extractEvent_e(okb,'click'),deadw.behaviors.value).transform_e(function(nd) {
-						return genRequest({
-							url: 'Paper/'+that.paper.id+'/setDeadline',
-							fields: {cookie:authCookie,typeid:ct.id,until:nd}});
+					var setE = postE(snapshot_e(extractEvent_e(okb,'click'),deadw.behaviors.value).transform_e(function(nd) {
+						return [caps.setDeadline, {typeid:ct.id,until:nd}];
 					}));
 					var greyB = merge_e(extractEvent_e(okb,'click').constant_e(true),setE.constant_e(false)).startsWith(false);
 					deadw = deadw.greyOutable(greyB);

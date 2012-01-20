@@ -92,6 +92,19 @@ def generate(numusers=10):
         roletext=rand_str(10), conference=c)
       uu.save()
 
+  revrole = Role.objects.filter(name='reviewer')[0]
+  reviewers = revrole.user_set.all()
+  if not len(reviewers) >= 10:
+    for n in range(10):
+      account = Account(key=str(uuid.uuid4()))
+      account.save()
+      rev_user = User(username='reviewer%s' % n, 
+        full_name='Joe Reviewer%s' % n, email='joe@reviewer%s.com' % n, 
+        conference=c,
+        account=account)
+      rev_user.save()
+      rev_user.roles.add(revrole)
+
   if not check_size(Topic, 10):
     topics = ['Programming Languages', 'Distributed Systems', 'Web Security', 
       'Computer Vision', 'Machine Learning', 'Computational Biology', 

@@ -448,7 +448,8 @@ def proxyHandler(request):
         args.update(new_args)
     return args
 
-  args = update_with(args, get_args)
+#  args = update_with(args, get_args)
+  if args is None: args = {}
   args = update_with(args, post_args)
 
   logger.error('Args: %s' % args)

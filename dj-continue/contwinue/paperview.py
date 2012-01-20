@@ -2,6 +2,9 @@
 import contwinue.models as m
 import belaylibs.dj_belay as bcap
 import time
+import logging
+
+logger = logging.getLogger('default')
 
 class GetByRoleHandler(bcap.CapHandler):
   def post_arg_names(self): return ['role']
@@ -14,7 +17,13 @@ class GetByRoleHandler(bcap.CapHandler):
 
 class GetPaperHandler(bcap.CapHandler):
   def get(self, granted):
-    return bcap.bcapResponse(granted.paper.get_paper_with_decision())
+    paper = granted['paper'].paper
+    user = granted['user'].user
+    response = paper.get_paper_with_decision()
+    if paper.can_see_reviews(user):
+      response['bids'] = [b.to_json() for b in paper.bid_set.all()]
+      response['reviews'] = [r.to_json() for r in paper.get_published()]
+    return bcap.bcapResponse(response)
 
 
 # SaveReviewHandler
@@ -39,8 +48,9 @@ class SaveReviewHandler(bcap.CapHandler):
     if 'submit' in args and args['submit'] == 'yes':
       prev.submitted = True
       prev.fill(**args)
-      prev.conf.update_last_change(prev.paper)
       prev.save()
+
+    prev.conference.update_last_change(prev.paper)
 
     return bcap.bcapResponse(therev.to_json())
 
@@ -117,7 +127,10 @@ class AssignReviewersHandler(bcap.CapHandler):
   def post(self, granted, args):
     paper = granted.paper
     conf = paper.conference
-    assign = args['assign']
+    if 'assign' in args:
+      assign = args['assign']
+    else:
+      assign = []
     if assign == '': assign = []
     if not isinstance(assign, list): assign = [assign]
     assign = [int(x) for x in assign]
@@ -129,7 +142,7 @@ class AssignReviewersHandler(bcap.CapHandler):
       if u not in cur_reviewer_ids:
         rev = m.Review(
           conference=conf,
-          reviewer_id=u,
+          reviewer=m.get_one(m.User.objects.filter(id=u)),
           paper=paper,
           overall=conf.default_overall,
           expertise=conf.default_expertise,
@@ -161,7 +174,10 @@ class LaunchPaperViewHandler(bcap.CapHandler):
       caps['updateDecision'] = bcap.grant('update-decision', paper)
       caps['setHidden'] = bcap.grant('set-hidden', paper)
 
-    caps['getPaper'] = bcap.grant('get-paper', paper)
+    caps['getPaper'] = bcap.grant('get-paper', {
+      'paper': paper,
+      'user': user
+    })
     caps['updateBids'] = bcap.grant('update-bids', user)
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)

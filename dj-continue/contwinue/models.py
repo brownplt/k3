@@ -456,10 +456,7 @@ class User(belay.Grantable):
     return [r.name for r in self.roles.all()]
 
   def to_json(self):
-    review_count = 0
-    for paper in self.papers.all():
-      for rc in paper.review_set.all():
-        review_count += 1
+    review_count = self.review_set.filter(published=True).count()
     return {
       'username' : self.username,
       'fullname' : self.full_name,
@@ -562,6 +559,9 @@ class Paper(belay.Grantable):
       'submitted': r.submitted
     } for r in self.review_set.all()]
   reviews_info = property(get_reviews_info)
+
+  def get_published(self):
+    return self.review_set.filter(published=True)
 
   def get_conflicts(self):
     cbids = Bid.objects.filter(

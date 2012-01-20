@@ -19,7 +19,25 @@ We need to get Robby’s opinion on whether simply using another
 submissions component is acceptable here, or we want something more
 elaborate.
 
+- Bulletin board
+
+Just a list of comments---this should be straightforward under the
+comment tab
+
 --------------------------------------
+
+Deploy
+[] Make some sample reviewers and reviews
+[] Give documents to existing papers
+[] Make some conflicts happen
+[] All cross-page launches
+  [] Review to admin
+  [] Paper to review
+  [] Review to submissions
+
+  Bigger features
+  [] Comments/bulletin board
+  [] Old review response flag for reviewers (just a component for sub)
 
 Accounts
 [x] (1) Associate Gmail accounts with existing accounts
