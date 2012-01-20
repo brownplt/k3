@@ -455,12 +455,12 @@ function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages,paperCaps)
 						if(r.submitted)
 							reviewed.push(new PaperEntry(basicInfo,pe,authCookie,'review_tab',defaultCols.concat(downloadCols)));
 						else
-							toreview.push(new PaperEntry(basicInfo,pe,authCookie,'review_tab',[shortNumberCol,authorCol,titleCol].concat(downloadCols),genAbstractRow(3+downloadCols.length)));
+							toreview.push(new PaperEntry(basicInfo,pe,authCookie,'review_tab',[shortNumberCol,authorCol,titleCol].concat(downloadCols),genAbstractRow(3+downloadCols.length,paperCaps[pe.id].getAbstract)));
 					}
 				},pe.reviewsInfo)
 			}
 			else
-				toreview.push(new PaperEntry(basicInfo,pe,authCookie,'review_tab',[shortNumberCol,authorCol,titleCol].concat(downloadCols),genAbstractRow(3+downloadCols.length)));
+				toreview.push(new PaperEntry(basicInfo,pe,authCookie,'review_tab',[shortNumberCol,authorCol,titleCol].concat(downloadCols),genAbstractRow(3+downloadCols.length,paperCaps[pe.id].getAbstract)));
 		},papers);
 		return [toreview,reviewed];
 	});
@@ -496,7 +496,8 @@ function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages,paperCaps)
 							TD({width:'8%',align:'right'},pct.percentage),
 							TD(DIV({className:'progress-dv'},
 								DIV({className:'progress-inner-dv',style:{width:pct.percentage=='N/A'?'100%':pct.percentage}},' ')))
-						);},pcts))),
+						);
+          },pcts))),
 				P({className:'action-link'},closeLink));
 	},displayTableB,allReviewsE.startsWith([]));
 	return DIVB(
