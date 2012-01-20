@@ -308,6 +308,8 @@ function makeAccountInfoTab(launchInfo, searchString, launchURL) {
     return r && !r.error;
   });
 
+  var loginlink = COMMON.urlPrefix + '/' + launchInfo.basicInfo.info.shortname +'/home';
+
   var googlesB = googleSuccessesE.startsWith(googles);
   var googleDivB = lift_b(function(googles) {
     if(googles.length === 0) {
@@ -327,6 +329,8 @@ function makeAccountInfoTab(launchInfo, searchString, launchURL) {
   else {
     continueDiv = 
       DIV(
+        P("This will let you log in with your email and the password " +
+          "you create at ", A({target:'_blank',href:loginlink}, loginlink), '.'),
         P(STRONG("This account has a password, but you can add another if you like.")),
         makeEmptyContinueDiv()
       );

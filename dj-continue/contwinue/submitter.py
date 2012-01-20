@@ -9,7 +9,7 @@ from contwinue.email import send_and_log_email, notFoundResponse
 
 from django.core.validators import validate_email
 from django.http import HttpResponseNotFound, HttpResponseNotAllowed
-from lib.py.common import logWith404, make_get_handler
+from lib.py.common import logWith404, make_get_handler, get_hashed
 
 logger = logging.getLogger('default')
 
@@ -265,7 +265,7 @@ class AddPasswordHandler(bcap.CapHandler):
     salt = str(uuid.uuid4())
     credentials = ContinueCredentials(
       username=user.email,
-      hashed_password=common.get_hashed(password, salt),
+      hashed_password=get_hashed(password, salt),
       salt=salt,
       account=user.account
     )
