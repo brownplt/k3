@@ -79,7 +79,7 @@ This link will take you a to a page where you can get started:
 
 %(base)s/review#%(key)s
 
-You can revisit this link as often as you like to edit your submission.  The
+You can revisit this link as often as you like to manage your reviews.  The
 page has instructions for creating an optional password-based account at your
 convenience.
 
