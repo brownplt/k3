@@ -206,6 +206,11 @@ class LaunchPaperViewHandler(bcap.CapHandler):
     })
     caps['getComments'] = bcap.grant('get-comments', paper)
 
+    component_caps = {}
+    for c in paper.component_set.exclude(type__fmt='Text'):
+      component_caps[c.id] = bcap.grant('get-component-file', c)
+    caps['getComponents'] = component_caps
+
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 
     if restpapers.count() > 0:

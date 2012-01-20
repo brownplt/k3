@@ -129,7 +129,8 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 			map(function(component) {
 				var ctype = fold(function(v, acc) {return acc ? acc : (v.id == component.typeID ? v : false);},false,basicInfo.components);
 				if (ctype.format != 'Text') {
-					return TR(TH(ctype.description,':'),TD(A({href:compLink(authCookie,that.paper.id,that.paper.title,component.typeID,component.value)},'Download')));
+					return TR(TH(ctype.description,':'),TD(A({target:'_blank',
+            href:caps.getComponents[component.id].serialize()},'Download')));
 				}
 				else
 					return '';

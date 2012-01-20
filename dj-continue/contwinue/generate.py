@@ -1,4 +1,5 @@
 from contwinue.models import *
+from contwinue.submitter import PaperUpdateComponentsHandler
 from django.http import HttpResponse
 from lib.py.generate_tools import rand_str, rand_email, rand_bool
 import logging
@@ -157,9 +158,13 @@ def generate(numusers=10):
       p.save()
       p.authors.add(contact)
       p.save()
-      component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
-        value="This is actually pretty short", mimetype='text/plain', conference=c)
-      component.save()
+      pcomp = get_one(ComponentType.objects.filter(abbr='P'))
+      f = open('testdata/testpdf.pdf', 'r')
+      filesDict = {
+        'P': f
+      }
+      handler = PaperUpdateComponentsHandler()
+      response = handler.post_files(p, {}, filesDict)
 
       abstract = get_one(ComponentType.objects.filter(abbr='A'))
       abs_comp = Component(type=abstract, paper=p, lastSubmitted=int(time.time()),

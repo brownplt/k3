@@ -28,5 +28,5 @@ def file_response(filename, response_name):
       mimetype = 'application/octet-stream'
 
     response = HttpResponse(file_data, mimetype=mimetype)
-    response['Content-Disposition'] = 'attachment; filename=%s' % response_name
+#    response['Content-Disposition'] = 'attachment; filename=%s' % response_name
     return response
