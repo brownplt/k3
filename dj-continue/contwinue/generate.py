@@ -31,6 +31,18 @@ def generate(numusers=10):
   Creates an admin/reviewer user (username: admin, pw: admin) and several 
   writer users (writer/writer, writer2/writer2, ..., writer10/writer10)
   """
+
+  names = ['Joe', 'Arjun', 'Matthias', 'Robby', 'Shriram', 'Matthew',\
+          'Sam', 'Vincent', 'Hannah', 'Andrew', 'Rodrigo', 'Stevie',
+          'John', 'Eli']
+  surnames = ['Granger', 'Potter', 'Dumbledore', 'MacGonnagal', \
+          'Snape', 'Flitwick', 'Hagrid', 'Weasley', 'Longbottom',\
+          'Skeeter', 'Krum', 'Ollivander']
+
+  def make_name():
+    return names[random.randint(0, len(names)-1)] + ' ' + \
+      surnames[random.randint(0, len(surnames)-1)]
+
   conferences = Conference.objects.all()
   if len(conferences) == 0:
     c = Conference.make_new('Sample Conference', 'SC', 'admin', 'admin',
@@ -64,7 +76,7 @@ def generate(numusers=10):
   if len(writer_users) != numusers:
     account = Account(key=str(uuid.uuid4()))
     account.save()
-    writer_user = User(username='writer', full_name='Joe Writer',
+    writer_user = User(username='writer', full_name=make_name(),
       email='joe@writer.com',
       conference=c,
       account=account)
@@ -79,7 +91,7 @@ def generate(numusers=10):
       account.save()
       nstr = str(n)
       writer_user = User(username='writer%s' % nstr, 
-        full_name='Joe Writer%s' % nstr, email='joe@writer%s.com' % nstr, 
+        full_name=make_name(), email='joe@writer%s.com' % nstr, 
         conference=c,
         account=account)
       writer_user.save()
@@ -99,7 +111,7 @@ def generate(numusers=10):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       rev_user = User(username='reviewer%s' % n, 
-        full_name='Joe Reviewer%s' % n, email='joe@reviewer%s.com' % n, 
+        full_name=make_name(), email='joe@reviewer%s.com' % n, 
         conference=c,
         account=account)
       rev_user.save()
