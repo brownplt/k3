@@ -158,6 +158,7 @@ function PaperView(paperInfo,curUser,basicInfo) {
 	};
 	this.getAssignDom = function(usersInfo,nextIdB) {
 		var allusers = {};
+    console.log('assign-domming');
 		var usersByBid = {};
 		var that = this;
 		map(function(b) {
@@ -420,7 +421,9 @@ function setPaperContent(currentTabB,paperInfoB,curUserB,basicInfoB,usersInfoB,e
 	var currentDomB = switch_b(currentTabB.transform_b(function(tab) {
 		switch(tab) {
 			case 'paper_assign_tab':
-				return switch_b(lift_b(function(o, u) {return (o && u) ? o.getAssignDom(u,nextIdB) : DIVB();}, currentObjB, usersInfoB));
+				return switch_b(lift_b(function(o, u) {
+          console.log('assign-tabbing: ', o, u);
+          return (o && u) ? o.getAssignDom(u,nextIdB) : DIVB();}, currentObjB, usersInfoB));
 			case 'paper_info_tab':
 				return lift_b(function(o) {return o ? o.getReviewsDom() : DIV();},currentObjB);
 			case 'paper_review_form_tab':
@@ -442,44 +445,44 @@ function loader() {
 	demoEventsE = consumer_e();
 	document.startDemo = function(cb) {demoEventsE.transform_e(function(evt) {cb(evt);});};
 
+  var capServer = new CapServer();
 	authCookie = $URL('cookie');
 	var onLoadTimeE = receiver_e();
 	var exceptsE = captureServerExcepts();
 	handleExcepts(exceptsE);
-	var basicInfoE = getBasicInfoE(onLoadTimeE);
-	doConfHead(basicInfoE);
 	paperReloadsE = consumer_e();
 	paperReloadsE.add_e(iframeLoad_e('astarget'));
-	var curUserE = getCurUserE(onLoadTimeE,authCookie);
-	var paperInfoE = getFilteredWSO_e(merge_e(onLoadTimeE,paperReloadsE).constant_e(
-		genRequest(
-			{url: 'Paper/'+$URL('id')+'/get',
-			fields: {cookie:$URL('cookie')},
-			asynchronous:false})
-	)).transform_e(function(paper) {paper.reviewStats = getReviewStats(paper.reviews); return paper;});
-	
+  var launchCap = launchCapFromKey(COMMON.urlPrefix, capServer);
+  var launchE = getE(onLoadTimeE.constant_e(launchCap));
+	var basicInfoE = getFieldE(launchE, 'basicInfo');
+	doConfHead(basicInfoE);
+	var curUserE = getFieldE(launchE, 'currentUser');
+
+  var paperCapsE = getFieldE(launchE, 'paperCaps');
+
+	var paperInfoE = getE(merge_e(launchE,paperReloadsE).snapshot_e(
+    getFieldE(paperCapsE, 'getPaper').startsWith(null)).filter_e(function(_) { 
+      console.log('Paper: ', _);
+      return _; })).
+	  transform_e(function(paper) {paper.reviewStats = getReviewStats(paper.reviews); return paper;});
+
 	var revertE = consumer_e();
 	var userReviewE = merge_e(
-		getFilteredWSO_e(onLoadTimeE.constant_e(
-			genRequest(
-				{url:  'Paper/'+$URL('id')+'/Review/get',
-				fields: {cookie:authCookie},
-				asynchronous: false})
-		)),
-		getFilteredWSO_e(revertE.constant_e(
-			genRequest(
-				{url:  'Paper/'+$URL('id')+'/Review/revert',
-				fields: {paper:$URL('id'),cookie:authCookie},
-				asynchronous: false})
-			).filter_e(function(_) {
+		getE(getFieldE(paperCapsE, 'getReview').filter_e(function(_) { return _; })),
+		postE(revertE.snapshot_e(getFieldE(paperCapsE,'revertReview').startsWith(null)).
+      filter_e(function(_) { return _; }).
+      transform_e(function(c) { return [c,{}]; })).
+			filter_e(function(_) {
 				return window.confirm('Are you sure you want to revert to your last published review? Anything you have entered since will be lost!');}
-			)
-		)
+			),
+    getFieldE(paperCapsE, 'getReview').filter_e(function(_) { 
+      return typeof _ === 'undefined';
+    }).constant_e(false)
 	);
 	var commentRevertE = consumer_e();
 	var commentSubmitE = consumer_e();
 	paperReloadsE.add_e(commentSubmitE);
-	var userCommentB = getFilteredWSO_e(merge_e(
+/*	var userCommentB = getFilteredWSO_e(merge_e(
 		merge_e(userReviewE.filter_e(function(ur) {return !ur;}),commentSubmitE)
 		.constant_e(
 			genRequest(
@@ -495,7 +498,8 @@ function loader() {
 		).filter_e(function(_) {
 			return window.confirm('Are you sure you want to revert to your last published comment? Anything you have entered since will be lost!');}
 		)
-	)).startsWith(false);
+	)).startsWith(false); */
+  var userCommentB = one_e(false).startsWith(false);
 
 	var uRolesE = lift_b(function(u, ur) {
 		var isadmin = inList('admin',u.rolenames);
@@ -516,8 +520,8 @@ function loader() {
 	var PaperTabs = new TabSet(
 		uRolesE.startsWith([]),
 		{
-			reviewing:[$('paper_review_form_tab')],
-			commenter:[$('paper_comment_form_tab')],
+			reviewing:[getObj('paper_review_form_tab')],
+			commenter:[getObj('paper_comment_form_tab')],
 			reviewer:$$('paper-tab'),user:[],loggedout:[],
 			admin:$$('paper-tab').concat($$('admin-tab'))
 		},
@@ -533,7 +537,7 @@ function loader() {
 	lift_b(function(bi,pi,ct) {
 		if(bi && pi) {
 			var ttl = bi.info.shortname + ' - #'+pi.id+': '+pi.title;
-			if(ct && $(ct)) ttl += ' ('+$(ct).title+')';
+			if(ct && getObj(ct)) ttl += ' ('+getObj(ct).title+')';
 			document.title = ttl;
 		}
 	},basicInfoE.startsWith(null),paperInfoE.startsWith(null),PaperTabs.currentTabB);
@@ -541,29 +545,26 @@ function loader() {
 	var intoAssignE = merge_e(
 		PaperTabs.currentTabB.changes().filter_e(function(t) {return t == 'paper_assign_tab';}),
 		$URL('mode') == 'paper_assign_tab' ? onLoadTimeE : receiver_e());
-	var usersInfoQueryE = merge_e(intoAssignE,iframeLoad_e('astarget')).constant_e(
-		genRequest(
-			{url:  'User/getByRole',
-			fields: {cookie:authCookie,role:'reviewer'}})
-	);
-	var usersInfoE = getFilteredWSO_e(usersInfoQueryE);
+	var usersInfoQueryE = merge_e(launchE,intoAssignE,iframeLoad_e('astarget')).
+    snapshot_e(getFieldE(paperCapsE, 'getByRole').startsWith(null)).
+    filter_e(function(_) { return _; }).
+    transform_e(function(cap) { return [cap, {role: 'reviewer'}]; });
+	var usersInfoE = postE(usersInfoQueryE);
 	var intoOptionsE = merge_e(
 		PaperTabs.currentTabB.changes().filter_e(function(t) {return t == 'paper_options_tab';}),
 		$URL('mode') == 'paper_options_tab' ? onLoadTimeE : receiver_e());
-	var extnsQueryE = intoOptionsE.constant_e(
-		genRequest(
-			{url:  'Paper/'+$URL('id')+'/getDeadlineExts',
-			fields: {cookie:authCookie}})
-	);
-	var extensionsE = getFilteredWSO_e(extnsQueryE);
+	var extnsQueryE = intoOptionsE.snapshot_e(
+    getFieldE(paperCapsE, 'getDeadlines').startsWith(null)).filter_e(id);
+	var extensionsE = getE(extnsQueryE);
 
-	var nextIdB = getFilteredWSO_e(intoAssignE.constant_e(
-		genRequest(
-			{url:	'Paper/'+$URL('id')+'/getNextID',
-			fields: {cookie:authCookie}})
-	)).startsWith(0);
+	var nextIdB = merge_e(launchE,intoAssignE).snapshot_e(
+      getFieldE(paperCapsE, 'nextPaper').startsWith(null)).
+      filter_e(function(_) { 
+        console.log('nextpaper: ', _);
+        return _; }).
+    startsWith(0);
 
-	$('back_to_list_tab').href = 'continue.html?cookie='+$URL('cookie')+'&tab='+$URL('tab');
+	getObj('back_to_list_tab').href = 'continue.html?cookie='+$URL('cookie')+'&tab='+$URL('tab');
 
 	setPaperContent(
 			PaperTabs.currentTabB,paperInfoE.startsWith(null),curUserE.startsWith(null),

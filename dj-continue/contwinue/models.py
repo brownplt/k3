@@ -592,14 +592,18 @@ class Paper(belay.Grantable):
       'title': self.title,
       'target': self.target.to_json(),
       'author': self.contact.full_name,
+      'contact': self.contact.to_json(),
       'topics': [t.to_json() for t in self.topic_set.all()],
-      'components': [c.to_json() for c in self.my(Component)]
+      'components': [c.to_json() for c in self.my(Component)],
     }
     return paper_json
 
   def get_paper_with_decision(self):
     paper_json = self.get_paper()
     paper_json['decision'] = self.decision.to_json()
+    paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
+    paper_json['bids'] = [b.to_json() for b in self.my(Bid)]
+    return paper_json
 
 
   def get_component(self, ct):
@@ -623,6 +627,9 @@ class Paper(belay.Grantable):
     else:
       self.other_cats = False
     return None
+
+class Comment(belay.Grantable):
+  paper = models.ForeignKey(Paper)
 
 class Bid(belay.Grantable):
   bidder = models.ForeignKey(User)

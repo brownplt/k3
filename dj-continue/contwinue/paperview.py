@@ -163,13 +163,14 @@ class LaunchPaperViewHandler(bcap.CapHandler):
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 
-    #TODO(joe): abstract this pattern into a function
-    caps['nextPaper'] = "%s/paperview/#%s" % (
-      bcap.this_server_url_prefix(),
-      bcap.cap_for_hash(bcap.grant('launch-paperview', {
-        'user': user, 'paper': paper
-      }))
-    )
+    if restpapers.count() != 0:
+      #TODO(joe): abstract this pattern into a function
+      caps['nextPaper'] = "%s/paperview/#%s" % (
+        bcap.this_server_url_prefix(),
+        bcap.cap_for_hash(bcap.grant('launch-paperview', {
+          'user': user, 'paper': paper
+        }))
+      )
     caps['backToList'] = "%s/review/#%s" % (
       bcap.this_server_url_prefix(),
       bcap.cap_for_hash(bcap.grant('launch-reviewer', user))
@@ -177,6 +178,7 @@ class LaunchPaperViewHandler(bcap.CapHandler):
 
     rev = m.Review.get_published_by_user_and_paper(user, paper)
     if rev:
+      caps['getReview'] = bcap.grant('get-review', rev)
       caps['saveReview'] = bcap.grant('save-review', rev)
       caps['revertReview'] = bcap.grant('revert-review', rev)
     return bcap.bcapResponse({

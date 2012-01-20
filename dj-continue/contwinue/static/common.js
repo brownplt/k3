@@ -370,3 +370,5 @@ function one_e(val) {
   rec.sendEvent(val);
   return rec;
 }
+
+function id(_) { return _; }
