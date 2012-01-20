@@ -385,6 +385,7 @@ class ComponentType(belay.Grantable):
   deadline = models.IntegerField()
   grace_hours = models.IntegerField()
   mandatory = models.BooleanField()
+  protected = models.BooleanField(default=False)
   conference = models.ForeignKey(Conference)
 
   def to_json(self):
@@ -600,9 +601,7 @@ class Paper(belay.Grantable):
 
   def get_paper_with_decision(self):
     paper_json = self.get_paper()
-    paper_json['decision'] = self.decision.to_json()
     paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
-    paper_json['bids'] = [b.to_json() for b in self.my(Bid)]
     paper_json['hidden'] = self.hidden
     return paper_json
 
@@ -683,6 +682,11 @@ class Component(belay.Grantable):
       'value': self.value,
       'getComponent': get_cap
     }
+
+#class ComponentGrantRequest(belay.Grantable):
+#  reviewer = models.ForeignKey(User)
+#  component = models.ForeignKey(Component)
+#  granted = models.BooleanColumn(default=False)
 
 class DeadlineExtension(belay.Grantable):
   type = models.ForeignKey(ComponentType)

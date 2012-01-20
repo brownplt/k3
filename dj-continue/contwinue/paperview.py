@@ -21,6 +21,7 @@ class GetPaperHandler(bcap.CapHandler):
     user = granted['user'].user
     response = paper.get_paper_with_decision()
     if paper.can_see_reviews(user):
+      response['decision'] = paper.decision.to_json()
       response['bids'] = [b.to_json() for b in paper.bid_set.all()]
       response['reviews'] = [r.to_json() for r in paper.get_published()]
     return bcap.bcapResponse(response)

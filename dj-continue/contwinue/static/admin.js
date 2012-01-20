@@ -5,7 +5,7 @@ function deleteTransform(caps,evt) {
 	}));
 }
 
-function makeDecisionsTable(decisions,targetable,addDecision) {
+function makeDecisionsTable(decisions,targetable,deleteDecision,addDecision) {
 	return new ModListWidget(
 		filter(function(d) {return targetable==d.targetable;},decisions),
 		TR(TH('Abbr'),TH('Description'),TD()),
@@ -14,7 +14,7 @@ function makeDecisionsTable(decisions,targetable,addDecision) {
 				{del: new LinkWidget('delete')},
 				function() {return obj},
 				function(_,bob) {return TR(TD(obj.abbr),TD(obj.description),TD((obj.abbr == 'R' || obj.abbr == 'U') ? '' : bob.del));});
-			ret.events.del = deleteTransform('DecisionValue',ret.events.del);
+			ret.events.del = deleteTransform(deleteDecision,ret.events.del);
 			return ret;
 		},
 		function() {
@@ -24,11 +24,12 @@ function makeDecisionsTable(decisions,targetable,addDecision) {
 				{value: new ButtonWidget('Add')},
 				function(a,d,t) {return {cookie:authCookie,abbr:a,description:d,targetable:targetable?'yes':'no'};},
 				function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(is[2]),TD(bs.value));})
-			.serverSaving(function(v) {return genRequest({url:'DecisionValue/add',fields:v});},true);
+			.belayServerSaving(function(v) {return genRequest({fields:v});},true,
+        addDecision);
 		}).dom;
 }
 
-function makeTopicsTable(topics) {
+function makeTopicsTable(topics, deleteTopics, addTopic) {
 	return new ModListWidget(
 		topics,
 		TR(TH('Name'),TD()),
@@ -37,7 +38,7 @@ function makeTopicsTable(topics) {
 				{del: new LinkWidget('Delete')},
 				function() {return obj;},
 				function(_,bob) {return TR(TD(obj.name),TD(bob.del));});
-			ret.events.del = deleteTransform('Topic',ret.events.del);
+			ret.events.del = deleteTransform(deleteTopics,ret.events.del);
 			return ret;
 		},
 		function() {
@@ -46,7 +47,8 @@ function makeTopicsTable(topics) {
 				{value: new ButtonWidget('Add')},
 				function(n) {return {cookie:authCookie,name:n};},
 				function(is,bs) {return TR(TD(is[0]),TD(bs.value));})
-			.serverSaving(function(v) {return genRequest({url:'Topic/add',fields:v});},true);
+			.belayServerSaving(function(v) {return genRequest({fields:v});},
+        true, addTopic);
 		}).dom;
 }
 
@@ -69,8 +71,8 @@ function makeRCompsTable(rcomps, addcomp, deletecomps) {
 				{value:new ButtonWidget('Add')},
 				function(d,p) {return {cookie:authCookie,description:d,pconly:(p ? 'yes' : 'no')};},
 				function(is,bs) {return TR(TD(is[0]),TD(is[1]),TD(bs.value));})
-			.capStreamServerSaving(function(v) {return genRequest({fields:v});},
-         true, function(v) { return addcomp[v.id]; });
+			.belayServerSaving(function(v) {return genRequest({fields:v});},
+         true, addcomp);
 		}).dom;
 }
 
@@ -154,9 +156,11 @@ function UserTableWidget(usersB,isPC,curUser,adminInfo) {
 		this.getObj = function() {return this.user;};
 		this.getDoms = function() {
 			var user = this.user;
-			var deleteLnk = A({href:'javascript://Delete'},'[delete]');
-			deletionClicksE.add_e(extractEvent_e(deleteLnk,'click').constant_e(user));
-			var emailLnk = A({href:'javascript://Change'},'[change]');
+      var deleteLnk = SPAN();
+//			var deleteLnk = A({href:'javascript://Delete'},'[delete]');
+//			deletionClicksE.add_e(extractEvent_e(deleteLnk,'click').constant_e(user));
+      var emailLnk = SPAN();
+//			var emailLnk = A({href:'javascript://Change'},'[change]');
 			var changeBtn = INPUT({'type':'button','value':'OK'});
 			var changeField = INPUT({'type':'text','value':user.email});
 			var changedE = getFilteredWSO_e(
@@ -275,7 +279,7 @@ function loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE,emailCapE) {
 				'email-from','beginning');
 }
 
-function loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE) {
+function loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE,setRolesE) {
 	var pcTableB = lift_b(function(cu,ai) {
 		if(cu && ai)
 			return new UserTableWidget(usersByRoleB.transform_b(function(_) {return _.pc;}),true,cu,ai);
@@ -286,11 +290,13 @@ function loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE) {
 	var roleChangeE = switch_e(pcTableB.changes().transform_e(function(_) {return _.events.roleChanged;}))
 	var pcDomB = switch_b(pcTableB.transform_b(function(_) {return _.dom;}));
 
-	getFilteredWSO_e(roleChangeE.transform_e(function(rcreq) {
-		return genRequest(
-			{url:'User/'+rcreq.id+'/setRole',
-			fields:{cookie:authCookie,role:rcreq.role,value:rcreq.value?'on':'off'}});
-		}));
+	postE(lift_b(function(rc, setroles) {
+    if (!rc || !setroles) return null;
+    return [setroles[rc.id],
+            {role:rc.role, value:rc.value?'on':'off'}];
+  }, roleChangeE.startsWith(null), setRolesE.startsWith(null)).
+    changes().filter_e(id));
+
 	var adminUsersB = lift_b(function(ui,_) {return filter(function(u) {return inList('admin',u.rolenames);},ui.pc);},usersByRoleB,roleChangeE.startsWith(null));
 
 	var dcAdmB = lift_b(function(adminfo,admins) {
@@ -435,10 +441,11 @@ function loader() {
  insertValueE(methodE(getFieldE(launchE, 'configure'), 'serialize', []), 'configure', 'action');
 
   var setContactE = getFieldE(launchE, 'setContact');
+  var setRolesE = getFieldE(launchE, 'setRoles');
   var dvCapsE = getFieldE(launchE, 'getPapersOfDV');
   var emailCapE = getFieldE(launchE, 'sendEmails');
 	loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE,emailCapE);
-	loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE);
+	loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE,setRolesE);
 
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.name;}),'conference_name','value');
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.shortname;}),'conference_short_name','value');
@@ -447,9 +454,15 @@ function loader() {
 	insertValueE(authorTextE.transform_e(function(at) {return at[0];}),'general_text','checked');
 	insertValueE(authorTextE.transform_e(function(at) {return at[1];}),'component_text','checked');
 
-	var categoriesTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeDecisionsTable(bi.decisions,true);}).startsWith(DIVB()));
-	var decisionsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeDecisionsTable(bi.decisions,false);}).startsWith(DIVB()));
-	var topicsTableB = switch_b(basicInfoE.transform_e(function(bi) {return makeTopicsTable(bi.topics);}).startsWith(DIVB()));
+	var categoriesTableB = switch_b(lift_e(function(bi, li) {
+    return makeDecisionsTable(bi.decisions,true,li.deleteDVs,li.addDecisionValue);
+  }, basicInfoE, launchE).startsWith(DIVB()));
+	var decisionsTableB = switch_b(lift_e(function(bi, li) {
+    return makeDecisionsTable(bi.decisions,false,li.deleteDVs,li.addDecisionValue);
+  }, basicInfoE, launchE).startsWith(DIVB()));
+	var topicsTableB = switch_b(lift_e(function(bi, li) {
+    return makeTopicsTable(bi.topics,li.deleteTopics, li.addTopic);
+  },basicInfoE, launchE).startsWith(DIVB()));
 	var componentsTableB = switch_b(lift_e(function(bi, li) {
     return makeComponentsTable(bi, li.addComponentType,
       li.changeComponentTypes,

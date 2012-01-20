@@ -85,12 +85,12 @@ class DeleteDecisionValueHandler(bcap.CapHandler):
 
 class AddReviewComponentTypeHandler(bcap.CapHandler):
   def post_arg_names(self):
-    return ['description', 'pcOnly']
+    return ['description', 'pconly']
 
   def post(self, granted, args): 
     conference = granted.conference
     description = args['description']
-    pc_only = args['pcOnly']
+    pc_only = args['pconly']
 
     if conference.has_rc_type(description, pc_only):
       rct = conference.get_rc_type(description, pc_only)

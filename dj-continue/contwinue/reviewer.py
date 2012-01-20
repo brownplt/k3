@@ -218,6 +218,12 @@ class LaunchReviewerHandler(bcap.CapHandler):
         paper_caps['compsCaps'] = comps_caps
       papers_caps[paper.id] = paper_caps
 
+    if 'admin' in reviewer.rolenames:
+      launchAdmin = "%s/admin#%s" % (
+        bcap.this_server_url_prefix(),
+        bcap.cap_for_hash(bcap.grant('launch-admin', reviewer))
+      )
+
     users = conf.users_by_role_name('reviewer')
     users_caps = {}
     for user in users:
@@ -226,6 +232,7 @@ class LaunchReviewerHandler(bcap.CapHandler):
       }
       users_caps[user.id] = user_caps
 
+
     return bcap.bcapResponse({
       'basicInfo': conf.get_admin_basic(),
       'addPassword': bcap.grant('add-password', reviewer),
@@ -233,6 +240,7 @@ class LaunchReviewerHandler(bcap.CapHandler):
       'credentials': reviewer.get_credentials(),
       'email': reviewer.email,
       'currentUser': reviewer.to_json(),
+      'launchAdmin': launchAdmin,
 
       'paperCaps': papers_caps,
       'userCaps': users_caps,

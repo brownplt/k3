@@ -438,10 +438,12 @@ function makeAllTable(papersB,basicInfo) {
 	return tbl.dom;
 }
 
-function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages) {
+function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages,paperCaps) {
 	var downloadCols = map(function(dc) {
 			return new Column('download',dc.description,function(a,b) {return 0;},
-		function (paper,cookie,tab) {return TD(paper.dcobj[dc.id] ? A({href:compLink(cookie,paper.id,paper.title,dc.id,paper.dcobj[dc.id].value)},'Download') : '');});},
+		function (paper,cookie,tab) {
+      return TD(paper.dcobj[dc.id] ? A({target:'_blank',
+      href:paperCaps[paper.id].compsCaps[dc.id].serialize()},'Download') : '');});},
 		filter(function(c) {return c.format != 'Text';},basicInfo.components));
 	var trListsB = papersB.transform_b(function(papers) {
 		var toreview = [];
@@ -717,7 +719,7 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 				if(!atb) atb = constant_b(makeAllTable(ncSummariesB,basicInfo));
 				return atb;
 			case 'review_tab':
-				if(!rtb) rtb = constant_b(makeReviewTable(ncSummariesB,basicInfo,curUser,launchInfo.getPercentages));
+				if(!rtb) rtb = constant_b(makeReviewTable(ncSummariesB,basicInfo,curUser,launchInfo.getPercentages,launchInfo.paperCaps));
 				return rtb;
 			case 'assign_tab':
 				if(!astb) astb = constant_b(makeAssignTable(ncSummariesB,basicInfo));
@@ -837,10 +839,10 @@ function loader() {
 				});
 			setTitle(basicInfo,MainTabs.currentTabB);
 			insertValueB(MainTabs.currentTabB.transform_b(function(ct){return (ct == null || ct == 'logout_tab') ? 'none' : 'block';}),'maintabs','style','display');
-			getObj('admin_tab').href = 'admin.html?cookie='+authCookie;
 			insertValueB(showLoadBoxE.transform_e(function(_) {return _ ? 'block' : 'none'}).startsWith('none'),'loadbox','style','display');
 			var olt2E = receiver_e();
-      
+      getObj('admin_tab').href = launchInfo.launchAdmin;
+      getObj('admin_tab').target = '_blank';
 	    insertDomB(switch_b(accountTabB),'account_placeholder');
       MainTabs.displayOn('account_tab', 'account_content');
 			loadPaperLists(MainTabs,olt2E,userInfo,basicInfo,launchInfo);
