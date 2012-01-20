@@ -218,6 +218,7 @@ class LaunchReviewerHandler(bcap.CapHandler):
         paper_caps['compsCaps'] = comps_caps
       papers_caps[paper.id] = paper_caps
 
+    launchAdmin = "#";
     if 'admin' in reviewer.rolenames:
       launchAdmin = "%s/admin#%s" % (
         bcap.this_server_url_prefix(),
