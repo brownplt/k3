@@ -137,7 +137,7 @@ def generate(numusers=10):
       contacts = User.objects.filter(username=username)
       contact = contacts[0]
       target = targets[n % len(targets)]
-      p = Paper(contact=contact, author=contact.full_name, target=target,
+      p = Paper(contact=contact, target=target,
         other_cats=(not (odd_true(n))), pc_paper=odd_true(n), hidden=False,
         conference=c, title=titles[n % len(titles)], decision=c.default_decision)
       p.save()

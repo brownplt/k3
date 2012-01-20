@@ -519,7 +519,6 @@ class Paper(belay.Grantable):
   contact = models.ForeignKey(User)
   authors = models.ManyToManyField(User, related_name='papers')
   unverified_authors = models.ManyToManyField(UnverifiedUser)
-  author = models.TextField()
   title = models.TextField(default='No Paper Title Given')
   target = models.ForeignKey(DecisionValue)
   decision = models.ForeignKey(DecisionValue, related_name='decision')
@@ -543,6 +542,8 @@ class Paper(belay.Grantable):
     return p
 
   contact_email = property(fget=lambda p: p.contact.email)
+
+  author = property(fget=lambda p: p.contact.full_name)
 
   topics = property(fget=lambda p: [t for t in p.topic_set.all()])
 
