@@ -52,7 +52,7 @@ class GetPaperSummariesHandler(bcap.CapHandler):
           ourflds = flds + ['reviews_info']
           memo = True
       else:
-        ourfld = flds
+        ourflds = flds
       if obj.has_conflict(user):
         r['hasconflict'] = True
       else:

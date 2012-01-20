@@ -167,3 +167,9 @@ Misc
 [] () Default return of a CapHandler should be bcapResponsed, special
       returns should be available for files, html, etc.
 
+Notes:
+
+[] Comments: up or down?
+[] Comments: shown to conflicted?
+[] Conflicted interface: show checkbox for each reviewer on submission?
+
