@@ -58,27 +58,12 @@ def generate(numusers=10):
   else:
     writer_role = writer_roles[0]
 
-
-  writer_bios = ComponentType.objects.filter(abbr='B')
-  if len(writer_bios) == 0:
-    writer_bio = ComponentType(abbr='B', description='Writer Bio', fmt='Any',
-      size_limit=20000, deadline=int(time.time())+(86400*15), mandatory=False,
-      grace_hours=48, conference=c)
-    writer_bio.save()
-
-  extended_abstracts = ComponentType.objects.filter(abbr='C')
-  if len(extended_abstracts) == 0:
-    extended_abstract = ComponentType(abbr='C', description='Extended Abstract',
-      fmt='Text', size_limit=1000, deadline=int(time.time())+1, mandatory=False,
-      grace_hours=96, conference=c)
-    extended_abstract.save()
-
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != numusers:
     account = Account(key=str(uuid.uuid4()))
     account.save()
-    writer_user = User(username='writer', full_name=make_name(),
-      email='joe@writer.com',
+    writer_user = User(username='writer@fake.lala', full_name=make_name(),
+      email='writer@fake.lala',
       conference=c,
       account=account)
     # 2 saves because you can't add ManyToMany relationships until the instance
@@ -91,8 +76,8 @@ def generate(numusers=10):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       nstr = str(n)
-      writer_user = User(username='writer%s' % nstr, 
-        full_name=make_name(), email='joe@writer%s.com' % nstr, 
+      writer_user = User(username='writer%s@fake.lala' % nstr, 
+        full_name=make_name(), email='writer%s@fake.lala' % nstr, 
         conference=c,
         account=account)
       writer_user.save()
@@ -112,7 +97,7 @@ def generate(numusers=10):
       account = Account(key=str(uuid.uuid4()))
       account.save()
       rev_user = User(username='reviewer%s' % n, 
-        full_name=make_name(), email='joe@reviewer%s.com' % n, 
+        full_name=make_name(), email='reviewer%s@fake.lala' % n, 
         conference=c,
         account=account)
       rev_user.save()
@@ -146,9 +131,9 @@ def generate(numusers=10):
     targets = DecisionValue.objects.filter(targetable=True)
     for n in range(numusers):
       if n == 0:
-        username = 'writer'
+        username = 'writer@fake.lala'
       else:
-        username = 'writer%s' % str(n+1)
+        username = 'writer%s@fake.lala' % str(n+1)
       contacts = User.objects.filter(username=username)
       contact = contacts[0]
       target = targets[n % len(targets)]
