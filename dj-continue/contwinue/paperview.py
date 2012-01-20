@@ -39,7 +39,7 @@ class SaveReviewHandler(bcap.CapHandler):
     if 'submit' in args and args['submit'] == 'yes':
       prev.submitted = True
       prev.fill(**args)
-      conf.update_last_change(granted.review.paper)
+      prev.conf.update_last_change(prev.paper)
       prev.save()
 
     return bcap.bcapResponse(therev.to_json())
@@ -158,8 +158,11 @@ class LaunchPaperViewHandler(bcap.CapHandler):
       caps['getDeadlines'] = bcap.grant('get-deadlines', paper)
       caps['assignReviewers'] = bcap.grant('assign-reviewers', paper)
       caps['getByRole'] = bcap.grant('get-by-role', conf)
+      caps['updateDecision'] = bcap.grant('update-decision', paper)
+      caps['setHidden'] = bcap.grant('set-hidden', paper)
 
     caps['getPaper'] = bcap.grant('get-paper', paper)
+    caps['updateBids'] = bcap.grant('update-bids', user)
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 
@@ -178,7 +181,9 @@ class LaunchPaperViewHandler(bcap.CapHandler):
 
     rev = m.Review.get_published_by_user_and_paper(user, paper)
     if rev:
-      caps['getReview'] = bcap.grant('get-review', rev)
+      caps['getReview'] = bcap.grant('get-review', {
+        'user': user, 'paper': paper
+      })
       caps['saveReview'] = bcap.grant('save-review', rev)
       caps['revertReview'] = bcap.grant('revert-review', rev)
     return bcap.bcapResponse({

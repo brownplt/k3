@@ -603,6 +603,7 @@ class Paper(belay.Grantable):
     paper_json['decision'] = self.decision.to_json()
     paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
     paper_json['bids'] = [b.to_json() for b in self.my(Bid)]
+    paper_json['hidden'] = self.hidden
     return paper_json
 
 

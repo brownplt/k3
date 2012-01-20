@@ -62,7 +62,7 @@ function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,t
 }
 inheritFrom(SSRWidget,InputWidget)
 
-function PaperView(paperInfo,curUser,basicInfo) {
+function PaperView(paperInfo,curUser,basicInfo,caps) {
 	this.paper = paperInfo;
 	this.user = curUser;
 	this.basicInfo = basicInfo;
@@ -98,11 +98,9 @@ function PaperView(paperInfo,curUser,basicInfo) {
 		if(inList('admin',this.user.rolenames)) {
 			var dsw = new SelectWidget(that.paper.decision.id, 
 					map(function(de) {return OPTION({value:de.id},de.description); }, that.basicInfo.decisions));
-			var chdec = getFilteredWSO_e(dsw.behaviors.value.changes().transform_e(function(dec) {
-				return genRequest(
-					{url:'Paper/'+that.paper.id+'/updateDecision',
-					fields:{cookie:authCookie,decision:dec}});
-			}));
+			var chdec = postE(dsw.behaviors.value.changes().transform_e(function(dec) {
+				return [caps.updateDecision, {decision:dec}];
+      }));
 			decsel = dsw.greyOutable(merge_e(dsw.behaviors.value.changes().constant_e(true),chdec.constant_e(false)).startsWith(false)).dom;
 		}
 		else
@@ -112,9 +110,10 @@ function PaperView(paperInfo,curUser,basicInfo) {
 			TR(TH('Your Bid:'),TD(
 						new SelectWidget(
 							fold(function(v, acc) {return v.bidderID == that.user.id ? v.valueID : acc;},that.basicInfo.info.defaultBidID,that.paper.bids),
-							map(function(bv) {return OPTION({value:bv.id},bv.abbr + ' - '+bv.description);},that.basicInfo.bids)).serverSaving(function(bidid) {
-								return genRequest({url:'updateBids',
-												  fields:{cookie:authCookie,bid:bidid,papers:that.paper.id}});}).dom)) : '';
+							map(function(bv) {return OPTION({value:bv.id},bv.abbr + ' - '+bv.description);},that.basicInfo.bids)).
+              belayServerSaving(function(bidid) {
+								return genRequest({fields:{bid:bidid,papers:that.paper.id}});
+              }, false, caps.updateBids).dom)) : '';
 
 		var targetables = fold(function(v, acc) {return v.targetable ? acc+1 : acc;},0,basicInfo.decisions);
 
@@ -197,7 +196,7 @@ function PaperView(paperInfo,curUser,basicInfo) {
 
 		return DIVB(
 			this.getInfoTable(false),
-			FORMB({target:'astarget',action:'Paper/'+this.paper.id+'/assignReviews',method:'post'},
+			FORMB({target:'astarget',action:caps.assignReviewers.serialize(),method:'post'},
 				INPUT({type:'hidden',name:'cookie',value:authCookie}),
 				map(function(bt) {
 					if (bt.abbr == 'V' || usersByBid[bt.id].length == 0)
@@ -244,10 +243,7 @@ function PaperView(paperInfo,curUser,basicInfo) {
 			flds.subreviewer = subrev;
 			flds.submit = (submit ? 'yes' : 'no');
 			flds.cookie = authCookie;
-			return genRequest({
-				url: 'Paper/'+that.paper.id+'/Review/save',
-				request: 'post',
-				fields: flds });
+			return [caps.saveReview, flds];
 		};
 
 		var revForm = new SSRWidget([overallBox,expertiseBox,srBox].concat(ctas),
@@ -274,22 +270,22 @@ function PaperView(paperInfo,curUser,basicInfo) {
 					btmStDom);
 			},
 			function(saveE) {
-				return getFilteredWSO_e(saveE.transform_e(function(vals) {
+				return postE(saveE.transform_e(function(vals) {
 					return genSaveReq(slice(vals,3),vals[0],vals[1],vals[2],false);
 				}));
 			},
 			function(submitE) {
-				return getFilteredWSO_e(submitE.transform_e(function(vals) {
+				return postE(submitE.transform_e(function(vals) {
 					return genSaveReq(slice(vals,3),vals[0],vals[1],vals[2],true);
 				}).filter_e(function(rq) {
 					var problems = '';
-					if(rq.fields.overallrating == that.basicInfo.info.defaultOverallID)
+					if(rq[1].overallrating == that.basicInfo.info.defaultOverallID)
 						problems += 'You have not set a valid rating for the paper.\n' 
-					if(rq.fields.expertiserating == that.basicInfo.info.defaultExpertiseID)
+					if(rq[1].expertiserating == that.basicInfo.info.defaultExpertiseID)
 						problems += 'You have not rated your expertise for this paper.\n'
 					var vs = false;
 					map(function(bc) {
-						if(!bc.pconly && rq.fields['comp-'+bc.id].length < 100 && !vs) {
+						if(!bc.pconly && rq[1]['comp-'+bc.id].length < 100 && !vs) {
 							vs = true;
 							problems += 'You have entered a very short review.\n'
 						}
@@ -374,10 +370,8 @@ function PaperView(paperInfo,curUser,basicInfo) {
 	};
 	this.getOptDom = function(extensions) {
 		hidecb = INPUT({type:'checkbox',checked:(that.paper.hidden)});
-		getFilteredWSO_e($B(hidecb).changes().transform_e(function(_) {
-				return genRequest(
-					{url:'Paper/'+that.paper.id+'/setHidden',
-					fields: {cookie:authCookie,hidden:(_?'yes':'no')}});
+		postE($B(hidecb).changes().transform_e(function(_) {
+				return [caps.setHidden, {hidden: _ ? 'yes':'no'}];
 		}));
 
 		var extns = toObj(extensions,function(e) {return e.typeID;});
@@ -409,14 +403,16 @@ function PaperView(paperInfo,curUser,basicInfo) {
 	}
 }
 
-function setPaperContent(currentTabB,paperInfoB,curUserB,basicInfoB,usersInfoB,extensionsB,userReviewB,userCommentB,nextIdB,revertE,commentRevertE,commentSubmitE) {
-	var currentObjB = lift_b(function(paperInfo,curUser,basicInfo) {
-		if (paperInfo == null || curUser == null || basicInfo == null)
+function setPaperContent(currentTabB,paperInfoB,curUserB,basicInfoB,usersInfoB,extensionsB,userReviewB,userCommentB,nextIdB,revertE,commentRevertE,commentSubmitE,
+capsB) {
+	var currentObjB = lift_b(function(paperInfo,curUser,basicInfo,caps) {
+		if (paperInfo == null || curUser == null || basicInfo == null ||
+        caps == null)
 			return null;
 		else {
-			return new PaperView(paperInfo, curUser, basicInfo);
+			return new PaperView(paperInfo, curUser, basicInfo, caps);
 		}
-	},paperInfoB, curUserB, basicInfoB);
+	},paperInfoB, curUserB, basicInfoB, capsB);
 
 	var currentDomB = switch_b(currentTabB.transform_b(function(tab) {
 		switch(tab) {
@@ -569,7 +565,7 @@ function loader() {
 	setPaperContent(
 			PaperTabs.currentTabB,paperInfoE.startsWith(null),curUserE.startsWith(null),
 			basicInfoE.startsWith(null),usersInfoE.startsWith(null),extensionsE.startsWith(null),
-			userReviewE.startsWith(false),userCommentB,nextIdB,revertE,commentRevertE,commentSubmitE);
+			userReviewE.startsWith(false),userCommentB,nextIdB,revertE,commentRevertE,commentSubmitE,paperCapsE.startsWith(null));
 
 	onLoadTimeE.sendEvent('loaded!');
 	
