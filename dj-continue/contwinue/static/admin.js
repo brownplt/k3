@@ -213,7 +213,7 @@ function UserTableWidget(usersB,isPC,curUser,adminInfo) {
 	this.events.roleChanged = roleChangeE;
 }
 
-function loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE) {
+function loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE,emailCapE) {
 	var emailDecisionDomB = basicInfoE.transform_e(function(basicInfo) {
 		return SELECT({name:'email-decision'},
 			map(function(dec) {
@@ -251,12 +251,13 @@ function loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE) {
 
 	var psE = merge_e(extractEvent_e('email-preview','click').constant_e('preview'),extractEvent_e('email-send','click').constant_e('send'))
 
-	var emailsE = getFilteredWSO_e(snapshot_e(psE,lift_b(function(stage,emailees,subject,body,reviews) {
+	var emailsE = postE(snapshot_e(psE,lift_b(function(stage,emailees,subject,body,reviews,cap) {
+    if (!cap) { return null; }
 		var uids = map(function(u) {return u.id;},emailees);
-		return genRequest(
-			{url: 'User/sendEmails',
-			fields: {cookie:authCookie,stage:stage,sendReviews:reviews,users:uids,subject:subject,body:body}});
-	},psE.startsWith('preview'),emaileesB,$B('email-subject'),$B('email-message'),sendReviewsB)));
+		return [cap, genRequest(
+			{stage:stage,sendReviews:reviews,users:uids,subject:subject,body:body})];
+	},psE.startsWith('preview'),emaileesB,$B('email-subject'),$B('email-message'),sendReviewsB,
+      emailCapE.startsWith(null))).filter_e(id));
 	
 	var emailContentE = emailsE.transform_e(function(pvs) {
 		if(pvs.sent) return P(STRONG('Emails sent.')); else return DIV({className:'email-preview'},H3('Full text of emails to send:'),map(function(u) {
@@ -435,7 +436,8 @@ function loader() {
 
   var setContactE = getFieldE(launchE, 'setContact');
   var dvCapsE = getFieldE(launchE, 'getPapersOfDV');
-	loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE);
+  var emailCapE = getFieldE(launchE, 'sendEmails');
+	loadComm(basicInfoE,adminInfoE,usersByRoleB,dvCapsE,emailCapE);
 	loadUserTables(curUserE,adminInfoE,usersByRoleB,setContactE);
 
 	insertValueE(basicInfoE.transform_e(function(bi) {return bi.info.name;}),'conference_name','value');

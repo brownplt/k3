@@ -294,7 +294,7 @@ class Conference(belay.Grantable):
   def get_admin(self):
     return {
       # TODO(matt): name? username? email?
-      'adminContact' : self.admin_contact.email,
+      'adminContact' : self.admin_contact.to_json(),
       'dsCutoffHi' : self.ds_cutoff_hi,
       'dsCutoffLo' : self.ds_cutoff_lo,
       'dsConflictCut' : self.ds_conflict_cut

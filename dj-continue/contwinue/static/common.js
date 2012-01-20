@@ -329,7 +329,7 @@ function makeAccountInfoTab(launchInfo, searchString, launchURL) {
   else {
     continueDiv = 
       DIV(
-        P("This will let you log in with your email and the password " +
+        P("This will let you log in as ", STRONG(launchInfo.email), " with the password " +
           "you create at ", A({target:'_blank',href:loginlink}, loginlink), '.'),
         P(STRONG("This account has a password, but you can add another if you like.")),
         makeEmptyContinueDiv()

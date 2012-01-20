@@ -232,7 +232,7 @@ class LaunchReviewerHandler(bcap.CapHandler):
       'addGoogleAccount': bcap.grant('add-google-account', reviewer),
       'credentials': reviewer.get_credentials(),
       'email': reviewer.email,
-      'currentUser': user.to_json(),
+      'currentUser': reviewer.to_json(),
 
       'paperCaps': papers_caps,
       'userCaps': users_caps,
