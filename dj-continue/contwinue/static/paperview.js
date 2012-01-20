@@ -148,11 +148,7 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 							(review.reviewer.fullname + ' (' + review.overall.abbr + '/' + review.expertise.abbr + ')')) : 
 						SPAN({className:'unfinished-review'},review.reviewer.fullname),
 						BR());
-				},this.paper.reviews) : 'Assigned for your review.')),
-			(this.paper.comments.length ?
-			 	TR(TH('Comments: '),TD(map(function(comment) {
-					return SPAN(isReview ? A({href:'#comment-'+comment.id},comment.submitterName) : comment.submitterName, BR());
-				},this.paper.comments))) : '')
+				},this.paper.reviews) : 'Assigned for your review.'))
 		));
 	};
 	this.getAssignDom = function(usersInfo,nextIdB) {
@@ -314,20 +310,15 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 				(userCommentInfo ? userCommentInfo.comment.lastSaved : 0),
 				function(statusDom,valueDom) {
 					return DIVB(
-						that.getInfoTable(false),
-						HR(),BR(),
-						H3('Enter Comment'),
+//						that.getInfoTable(false),
+						H4('Enter Comment'),
 						DIV({className:'form-inputs'},valueDom),
 						statusDom);
 				},
-				function(saveE) {return getFilteredWSO_e(saveE.transform_e(function(vals) {
-						return genRequest(
-							{url:'Paper/'+$URL('id')+'/Comment/save',
-							fields:{cookie:authCookie,value:vals[0],publish:'no'},
-							method:'post'}
-						);
-				}));},
-				function(submitE) {return getFilteredWSO_e(
+				function(saveE) {return saveE.transform_e(function(vals) {
+						return [caps.postComment, {publish:'no', value:vals[0]}];
+				});},
+				function(submitE) {return postE(
 					submitE.filter_e(function(vals) {
 						if(vals[0] == '') {
 							window.alert('You cannot submit an empty comment. Please enter a comment and then submit again.');
@@ -335,11 +326,7 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 						}
 						return true;})
 					.transform_e(function(vals) {
-						return genRequest(
-							{url:'Paper/'+$URL('id')+'/Comment/save',
-							fields:{cookie:authCookie,value:vals[0],publish:'yes'},
-							method:'post'}
-						);
+						return [caps.postComment, {publish:'yes',value:vals[0]}];
 				}));},
 				10000,(userCommentInfo && userCommentInfo.hasPublished),false);
 		revertE.add_e(comForm.events.revert);
@@ -364,13 +351,23 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 								},basicInfo.rcomponents),
 							review.subreviewers != '' ? TR(TH('Subreviewers:'),TD(paraString(review.subreviewers,'pre'))) : ''))) : '';
 			},this.paper.reviews) : '',
-			this.paper.comments.length ? DIV(HR(),H3('Comments'),
-				TABLE({className:'key-value'},
-					TBODY(
-						map(function(comment) {
-							return TR(TH(A({name:'comment-'+comment.id}),comment.submitterName),TD(paraString(comment.value,'pre')));
-						},this.paper.comments)
-					))) : ''
+      DIV({style:{'padding-bottom': '2em'}},HR(),H3('Comments'),
+        P('This space is for informal comments and discussion about ' +
+          'the paper.  Comments are not official reviews.'),
+        this.paper.comments.length ? 
+          TABLE({className:'key-value'},
+            TBODY(
+              map(function(comment) {
+                return DIV({style:{'padding-top': '1em',
+                                   'border-top':'1px dotted gray'}},
+                            SPAN(STRONG(comment.submitterName), ' says...'),
+                            SPAN({style:{'font-size': 'small',
+                                         'float':'right',
+                                         'color':'gray'}},
+                                 ' (' + comment.postedString + ')'),
+                       P(paraString(comment.value,'pre')));
+              },this.paper.comments)
+            )) : '(No comments for this paper yet)')
 		);
 	};
 	this.getOptDom = function(extensions) {
@@ -424,7 +421,11 @@ capsB) {
           console.log('assign-tabbing: ', o, u);
           return (o && u) ? o.getAssignDom(u,nextIdB) : DIVB();}, currentObjB, usersInfoB));
 			case 'paper_info_tab':
-				return lift_b(function(o) {return o ? o.getReviewsDom() : DIV();},currentObjB);
+				return switch_b(lift_b(function(o, c) {return o ?
+            DIVB(o.getReviewsDom(),
+                o.getCommentFormDom(c,commentRevertE,commentSubmitE))
+          : DIVB();
+        }, currentObjB, userCommentB));
 			case 'paper_review_form_tab':
 				return switch_b(lift_b(function(o,r) {return (o && r) ? o.getReviewFormDom(r,revertE) : DIV()},currentObjB,userReviewB));
 			case 'paper_comment_form_tab':
@@ -520,7 +521,7 @@ function loader() {
 		uRolesE.startsWith([]),
 		{
 			reviewing:[getObj('paper_review_form_tab')],
-			commenter:[getObj('paper_comment_form_tab')],
+			commenter:[],
 			reviewer:$$('paper-tab'),user:[],loggedout:[],
 			admin:$$('paper-tab').concat($$('admin-tab'))
 		},

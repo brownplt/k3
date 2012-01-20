@@ -640,9 +640,11 @@ class Comment(belay.Grantable):
   def to_json(self):
     return {
       'id': self.id,
-      'paperID': self.paper.id,
-      'commenterID': self.commenter.id,
-      'value': self.value
+      'paperID': self.paper_id,
+      'commenterID': self.commenter_id,
+      'value': self.value,
+      'postedString': convertTime(self.posted_at),
+      'submitterName': self.commenter.full_name
     }
 
 class Bid(belay.Grantable):

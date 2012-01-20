@@ -160,11 +160,14 @@ class AssignReviewersHandler(bcap.CapHandler):
     conf.update_last_change(paper)
     return bcap.bcapResponse(True)
 
+def comments_response(paper):
+  return bcap.bcapResponse(
+    [c.to_json() for c in paper.comment_set.all()]
+  )
+
 class GetCommentsHandler(bcap.CapHandler):
   def get(self, granted):
-    return bcap.bcapResponse(
-      [c.to_json() for c in granted.paper.comment_set.all()]
-    )
+    return comments_response(paper)
 
 class PostCommentHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -177,7 +180,7 @@ class PostCommentHandler(bcap.CapHandler):
       value=args['value']
     )
     c.save()
-    return bcap.bcapResponse(c.to_json())
+    return comments_response(p)
 
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
@@ -198,6 +201,10 @@ class LaunchPaperViewHandler(bcap.CapHandler):
       'user': user
     })
     caps['updateBids'] = bcap.grant('update-bids', user)
+    caps['postComment'] = bcap.grant('post-comment', {
+      'user': user, 'paper': paper
+    })
+    caps['getComments'] = bcap.grant('get-comments', paper)
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 

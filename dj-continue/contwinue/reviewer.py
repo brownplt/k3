@@ -133,7 +133,7 @@ class UpdateBidsHandler(bcap.CapHandler):
     if bid == user.conference.conflict_bid_id or \
        oldbid == user.conference.conflict_bid_id:
       for paper in papers:
-        self.update_last_change(paper)
+        user.conference.update_last_change(paper)
     return bcap.bcapResponse([b.to_json() for b in ret])
 
 
