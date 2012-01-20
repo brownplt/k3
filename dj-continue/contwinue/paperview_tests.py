@@ -19,7 +19,7 @@ def make_reviewer(name, email, conf):
 class TestGetByRole(Generator):
   def test_get_users(self):
 
-    admin = m.get_one(m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all())
+    admin = m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all()[0]
     r1 = make_reviewer('Reviewer', 'foo@bar.com', self.conference)
     get_users = bcap.grant('get-by-role', self.conference)
     result = get_users.post({'role': 'reviewer'})
@@ -32,7 +32,8 @@ class TestGetByRole(Generator):
 class TestGetPaper(Generator):
   def test_get_paper(self):
     p1 = m.Paper.objects.all()[0]
-    get_paper = bcap.grant('get-paper', p1)
+    admin = m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all()[0]
+    get_paper = bcap.grant('get-paper', {'user': admin, 'paper': p1})
     self.assertEqual(get_paper.get(), p1.get_paper_with_decision())
 
 class TestSaveReview(Generator):

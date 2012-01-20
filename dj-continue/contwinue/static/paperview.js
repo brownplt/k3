@@ -190,9 +190,13 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 		var advanceToE = snapshot_e(
 				iframeLoad_e('astarget'),
 				lift_b(function(adv,next) {return (adv ? next : 0);},AdvanceB,nextIdB)
-			).filter_e(function(_) {return _ > 0;});
-		advanceToE.transform_e(function(nID) {
-			window.location = 'paper.html?cookie='+authCookie+'&id='+nID+'&mode=paper_assign_tab&tab='+$URL('tab');});
+			).filter_e(function(_) {return _ !== 0;});
+		advanceToE.transform_e(function(next) {
+			var redirect = 'paperview?id='+next.id+'&mode=paper_assign_tab&tab='+$URL('tab')+
+            "#" + next.cap;
+      console.log(redirect);
+      window.location = redirect;
+    });
 
 		return DIVB(
 			this.getInfoTable(false),
@@ -555,7 +559,6 @@ function loader() {
 	var nextIdB = merge_e(launchE,intoAssignE).snapshot_e(
       getFieldE(paperCapsE, 'nextPaper').startsWith(null)).
       filter_e(function(_) { 
-        console.log('nextpaper: ', _);
         return _; }).
     startsWith(0);
 

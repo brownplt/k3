@@ -182,14 +182,16 @@ class LaunchPaperViewHandler(bcap.CapHandler):
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 
-    if restpapers.count() != 0:
+    if restpapers.count() > 0:
       #TODO(joe): abstract this pattern into a function
-      caps['nextPaper'] = "%s/paperview/#%s" % (
-        bcap.this_server_url_prefix(),
-        bcap.cap_for_hash(bcap.grant('launch-paperview', {
-          'user': user, 'paper': paper
-        }))
-      )
+      caps['nextPaper'] = {
+        'cap': bcap.cap_for_hash(
+          bcap.grant('launch-paperview', {
+            'user': user, 'paper': restpapers[0]
+          })
+        ),
+        'id': restpapers[0].id
+      }
     caps['backToList'] = "%s/review/#%s" % (
       bcap.this_server_url_prefix(),
       bcap.cap_for_hash(bcap.grant('launch-reviewer', user))
