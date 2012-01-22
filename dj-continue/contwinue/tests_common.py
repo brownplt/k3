@@ -3,7 +3,7 @@ import uuid
 from contwinue.views import ContinueInit
 from contwinue.models import Conference, Account, User, get_one, \
   Review
-from contwinue.generate import generate
+from contwinue.test_generate import generate
 
 from django.test import TestCase
 

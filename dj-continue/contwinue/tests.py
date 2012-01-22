@@ -21,9 +21,6 @@ from contwinue.accounts_tests import TestCreateReviewer
 from contwinue.model_tests import TestPaperJsons, TestCJSONSpeed
 from contwinue.crypt_tests import TestEnDecrypt
 
-# Note:  These tests rely on generate.py, which creates an initial department
-# and fills it in with some data.
-
 class FakeHttp(object):
   def __init__(self, path, method):
     self.path_info = path
