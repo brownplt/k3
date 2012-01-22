@@ -150,7 +150,10 @@ class TestReviewPercentages(Generator):
       
     [p1, p2] = m.Paper.objects.filter(conference=self.conference)[0:2]
 
-    admin = m.get_one(m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all())
+    admin = m.get_one(m.Role.get_by_conf_and_name(
+      self.conference,
+      'admin'
+    ).user_set.all())
     r1 = make_reviewer('Bob Reviewer', 'bob@fake.org', self.conference)
     r2 = make_reviewer('Joe Reviewer', 'joe@foo.org', self.conference)
 

@@ -24,7 +24,7 @@ class TestAdminPage(Generator):
     self.assertTrue(has_keys(response,
       ['adminContact', 'dsCutoffHi', 'dsCutoffLo', 'dsConflictCut']))
     # TODO(matt): for now, adminContact is admin's email
-    self.assertEqual(response['adminContact'], admin_u.to_json())
+    self.assertEqual(response['adminContact'], adminu.to_json())
     self.assertEqual(response['dsCutoffHi'], 7.0)
     self.assertEqual(response['dsCutoffLo'], 2.0)
     self.assertEqual(response['dsConflictCut'], 0.05)
@@ -139,18 +139,18 @@ class TestAdminPage(Generator):
     add_cap = bcap.grant('add-review-component-type', self.conference)
     description = 'A new review component type'
 
-    response = add_cap.post({'description' : description, 'pcOnly' : False})
+    response = add_cap.post({'description' : description, 'pconly' : False})
 
-    self.assertTrue(has_keys(response, ['description', 'pcOnly']))
+    self.assertTrue(has_keys(response, ['description', 'pconly']))
     self.assertEquals(response['description'], description)
-    self.assertEquals(response['pcOnly'], False)
+    self.assertEquals(response['pconly'], False)
     self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))
     self.assertEquals(1, len(ReviewComponentType.objects.filter(\
       description=description, pc_only=False)))
 
-    add_cap.post({'description' : description, 'pcOnly' : False})
+    add_cap.post({'description' : description, 'pconly' : False})
     self.assertEquals(response['description'], description)
-    self.assertEquals(response['pcOnly'], False)
+    self.assertEquals(response['pconly'], False)
     self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))
     self.assertEquals(1, len(ReviewComponentType.objects.filter(\
       description=description, pc_only=False)))
