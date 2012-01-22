@@ -259,7 +259,7 @@ def new_reviewer(conf, name, email):
 # be sent
 def send_new_reviewer_email(unverified_user):
 
-  launch_cap = bcap.dbgrant('launch-reviewer', unverified_user)
+  launch_cap = bcap.regrant('launch-reviewer', unverified_user)
 
   fromaddr = "%s <%s>" % \
     (unverified_user.conference.name,

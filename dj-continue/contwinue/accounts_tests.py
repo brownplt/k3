@@ -14,11 +14,11 @@ class TestCreateReviewer(Generator):
   def test_create(self):
     uu = accounts.new_reviewer(self.conference, 'Billy', 'billy@fake.edu')
     self.assertEqual(uu.conference, self.conference)
-    self.assertEqual(uu.name, 'Billy')
+    self.assertEqual(uu.full_name, 'Billy')
     self.assertEqual(uu.email, 'billy@fake.edu')
 
   def test_email(self):
-    settings.DEBUG = False
+    settings.NO_MAIL = False
     uu = accounts.new_reviewer(self.conference, 'Bobby', 'bobby@fake.edu')
     accounts.send_new_reviewer_email(uu)
 
@@ -33,10 +33,7 @@ class TestCreateReviewer(Generator):
 
     granted = get_one(Grant.objects.filter(
       internal_path='launch-reviewer',
-      db_data=bcap.dbPreProcess({
-        'newuser': True,
-        'unverified': uu
-      })
+      db_data=bcap.dbPreProcess(uu)
     ))
     self.assertTrue(granted is not None)
 
@@ -47,13 +44,13 @@ class TestCreateReviewer(Generator):
       mail.outbox[0].body,
       strings.new_reviewer_body % {
         'confname': uu.conference.name,
-        'name': uu.name,
+        'name': uu.full_name,
         'key': bcap.cap_for_hash(granted_cap),
         'base': bcap.this_server_url_prefix()
       }
     )
 
-    settings.DEBUG = True
+    settings.NO_MAIL = True
 
   def test_email_nonrev(self):
     uu = UnverifiedUser(

@@ -211,7 +211,7 @@ class TestAuthorLaunch(Generator):
       {'error': 'The file you uploaded was not a PDF document.'})
 
   def test_add_author(self):
-    settings.DEBUG=False
+    settings.NO_MAIL=False
     author = get_one(User.objects.filter(email='joe@writer.com'))
     paper = get_one(Paper.objects.filter(contact=author))
 
@@ -247,10 +247,10 @@ class TestAuthorLaunch(Generator):
 
     # Make sure the cap id shows up in the email
     self.assertTrue(mail.outbox[0].body.find(granted_cap.cap_id) != -1)
-    settings.DEBUG=True
+    settings.NO_MAIL=True
 
   def test_add_author_existing(self):
-    settings.DEBUG=False
+    settings.NO_MAIL=False
     author = get_one(User.objects.filter(email='joe@writer.com'))
     paper = get_one(Paper.objects.filter(contact=author))
 
@@ -285,7 +285,7 @@ class TestAuthorLaunch(Generator):
 
     # Make sure the cap id shows up in the email
     self.assertTrue(mail.outbox[0].body.find(granted_cap.cap_id) != -1)
-    settings.DEBUG=True
+    settings.NO_MAIL=True
 
   def test_launch_new_paper(self):
     uu = UnverifiedUser(

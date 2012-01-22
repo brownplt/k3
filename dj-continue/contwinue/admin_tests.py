@@ -18,11 +18,13 @@ class TestAdminPage(Generator):
     self.conference = Conference.get_by_shortname('SC')
 
   def test_get_admin(self):
+    admin = Role.get_by_conf_and_name(self.conference, 'admin')
+    adminu = admin.user_set.all()[0]
     response = bcap.grant('get-admin', self.conference).get()
     self.assertTrue(has_keys(response,
       ['adminContact', 'dsCutoffHi', 'dsCutoffLo', 'dsConflictCut']))
     # TODO(matt): for now, adminContact is admin's email
-    self.assertEqual(response['adminContact'], 'joe@fake.com')
+    self.assertEqual(response['adminContact'], admin_u.to_json())
     self.assertEqual(response['dsCutoffHi'], 7.0)
     self.assertEqual(response['dsCutoffLo'], 2.0)
     self.assertEqual(response['dsConflictCut'], 0.05)
@@ -39,7 +41,7 @@ class TestAdminPage(Generator):
     user_keys = ['username', 'fullname', 'email', 'rolenames', 'reviewCount']
     response = bcap.grant('get-all', self.conference).get()
 
-    self.assertEqual(len(response), 11)
+    self.assertEqual(len(response), 21)
     self.assertTrue(all([has_keys(u, user_keys)\
       for u in response]))
 
@@ -481,12 +483,12 @@ class TestSendEmails(Generator):
     )
     self.hermione_comment.save()
     # So that emails work with the test framework
-    settings.DEBUG=False
+    settings.NO_MAIL=False
 
   def tearDown(self):
     super(TestSendEmails, self).tearDown()
     # So that nothing surprising happens later
-    settings.DEBUG=True
+    settings.NO_MAIL=True
 
   def test_preview_with_no_reviews(self):
     subject = 'All Papers Rejected'
@@ -644,10 +646,7 @@ class TestAddPCs(Generator):
       'emails': emails
     })
 
-    self.assertEqual(result, [
-      {'name': 'Shriram'},
-      {'name': 'Joe'}
-    ])
+    self.assertEqual(result, [])
 
   def test_add_err(self):
     names = ['Joe']

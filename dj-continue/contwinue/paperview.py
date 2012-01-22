@@ -168,7 +168,7 @@ def comments_response(paper):
 
 class GetCommentsHandler(bcap.CapHandler):
   def get(self, granted):
-    return comments_response(paper)
+    return comments_response(granted.paper)
 
 class PostCommentHandler(bcap.CapHandler):
   def post(self, granted, args):
