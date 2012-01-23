@@ -141,7 +141,6 @@ class TestAdminPage(Generator):
 
     response = add_cap.post({'description' : description, 'pconly' : False})
 
-    self.assertTrue(has_keys(response, ['description', 'pconly']))
     self.assertEquals(response['description'], description)
     self.assertEquals(response['pconly'], False)
     self.assertEquals(num_types + 1, len(ReviewComponentType.objects.all()))

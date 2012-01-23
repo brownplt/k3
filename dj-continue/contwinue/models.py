@@ -416,7 +416,7 @@ class ReviewComponentType(belay.Grantable):
     return {
       'id': self.id,
       'description' : self.description,
-      'pcOnly' : self.pc_only
+      'pconly' : self.pc_only
     }
 
 
