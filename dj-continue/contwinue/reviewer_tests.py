@@ -29,10 +29,11 @@ class TestGetPaperSummaries(Generator):
     start = datetime.now()
     (p1, result) = self.get_summaries()
     end = datetime.now()
+    print('\n\nQuick check of cache performance.  First should take much longer')
     print('First took %s' % (end - start))
     self.get_summaries(lastChangeVal=0)
     end2 = datetime.now()
-    print('Second took %s' % (end2 - end))
+    print('Second took %s\n\n' % (end2 - end))
 
   def test_get_summaries(self):
     (p1, result) = self.get_summaries()

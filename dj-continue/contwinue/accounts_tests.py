@@ -14,7 +14,7 @@ class TestCreateReviewer(Generator):
   def test_create(self):
     uu = accounts.new_reviewer(self.conference, 'Billy', 'billy@fake.edu')
     self.assertEqual(uu.conference, self.conference)
-    self.assertEqual(uu.full_name, 'Billy')
+    self.assertEqual(uu.name, 'Billy')
     self.assertEqual(uu.email, 'billy@fake.edu')
 
   def test_email(self):
@@ -44,7 +44,7 @@ class TestCreateReviewer(Generator):
       mail.outbox[0].body,
       strings.new_reviewer_body % {
         'confname': uu.conference.name,
-        'name': uu.full_name,
+        'name': uu.name,
         'key': bcap.cap_for_hash(granted_cap),
         'base': bcap.this_server_url_prefix()
       }

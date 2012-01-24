@@ -3,6 +3,8 @@ import belaylibs.dj_belay as bcap
 
 import contwinue.models as m
 
+from contwinue.submitter import make_user
+
 from lib.py.common import toJSON
 
 # GetPaperSummariesHandler
@@ -195,13 +197,34 @@ class UpdateDecisionHandler(bcap.CapHandler):
     return bcap.bcapResponse(True)
 
 
+def check_unverified(uu):
+  maybe_real_user = uu.get_user()
+  if maybe_real_user is not None:
+    return maybe_real_user
+  else:
+    (account, maybe_real_user) = make_user(uu)
+    launch = bcap.dbgrant('launch-reviewer', maybe_real_user)
+    launchable = m.Launchable(
+      account=account,
+      launchbase='%s/reviewer' % bcap.this_server_url_prefix(),
+      launchcap=bcap.cap_for_hash(launch),
+      display=''
+    )
+    launchable.save()
+    return maybe_real_user
+
 # LaunchReviewerHandler
 # Gets info and caps for launching the reviewer page
 class LaunchReviewerHandler(bcap.CapHandler):
   def get(self, granted):
-    conf = granted.user.conference
+    if hasattr(granted, 'unverifieduser'):
+      reviewer = check_unverified(granted.unverifieduser)
+    elif hasattr(granted, 'user'):
+      reviewer = granted.user
+    else:
+      raise Exception('LaunchReviewer: granted is not (Unverified)User')
+    conf = reviewer.conference
     papers = conf.my(m.Paper, True)
-    reviewer = granted.user
     papers_caps = {}
     for paper in papers:
       paper_caps = {}

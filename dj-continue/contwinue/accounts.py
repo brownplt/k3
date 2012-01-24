@@ -232,16 +232,13 @@ def glogin_landing(request):
 def new_reviewer(conf, name, email):
   a = Account(key=uuid.uuid4())
   a.save()
-  u = User(
-    username=email,
+  u = UnverifiedUser(
     conference=conf,
-    full_name=name,
+    name=name,
     email=email,
-    account=a
+    roletext='reviewer'
   )
   u.save()
-  revrole = get_one(Role.objects.filter(name='reviewer'))
-  u.roles.add(revrole)
   launchcap = bcap.dbgrant('launch-reviewer', u)
   launchbase = '%s/review' % bcap.this_server_url_prefix()
 
@@ -271,7 +268,7 @@ def send_new_reviewer_email(unverified_user):
     },
     msg=strings.new_reviewer_body % {
       'confname': unverified_user.conference.name,
-      'name': unverified_user.full_name,
+      'name': unverified_user.name,
       'base': bcap.this_server_url_prefix(),
       'key': bcap.cap_for_hash(launch_cap)
     },

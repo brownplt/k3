@@ -495,6 +495,12 @@ class UnverifiedUser(belay.Grantable):
   roletext = models.TextField(default='writer')
   conference = models.ForeignKey(Conference)
 
+  def get_user(self):
+    return get_one(User.objects.filter(
+      email=self.email,
+      conference=self.conference
+    ))
+
 class Topic(belay.Grantable):
   class Meta:
     unique_together = (('conference', 'name'))
