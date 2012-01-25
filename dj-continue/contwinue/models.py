@@ -606,10 +606,14 @@ class Paper(belay.Grantable):
     }
     return paper_json
 
-  def get_paper_with_decision(self):
+  def get_paper_with_decision(self, user):
     paper_json = self.get_paper()
     paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
     paper_json['hidden'] = self.hidden
+    if self.can_see_reviews(user):
+      paper_json['decision'] = self.decision.to_json()
+      paper_json['bids'] = [b.to_json() for b in self.bid_set.all()]
+      paper_json['reviews'] = [r.to_json() for r in self.get_published()]
     return paper_json
 
 
@@ -681,6 +685,7 @@ class Component(belay.Grantable):
   conference = models.ForeignKey(Conference)
 
   def to_json(self):
+    # TODO(joe): remove this grant
     get_cap = belay.grant('get-component-file', self)
     return {
       'id': self.id,

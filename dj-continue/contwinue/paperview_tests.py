@@ -34,7 +34,8 @@ class TestGetPaper(Generator):
     p1 = m.Paper.objects.all()[0]
     admin = m.Role.get_by_conf_and_name(self.conference, 'reviewer').user_set.all()[0]
     get_paper = bcap.grant('get-paper', {'user': admin, 'paper': p1})
-    self.assertEqual(get_paper.get(), p1.get_paper_with_decision())
+    # TODO(fix this test)
+    self.assertEqual(get_paper.get(), p1.get_paper_with_decision(admin))
 
 class TestSaveReview(Generator):
   def test_review_save(self):
