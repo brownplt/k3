@@ -143,7 +143,7 @@ class GetComponentFileHandler(bcap.CapHandler):
     fname = os.path.join(settings.SAVEDFILES_DIR, '%d-%d-component' %
       (comp.paper.id, comp.type.id))
     response = file_utils.file_response(fname, comp.value)
-    return response
+    return bcap.bcapRawResponse(response)
 
 class PaperUpdateComponentsHandler(bcap.CapHandler):
   def post_arg_names(self): return []

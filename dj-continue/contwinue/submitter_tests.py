@@ -194,7 +194,8 @@ class TestAuthorLaunch(Generator):
 
     f2 = open('testdata/testpdf.pdf', 'r')
     self.assertEqual(response.content, f2.read())
-    self.assertEqual(response.__getitem__('Content-Disposition'), 'attachment; filename=testdata/testpdf.pdf')
+#   Not doing disposition to allow Chrome users to open pdfs in tabs
+#    self.assertEqual(response.__getitem__('Content-Disposition'), 'attachment; filename=testdata/testpdf.pdf')
     f2.close()
 
 

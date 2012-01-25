@@ -94,7 +94,7 @@ def invokeCapURL(capURL, meth, data=""):
           self.status = result.status_code
 
       return Wrapper()
-    elif result.has_header('Content-Disposition'):
+    elif hasattr(result, 'raw_response'):
       return result
     else:
       if result.status_code >= 400:
@@ -286,6 +286,10 @@ def bcapNullResponse():
   response = HttpResponse()
   xhr_response(response)
   return response
+
+def bcapRawResponse(httpresponse):
+  httpresponse.raw_response = True
+  return httpresponse
 
 def bcapResponse(content):
   response = HttpResponse()
