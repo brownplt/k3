@@ -165,7 +165,8 @@ class TestReviewPercentages(Generator):
     get_percents = bcap.grant('get-review-percentages', self.conference)
     result = get_percents.get()
 
-    self.assertEqual(result, [
+    self.assertEqual(filter(lambda r: \
+      r['id'] in (map(lambda r2: r2.id, [admin, r1, r2])), result), [
       {'id': admin.id, 'name': admin.full_name, 'percentage': 'N/A'},
       {'id': r1.id, 'name': r1.full_name, 'percentage': '50%'},
       {'id': r2.id, 'name': r2.full_name, 'percentage': '0%'}
