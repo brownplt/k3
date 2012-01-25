@@ -41,7 +41,7 @@ class TestAdminPage(Generator):
     user_keys = ['username', 'fullname', 'email', 'rolenames', 'reviewCount']
     response = bcap.grant('get-all', self.conference).get()
 
-    self.assertEqual(len(response), 21)
+    self.assertEqual(len(response), 11)
     self.assertTrue(all([has_keys(u, user_keys)\
       for u in response]))
 
