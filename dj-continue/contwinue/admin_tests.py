@@ -448,7 +448,7 @@ class TestSendEmails(Generator):
       reviewer=self.snape,
       paper=self.harrys_paper,
       submitted=True,
-      published=False,
+      published=True,
       overall=RatingValue.objects.all()[0],
       expertise=ExpertiseValue.objects.all()[0],
       last_saved=0,
@@ -512,7 +512,7 @@ class TestSendEmails(Generator):
           'fullname': self.harry.full_name,
           'email': self.harry.email,
           'rolenames': [],
-          'reviewCount': 1,
+          'reviewCount': 0,
           'id': self.harry.id
         }
       },
@@ -524,7 +524,7 @@ class TestSendEmails(Generator):
           'email': self.hermione.email,
           'fullname': self.hermione.full_name,
           'rolenames': [],
-          'reviewCount': 1,
+          'reviewCount': 0,
           'id': self.hermione.id
         }
       }])
@@ -582,7 +582,7 @@ class TestSendEmails(Generator):
           'fullname': self.harry.full_name,
           'email': self.harry.email,
           'rolenames': [],
-          'reviewCount': 1,
+          'reviewCount': 0,
           'id': self.harry.id
         }
       },
@@ -594,7 +594,7 @@ class TestSendEmails(Generator):
           'email': self.hermione.email,
           'fullname': self.hermione.full_name,
           'rolenames': [],
-          'reviewCount': 1,
+          'reviewCount': 0,
           'id': self.hermione.id
         }
       }])
