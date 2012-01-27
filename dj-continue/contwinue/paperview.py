@@ -203,9 +203,17 @@ class LaunchPaperViewHandler(bcap.CapHandler):
     caps['getComments'] = bcap.grant('get-comments', paper)
 
     component_caps = {}
-    for c in paper.component_set.exclude(type__fmt='Text'):
+    for c in paper.get_dcomps_safe(user):
       component_caps[c.id] = bcap.grant('get-component-file', c)
     caps['getComponents'] = component_caps
+
+    request_caps = {}
+    for c in paper.get_hidden_comps(user):
+      request_caps[c.type_id] = bcap.grant('request-component-access', {
+        'user': user,
+        'component': c
+      })
+    caps['requestComponents'] = request_caps
 
     restpapers = m.Paper.objects.filter(id__gt=paper.id)
 

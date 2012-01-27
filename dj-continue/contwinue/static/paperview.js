@@ -98,6 +98,38 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 			},this.paper.components);
 
     var hiddenTRs = [];
+    var self = this;
+    map(function(ctype) {
+        var ohdom = TH();
+        var oddom = TD();
+        var showhide = new ToggleWidget('Hide '+ctype.description,'Show '+ctype.description);
+        var textdv = paraString('You do not have permission to see ' +
+          'this paper\'s ' + ctype.description + '  You may request ' +
+          'access by clicking below, and a PC member will grant your ' +
+          'request if appropriate.', 'pre');
+        var grantbutton = BUTTON();
+        var postedE = postE(extractEvent_e(grantbutton, 'click').
+          transform_e(function(_) {
+            return [caps.requestComponents[ctype.id], {}];
+          }));
+        var requestedB = postedE.
+          startsWith(ctype.id in self.paper.grants);
+        var textB = requestedB.lift_b(function(r) {
+          return r ? 'Access Requested' : 'Request Access';
+        });
+        insertValueB(requestedB, grantbutton, 'disabled');
+        insertDomB(textB, grantbutton, 'end');
+
+        var requestDiv = DIVB(textdv, grantbutton);
+        insertDomB(
+          switch_b(showhide.behaviors.toggled.transform_b(function(_) {return _ ?
+DIVB({className:'pre'},' ') : requestDiv;})),
+          oddom,
+          'beginning');
+        insertDomB(showhide.dom,ohdom,'beginning');
+        textTRs.push(TR(ohdom,oddom));
+    }, filter(function(_) { return _.protected; }, basicInfo.components));
+
 
 		var decsel;
 		if(inList('admin',this.user.rolenames)) {

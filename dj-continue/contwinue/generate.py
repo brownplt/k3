@@ -156,6 +156,11 @@ def generate(numusers=10):
       t.papers.add(p)
       t.save()
 
+      p_comp = Component(type=protected_type, paper=p,
+        lastSubmitted=int(time.time()), value='some/file',
+        mimetype='text/plain', conference=c)
+      p_comp.save()
+
   if not check_size(ReviewComponentType, 2):
     pc_comments = ReviewComponentType(
       conference=c,

@@ -256,7 +256,7 @@ class LaunchReviewerHandler(bcap.CapHandler):
           bcap.grant('launch-paperview', {'user': reviewer, 'paper': paper})
         )
         comps_caps = {}
-        for component in paper.get_components_safe(user):
+        for component in paper.get_components_safe(reviewer):
           view_comp = bcap.dbgrant('get-component-file', component)
           comps_caps[component.type.id] = view_comp
         paper_caps['compsCaps'] = comps_caps

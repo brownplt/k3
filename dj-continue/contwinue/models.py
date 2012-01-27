@@ -567,6 +567,17 @@ class Paper(belay.Grantable):
                filter(granted=True)]
     return allowed + granted
 
+  def get_hidden_comps(self, user):
+    usergrants = user.componentgrantrequest_set.\
+      select_related().filter(granted=True)
+    usergrants_pending = user.componentgrantrequest_set.\
+      select_related().filter(granted=False)
+    components = self.component_set.filter(type__protected=True)
+    comps = set(components) - set([g.component for g in usergrants])
+    for c in comps:
+      if c in usergrants_pending: c.hasgrant=True
+    return comps
+
   def get_reviews_info(self):
 		return [{
       'id': r.id,
@@ -624,6 +635,11 @@ class Paper(belay.Grantable):
     paper_json = self.get_paper()
     paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
     paper_json['hidden'] = self.hidden
+    paper_json['grants'] = dict([(g.component.type.id, True) \
+      for g in ComponentGrantRequest.objects.filter(
+        component__paper=self,
+        reviewer=user
+      )])
     if self.can_see_reviews(user):
       paper_json['decision'] = self.decision.to_json()
       paper_json['bids'] = [b.to_json() for b in self.bid_set.all()]
