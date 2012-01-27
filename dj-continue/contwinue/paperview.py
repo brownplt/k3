@@ -22,7 +22,6 @@ class GetPaperHandler(bcap.CapHandler):
     response = paper.get_paper_with_decision(user)
     return bcap.bcapResponse(response)
 
-
 # SaveReviewHandler
 # Save a review (including rating, expertise, and text)
 #

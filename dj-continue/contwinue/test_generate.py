@@ -60,6 +60,21 @@ def generate(numusers=10):
       grace_hours=96, conference=c)
     extended_abstract.save()
 
+  protected_type = ComponentType.objects.filter(abbr='V')
+  if len(protected_type) == 0:
+    protected_type = ComponentType(
+      conference=c,
+      abbr='V',
+      description='Previous Review Updates',
+      fmt='PDF',
+      deadline=int(time.time())+(86400*30),
+      mandatory=False,
+      grace_hours=0,
+      size_limit=0,
+      protected=True
+    )
+    protected_type.save()
+
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != numusers:
     account = Account(key=str(uuid.uuid4()))

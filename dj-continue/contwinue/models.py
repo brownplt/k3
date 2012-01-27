@@ -553,9 +553,18 @@ class Paper(belay.Grantable):
 
   topics = property(fget=lambda p: [t for t in p.topic_set.all()])
 
-  def get_dcomps(self):
-    return [c for c in self.component_set.exclude(type__fmt='Text')]
-  dcomps = property(get_dcomps)
+  def get_components_safe(self, user):
+    allowed = [c for c in self.component_set.exclude(type__protected=True)]
+    granted = [g.component for g in user.componentgrantrequest_set.
+               filter(granted=True)]
+    return allowed + granted
+
+  def get_dcomps_safe(self, user):
+    allowed = [c for c in self.component_set.exclude(type__fmt='Text').
+               exclude(type__protected=True)]
+    granted = [g.component for g in user.componentgrantrequest_set.
+               filter(granted=True)]
+    return allowed + granted
 
   def get_reviews_info(self):
 		return [{
@@ -602,8 +611,12 @@ class Paper(belay.Grantable):
       'author': self.contact.full_name,
       'contact': self.contact.to_json(),
       'topics': [t.to_json() for t in self.topic_set.all()],
-      'components': [c.to_json() for c in self.my(Component)],
     }
+    return paper_json
+
+  def get_paper_for_writer(self, user):
+    paper_json = self.get_paper()
+    paper_json['components'] = [c.to_json() for c in self.my(Component)]
     return paper_json
 
   def get_paper_with_decision(self, user):
@@ -614,6 +627,8 @@ class Paper(belay.Grantable):
       paper_json['decision'] = self.decision.to_json()
       paper_json['bids'] = [b.to_json() for b in self.bid_set.all()]
       paper_json['reviews'] = [r.to_json() for r in self.get_published()]
+      paper_json['components'] = [c.to_json() for c in
+        self.get_components_safe(user)]
     return paper_json
 
 
@@ -695,10 +710,10 @@ class Component(belay.Grantable):
       'getComponent': get_cap
     }
 
-#class ComponentGrantRequest(belay.Grantable):
-#  reviewer = models.ForeignKey(User)
-#  component = models.ForeignKey(Component)
-#  granted = models.BooleanColumn(default=False)
+class ComponentGrantRequest(belay.Grantable):
+  reviewer = models.ForeignKey(User)
+  component = models.ForeignKey(Component)
+  granted = models.BooleanField(default=False)
 
 class DeadlineExtension(belay.Grantable):
   type = models.ForeignKey(ComponentType)
@@ -876,3 +891,4 @@ class ContinueCredentials(belay.Grantable):
     return {
       'username': self.username,
     }
+

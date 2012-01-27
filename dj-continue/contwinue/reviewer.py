@@ -43,7 +43,7 @@ class GetPaperSummariesHandler(bcap.CapHandler):
 
     flds = ['id','author','title','decision','target','other_cats',\
             'contact_email','topics','conflicts','pc_paper','hidden',\
-            'dcomps','oscore']
+            'oscore']
     def getFlds(obj):
       r = {}
       memo = False
@@ -62,6 +62,7 @@ class GetPaperSummariesHandler(bcap.CapHandler):
 
       for fld in ourflds:
         r[fld] = obj.__getattribute__(fld)
+      r['dcomps'] = obj.get_dcomps_safe(user)
       ourjson = r
       if memo:
         obj.json = bcap.dataPreProcessV(ourjson)

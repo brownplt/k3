@@ -50,5 +50,5 @@ class TestBasic(Generator):
     # Only 1 because we filter for targetables
     self.assertEqual(len(response['decisions']), 1)
     # make_new makes 2
-    self.assertEqual(len(response['components']), 4)
+    self.assertEqual(len(response['components']), 5)
 

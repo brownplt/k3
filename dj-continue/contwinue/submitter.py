@@ -68,7 +68,7 @@ class WriterPaperInfoHandler(bcap.CapHandler):
         'added': False,
         'remove': remove
       }) 
-    paper_json = paper.get_paper()
+    paper_json = paper.get_paper_for_writer(caller)
     paper_json['authors'] = author_json
     paper_json['unverifiedAuthors'] = unverified_author_json
     paper_json['thisAuthor'] = {

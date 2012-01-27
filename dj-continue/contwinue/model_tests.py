@@ -6,16 +6,21 @@ import random as random
 from datetime import datetime
 
 class TestPaperJsons(Generator):
-  def test_dcomps(self):
-    p = m.Paper.objects.all()[0]
+  def setUp(self):
+    super(TestPaperJsons, self).setUp()
+    self.p = m.Paper.objects.all()[0]
+    self.r = m.get_one(m.Role.objects.filter(name='reviewer'))
+    self.rev = self.r.user_set.all()[0]
+    self.protected_type = m.get_one(m.ComponentType.objects.filter(abbr='V'))
 
-    dc = p.dcomps
+  def test_dcomps(self):
+    dc = self.p.get_dcomps_safe(self.rev)
     self.assertEqual(dc, [])
 
     ct = m.get_one(m.ComponentType.objects.filter(abbr='P'))
     c = m.Component(
       type=ct,
-      paper=p,
+      paper=self.p,
       lastSubmitted=1234,
       value='some/file',
       mimetype='application/pdf',
@@ -23,8 +28,76 @@ class TestPaperJsons(Generator):
     )
     c.save()
 
-    dc = p.dcomps
+    dc = self.p.get_dcomps_safe(self.rev)
     self.assertEqual(dc, [c])
+
+  def test_dcomps_protected(self):
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [])
+
+    c = m.Component(
+      type=self.protected_type,
+      paper=self.p,
+      lastSubmitted=1234,
+      value='some/file',
+      mimetype='application/pdf',
+      conference=self.conference
+    )
+    c.save()
+
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [])
+
+  def test_dcomps_granted_not_approved(self):
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [])
+    
+    c = m.Component(
+      type=self.protected_type,
+      paper=self.p,
+      lastSubmitted=1234,
+      value='some/file',
+      mimetype='application/pdf',
+      conference=self.conference
+    )
+    c.save()
+
+    grant_request = m.ComponentGrantRequest(
+      reviewer=self.rev,
+      component=c,
+      granted=False
+    )
+    grant_request.save()
+
+    # stil not present
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [])
+
+  def test_dcomps_granted_and_approved(self):
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [])
+    
+    c = m.Component(
+      type=self.protected_type,
+      paper=self.p,
+      lastSubmitted=1234,
+      value='some/file',
+      mimetype='application/pdf',
+      conference=self.conference
+    )
+    c.save()
+
+    grant_request = m.ComponentGrantRequest(
+      reviewer=self.rev,
+      component=c,
+      granted=True
+    )
+    grant_request.save()
+
+    # now it's present
+    dc = self.p.get_dcomps_safe(self.rev)
+    self.assertEqual(dc, [c])
+    
 
   def test_reviews_info(self):
     p = m.Paper.objects.all()[0]
