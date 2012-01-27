@@ -399,6 +399,7 @@ class ComponentType(belay.Grantable):
       'deadlineStr': self.deadline_str(),
       'mandatory': self.mandatory,
       'gracehours': self.grace_hours,
+      'protected': self.protected
     }
 
   @classmethod
@@ -714,6 +715,7 @@ class ComponentGrantRequest(belay.Grantable):
   reviewer = models.ForeignKey(User)
   component = models.ForeignKey(Component)
   granted = models.BooleanField(default=False)
+  conference = models.ForeignKey(Conference)
 
 class DeadlineExtension(belay.Grantable):
   type = models.ForeignKey(ComponentType)

@@ -214,6 +214,26 @@ def check_unverified(uu):
     launchable.save()
     return maybe_real_user
 
+# RequestComponentAccessHandler
+# granted: {user: |user:User|, component: |component:Component|}
+
+# -> {}
+# <- Boolean
+class RequestComponentAccessHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    reviewer = granted['user'].user
+    component = granted['component'].component
+
+    grant = m.ComponentGrantRequest(
+      reviewer=reviewer,
+      component=component,
+      conference=reviewer.conference,
+      granted=False
+    )
+    grant.save()
+
+    return bcap.bcapResponse(True)
+
 # LaunchReviewerHandler
 # Gets info and caps for launching the reviewer page
 class LaunchReviewerHandler(bcap.CapHandler):
@@ -236,13 +256,13 @@ class LaunchReviewerHandler(bcap.CapHandler):
           bcap.grant('launch-paperview', {'user': reviewer, 'paper': paper})
         )
         comps_caps = {}
-        for component in paper.dcomps:
+        for component in paper.get_components_safe(user):
           view_comp = bcap.dbgrant('get-component-file', component)
           comps_caps[component.type.id] = view_comp
         paper_caps['compsCaps'] = comps_caps
       papers_caps[paper.id] = paper_caps
 
-    launchAdmin = "#";
+    launchAdmin = "#"
     if 'admin' in reviewer.rolenames:
       launchAdmin = "%s/admin#%s" % (
         bcap.this_server_url_prefix(),

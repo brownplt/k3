@@ -12,7 +12,7 @@ from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
 from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \
     TestReviewPercentages, TestGetPaperSummaries, TestGetUserBids, \
-    TestUpdateDecision
+    TestUpdateDecision, TestRequestAccess
 from contwinue.paperview_tests import TestGetByRole, TestGetPaper, \
     TestSaveReview, TestGetReview, TestRevertReview, TestSetHidden, \
     TestSetDeadline, TestGetDeadlines, TestAssignReviewers, \

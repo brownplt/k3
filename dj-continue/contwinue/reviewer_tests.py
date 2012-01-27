@@ -185,3 +185,40 @@ class TestUpdateDecision(Generator):
     paper = m.Paper.objects.all()[0]
     self.assertEqual(paper.decision, decision)
 
+class TestRequestAccess(Generator):
+  def test_request_access(self):
+    paper = m.Paper.objects.all()[0]
+    reviewer = self.reviewers[0]
+    protected_type = m.get_one(m.ComponentType.objects.filter(abbr='V'))
+
+    component = m.Component(
+      type=protected_type,
+      paper=paper,
+      lastSubmitted=1234,
+      value='some/file',
+      mimetype='application/pdf',
+      conference=self.conference      
+    )
+    component.save()
+
+    request = bcap.grant('request-component-access', {
+      'user': reviewer, 'component': component
+    })
+
+    grants = m.ComponentGrantRequest.objects.all()
+    self.assertEqual(len(grants), 0)
+
+    request.post()
+
+    grants = m.ComponentGrantRequest.objects.all()
+    self.assertEqual(len(grants), 1)
+    self.assertEqual(grants[0].granted, False)    
+    self.assertEqual(grants[0].component, component)
+    self.assertEqual(grants[0].reviewer, reviewer)
+
+    request.post()
+    self.assertEqual(len(grants), 1)
+    self.assertEqual(grants[0].granted, False)    
+    self.assertEqual(grants[0].component, component)
+    self.assertEqual(grants[0].reviewer, reviewer)
+

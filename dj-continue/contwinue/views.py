@@ -180,6 +180,7 @@ class ContinueInit():
       'update-decision': reviewer.UpdateDecisionHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
+      'request-component-access': reviewer.RequestComponentAccessHandler,
       'launch-reviewer' : reviewer.LaunchReviewerHandler,
       # End LaunchContinue handlers
 

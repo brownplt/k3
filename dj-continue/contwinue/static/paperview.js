@@ -78,7 +78,10 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 	this.getInfoTable = function(isReview) {
 		var textTRs = [];
 		map(function(component) {
-			var ctype = fold(function(v, acc) {return acc ? acc : (v.id == component.typeID ? v : false);},false,basicInfo.components);
+			var ctype = fold(function(v, acc) {
+        console.log(arguments);
+        return acc ? acc : (v.id == component.typeID ? v : false);
+      }, false, basicInfo.components);
 			if(ctype.format == 'Text')  {
 				var ohdom = TH();
 				var oddom = TD();
@@ -93,6 +96,8 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 			else
 				return '';
 			},this.paper.components);
+
+    var hiddenTRs = [];
 
 		var decsel;
 		if(inList('admin',this.user.rolenames)) {

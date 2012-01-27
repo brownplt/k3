@@ -113,7 +113,7 @@ class PaperSetPcPaperHandler(bcap.CapHandler):
     return bcap.bcapResponse(granted.paper.get_paper())
 
 class PaperSetTargetsHandler(bcap.CapHandler):
-  def post_arg_names(self): return ['targetID', 'othercats']  
+  def post_arg_names(self): return ['targetID', 'othercats']
   def post(self, granted, args):
     paper = granted.paper
     paper.update_target_by_id(args['targetID'])

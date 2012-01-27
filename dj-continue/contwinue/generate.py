@@ -45,20 +45,21 @@ def generate(numusers=10):
   else:
     writer_role = writer_roles[0]
 
+  protected_type = ComponentType.objects.filter(abbr='V')
+  if len(protected_type) == 0:
+    protected_type = ComponentType(
+      conference=c,
+      abbr='V',
+      description='Previous Review Updates',
+      fmt='PDF',
+      deadline=int(time.time())+(86400*30),
+      mandatory=False,
+      grace_hours=0,
+      size_limit=0,
+      protected=True
+    )
+    protected_type.save()
 
-  writer_bios = ComponentType.objects.filter(abbr='B')
-  if len(writer_bios) == 0:
-    writer_bio = ComponentType(abbr='B', description='Writer Bio', fmt='Any',
-      size_limit=20000, deadline=int(time.time())+(86400*15), mandatory=False,
-      grace_hours=48, conference=c)
-    writer_bio.save()
-
-  extended_abstracts = ComponentType.objects.filter(abbr='C')
-  if len(extended_abstracts) == 0:
-    extended_abstract = ComponentType(abbr='C', description='Extended Abstract',
-      fmt='Text', size_limit=1000, deadline=int(time.time())+1, mandatory=False,
-      grace_hours=96, conference=c)
-    extended_abstract.save()
 
   writer_users = User.objects.filter(roles=writer_role)
   if len(writer_users) != numusers:
@@ -145,9 +146,6 @@ def generate(numusers=10):
       p.save()
       p.authors.add(contact)
       p.save()
-      component = Component(type=extended_abstract, paper=p, lastSubmitted=987214,
-        value="This is actually pretty short", mimetype='text/plain', conference=c)
-      component.save()
 
       abstract = get_one(ComponentType.objects.filter(abbr='A'))
       abs_comp = Component(type=abstract, paper=p, lastSubmitted=int(time.time()),
