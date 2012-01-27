@@ -65,7 +65,8 @@ class TestPaperJsons(Generator):
     grant_request = m.ComponentGrantRequest(
       reviewer=self.rev,
       component=c,
-      granted=False
+      granted=False,
+      conference=self.rev.conference
     )
     grant_request.save()
 
@@ -90,7 +91,8 @@ class TestPaperJsons(Generator):
     grant_request = m.ComponentGrantRequest(
       reviewer=self.rev,
       component=c,
-      granted=True
+      granted=True,
+      conference=self.rev.conference
     )
     grant_request.save()
 
@@ -147,7 +149,7 @@ def transform(obj):
     return obj
 
 class TestCJSONSpeed(Generator):
-  def speed_test(self):
+  def test_speed(self):
     obj = {}
     for i in range(0,100):
       for c in range(33,126):

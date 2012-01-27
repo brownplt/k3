@@ -69,6 +69,10 @@ class WriterPaperInfoHandler(bcap.CapHandler):
         'remove': remove
       }) 
     paper_json = paper.get_paper_for_writer(caller)
+    for c in paper_json['components']:
+      comp = get_one(Component.objects.filter(id=c['id']))
+      get_cap = belay.grant('get-component-file', comp)
+      c['getComponent'] = get_cap
     paper_json['authors'] = author_json
     paper_json['unverifiedAuthors'] = unverified_author_json
     paper_json['thisAuthor'] = {

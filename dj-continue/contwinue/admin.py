@@ -382,6 +382,15 @@ class ConfigureHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(ret)
 
+# GetComponentRequestHandler
+# granted: |user:Admin|
+#
+# <- [ grantJSON ]
+class GetComponentRequestsHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse([g.to_json() for g in \
+      granted.user.conference.my(ComponentGrantRequest)])
+
 class LaunchAdminHandler(bcap.CapHandler):
   def get(self, granted):
     user = granted.user

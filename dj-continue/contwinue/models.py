@@ -654,6 +654,11 @@ class Paper(belay.Grantable):
     if comp is None: return comp
     return comp.to_json()
 
+  def component_by_abbr(self, abbr):
+    ct = get_one(ComponentType.objects.filter(abbr=abbr))
+    comp = get_one(Component.objects.filter(paper=self,type=ct))
+    return comp
+
   def get_deadline_extensions(self):
     return [ext.to_json() for ext in
             DeadlineExtension.objects.filter(paper=self)]
@@ -717,14 +722,11 @@ class Component(belay.Grantable):
   conference = models.ForeignKey(Conference)
 
   def to_json(self):
-    # TODO(joe): remove this grant
-    get_cap = belay.grant('get-component-file', self)
     return {
       'id': self.id,
       'typeID': self.type.id,
       'lsStr': convertTime(self.lastSubmitted),
-      'value': self.value,
-      'getComponent': get_cap
+      'value': self.value
     }
 
 class ComponentGrantRequest(belay.Grantable):
@@ -732,6 +734,13 @@ class ComponentGrantRequest(belay.Grantable):
   component = models.ForeignKey(Component)
   granted = models.BooleanField(default=False)
   conference = models.ForeignKey(Conference)
+
+  def to_json(self):
+    return {
+      'reviewer': self.reviewer.to_json(),
+      'component': self.component.to_json(),
+      'granted': self.granted
+    }
 
 class DeadlineExtension(belay.Grantable):
   type = models.ForeignKey(ComponentType)

@@ -686,3 +686,32 @@ class TestConfigure(Generator):
     self.assertEqual(updated.general_text, 'Some general text.')
     self.assertEqual(updated.component_text, 'Some component text.')
 
+class TestGetComponentRequests(Generator):
+  def test_get_requests(self):
+    [p1, p2] = Paper.objects.all()[:2]
+    r = self.reviewers[0]
+
+    c1 = p1.component_by_abbr('V')
+    c2 = p2.component_by_abbr('V')
+
+    g1 = ComponentGrantRequest(
+      component=c1,
+      reviewer=r,
+      conference=self.conference,
+      granted=False
+    )
+    g1.save()
+
+    g2 = ComponentGrantRequest(
+      component=c2,
+      reviewer=r,
+      conference=self.conference,
+      granted=False
+    )
+    g2.save()
+
+    get_grants = bcap.grant('get-component-requests', self.admin)
+
+    result = get_grants.get()
+
+    self.assertItemsEqual(result, [g1.to_json(), g2.to_json()])

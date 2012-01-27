@@ -5,6 +5,10 @@ function deleteTransform(caps,evt) {
 	}));
 }
 
+function makeGrantsTable(initGrants, acceptGrant, removeGrant) {
+
+}
+
 function makeDecisionsTable(decisions,targetable,deleteDecision,addDecision) {
 	return new ModListWidget(
 		filter(function(d) {return targetable==d.targetable;},decisions),

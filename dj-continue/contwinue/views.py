@@ -170,6 +170,7 @@ class ContinueInit():
       'send-emails': admin.SendEmailsHandler,
       'get-subreviewers': admin.GetSubReviewersHandler,
       'add-pcs': admin.AddPCsHandler,
+      'get-component-requests': admin.GetComponentRequestsHandler,
       'launch-admin': admin.LaunchAdminHandler,
       # End LaunchAdmin handlers
 
