@@ -157,7 +157,7 @@ def generate(numusers=10):
       t.save()
 
       p_comp = Component(type=protected_type, paper=p,
-        lastSubmitted=int(time.time()), value='some/file',
+        lastSubmitted=int(time.time()), value='testdata/response.pdf',
         mimetype='text/plain', conference=c)
       p_comp.save()
 
