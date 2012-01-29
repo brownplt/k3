@@ -557,7 +557,7 @@ class Paper(belay.Grantable):
   def get_components_safe(self, user):
     allowed = [c for c in self.component_set.exclude(type__protected=True)]
     granted = [g.component for g in user.componentgrantrequest_set.
-               filter(granted=True)]
+               filter(granted=True, component__paper__id=self.id)]
     return allowed + granted
 
   def get_dcomps_safe(self, user):

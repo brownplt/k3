@@ -62,7 +62,7 @@ function makeGrantsTable(initGrantsE, updateGrantsE)
         return {fields:{grants: dict}}
       }, false, cap);
 
-    return DIV(grantAll.dom, widg.dom);
+    return DIV(grantAll.dom, BR(), BR(), widg.dom);
   }, grantsE.startsWith(null), updateGrantsE.startsWith(null));
   return widget;
 }

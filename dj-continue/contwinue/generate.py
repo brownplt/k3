@@ -5,6 +5,8 @@ import logging
 import sha
 import random
 
+from contwinue.submitter import PaperUpdateComponentsHandler
+
 logger = logging.getLogger('default')
 
 def check_size(cls, num):
@@ -151,6 +153,15 @@ def generate(numusers=10):
       abs_comp = Component(type=abstract, paper=p, lastSubmitted=int(time.time()),
         value="Paper %s abstract" % p.id, mimetype='text/plain', conference=c)
       abs_comp.save()
+
+      pcomp = get_one(ComponentType.objects.filter(abbr='P'))
+      f1 = open('testdata/testpdf.pdf', 'r')
+      f2 = open('testdata/response.pdf', 'r')
+      filesDict = {
+        'P': f1, 'V': f2
+      }
+      handler = PaperUpdateComponentsHandler()
+      response = handler.post_files(p, {}, filesDict)
   
       t = Topic.objects.all()[random.randint(0, 9)]
       t.papers.add(p)

@@ -95,6 +95,8 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 			else
 				return '';
 			},this.paper.components);
+    var componentsDict = {};
+    map(function(c) { componentsDict[c.typeID] = c; }, this.paper.components);
 
     var hiddenTRs = [];
     var self = this;
@@ -126,7 +128,7 @@ DIVB({className:'pre'},' ') : requestDiv;})),
           oddom,
           'beginning');
         insertDomB(showhide.dom,ohdom,'beginning');
-        if (caps.requestComponents[ctype.id]) {
+        if (caps.requestComponents[ctype.id] && !componentsDict[ctype.id]) {
           textTRs.push(TR(ohdom,oddom));
         }
     }, filter(function(_) { return _.protected; }, basicInfo.components));
