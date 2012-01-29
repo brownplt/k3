@@ -737,6 +737,7 @@ class ComponentGrantRequest(belay.Grantable):
 
   def to_json(self):
     return {
+      'id': self.id,
       'reviewer': self.reviewer.to_json(),
       'component': self.component.to_json(),
       'granted': self.granted

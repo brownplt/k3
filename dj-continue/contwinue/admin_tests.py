@@ -715,3 +715,43 @@ class TestGetComponentRequests(Generator):
     result = get_grants.get()
 
     self.assertItemsEqual(result, [g1.to_json(), g2.to_json()])
+
+class TestGrantComponentRequests(Generator):
+  def test_grant_request(self):
+    [p1, p2] = Paper.objects.all()[:2]
+    r = self.reviewers[0]
+
+    c1 = p1.component_by_abbr('V')
+    c2 = p2.component_by_abbr('V')
+
+    g1 = ComponentGrantRequest(
+      component=c1,
+      reviewer=r,
+      conference=self.conference,
+      granted=False
+    )
+    g1.save()
+
+    g2 = ComponentGrantRequest(
+      component=c2,
+      reviewer=r,
+      conference=self.conference,
+      granted=False
+    )
+    g2.save()
+
+    grant = bcap.grant('grant-component-requests', g1.conference)
+
+    args= {}
+    args[g1.id] = True
+    args[g2.id] = True
+
+    result = grant.post(args)
+
+    g1after = ComponentGrantRequest.objects.filter(id=g1.id)[0]
+    g2after = ComponentGrantRequest.objects.filter(id=g2.id)[0]
+
+    self.assertTrue(g1after.granted)
+    self.assertTrue(g2after.granted)
+
+    self.assertItemsEqual(result, [g1after.to_json(), g2after.to_json()])

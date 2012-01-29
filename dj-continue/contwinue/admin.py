@@ -391,6 +391,23 @@ class GetComponentRequestsHandler(bcap.CapHandler):
     return bcap.bcapResponse([g.to_json() for g in \
       granted.user.conference.my(ComponentGrantRequest)])
 
+# GrantComponentRequestsHandler
+# granted: |conference:Conference|
+#
+# -> {grantid: Boolean}
+# <- [ grantJSON ]
+class GrantComponentRequestsHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    conf = granted.conference
+    for gid, should_grant in args.iteritems():
+      g = ComponentGrantRequest.objects.filter(id=gid)[0]
+      g.granted = should_grant
+      g.save()
+
+    return bcap.bcapResponse([g.to_json() for g in \
+      conf.my(ComponentGrantRequest)])
+    
+
 class LaunchAdminHandler(bcap.CapHandler):
   def get(self, granted):
     user = granted.user

@@ -8,7 +8,7 @@ import belaylibs.dj_belay as bcap
 from contwinue.tests_common import Generator
 from contwinue.admin_tests import TestAdminPage, TestSetRole, TestSetContact, \
     TestSendEmails, TestGetSubReviewers, TestAddPCs, TestConfigure, \
-    TestGetComponentRequests
+    TestGetComponentRequests, TestGrantComponentRequests
 from contwinue.submitter_tests import TestAuthorLaunch, TestUpdateAuthorName, \
     TestRemoveAuthor
 from contwinue.reviewer_tests import TestGetAbstracts, TestUpdateBids, \

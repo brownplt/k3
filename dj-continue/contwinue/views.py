@@ -171,6 +171,7 @@ class ContinueInit():
       'get-subreviewers': admin.GetSubReviewersHandler,
       'add-pcs': admin.AddPCsHandler,
       'get-component-requests': admin.GetComponentRequestsHandler,
+      'grant-component-requests': admin.GrantComponentRequestsHandler,
       'launch-admin': admin.LaunchAdminHandler,
       # End LaunchAdmin handlers
 

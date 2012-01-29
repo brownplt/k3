@@ -79,7 +79,6 @@ function PaperView(paperInfo,curUser,basicInfo,caps) {
 		var textTRs = [];
 		map(function(component) {
 			var ctype = fold(function(v, acc) {
-        console.log(arguments);
         return acc ? acc : (v.id == component.typeID ? v : false);
       }, false, basicInfo.components);
 			if(ctype.format == 'Text')  {
@@ -127,7 +126,9 @@ DIVB({className:'pre'},' ') : requestDiv;})),
           oddom,
           'beginning');
         insertDomB(showhide.dom,ohdom,'beginning');
-        textTRs.push(TR(ohdom,oddom));
+        if (caps.requestComponents[ctype.id]) {
+          textTRs.push(TR(ohdom,oddom));
+        }
     }, filter(function(_) { return _.protected; }, basicInfo.components));
 
 
@@ -228,7 +229,6 @@ DIVB({className:'pre'},' ') : requestDiv;})),
 		advanceToE.transform_e(function(next) {
 			var redirect = 'paperview?id='+next.id+'&mode=paper_assign_tab&tab='+$URL('tab')+
             "#" + next.cap;
-      console.log(redirect);
       window.location = redirect;
     });
 
@@ -250,7 +250,7 @@ DIVB({className:'pre'},' ') : requestDiv;})),
 					 '* = submitted review already',BR(),
 					'Numbers in brackets tally the assignments of each reviewer. Reviewers with a conflict of interest are not listed.'),
 				DIVB({className:'form-buttons'},saveBtn,saveAdvB)
-			)
+  		)
 		);
 	}
 	this.getReviewFormDom = function(userReviewInfo,revertE) {
