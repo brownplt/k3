@@ -399,8 +399,9 @@ class GetComponentRequestsHandler(bcap.CapHandler):
 class GrantComponentRequestsHandler(bcap.CapHandler):
   def post(self, granted, args):
     conf = granted.conference
-    for gid, should_grant in args.iteritems():
-      g = ComponentGrantRequest.objects.filter(id=gid)[0]
+    for gid, should_grant in args['grants'].iteritems():
+      logger.error('Gid is %s' % gid)
+      g = ComponentGrantRequest.objects.filter(id=int(gid))[0]
       g.granted = should_grant
       g.save()
 
@@ -455,6 +456,10 @@ class LaunchAdminHandler(bcap.CapHandler):
       'deleteTopics': topiccaps,
       'deleteComponentTypes': deletects,
       'changeComponentTypes': changects,
+      'componentRequests':
+         bcap.grant('get-component-requests', user).get(),
+      'grantComponentRequests':
+         bcap.grant('grant-component-requests', conf),
       'setRoles': rolecaps,
       'changeEmails': emailcaps,
       'sendEmails': bcap.regrant('send-emails', conf),

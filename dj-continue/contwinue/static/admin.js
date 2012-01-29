@@ -5,8 +5,66 @@ function deleteTransform(caps,evt) {
 	}));
 }
 
-function makeGrantsTable(initGrants, acceptGrant, removeGrant) {
+function makeGrantsTable(initGrantsE, updateGrantsE)
+/*: EventStream([{id: grantID,
+      reviewer: reviewerJSON,
+      paperTitle: String,
+      component: compJSON,
+      granted: Bool
+     }])
+  * EventStream(cap(grant-component-requests)) -> DOMB
+*/
+{
+  var grantsE = receiver_e();
 
+  initGrantsE.transform_e(function(_) { grantsE.sendEvent(_); });
+
+  var widget = lift_b(function(reqs, cap) {
+    if ((reqs === null) || (cap === null)) { return SPAN(); }
+
+    var grantAll = new ButtonWidget('Grant All');
+
+    var allGrantE = extractEvent_e(grantAll.dom, 'click').transform_e(function() {
+      var postDataReqs = {};
+      map(function(r) {
+        postDataReqs[r.id] = true
+      }, reqs);
+      return [cap, {grants:postDataReqs}];
+    });
+
+    postE(allGrantE).transform_e(function(res) {
+      grantsE.sendEvent(res);
+    });
+
+    var displayDoms = map(function(grant) { 
+        return {
+          k: grant.id,
+          v: grant.reviewer.fullname + ", " + grant.paperTitle
+        };
+      }, reqs);
+
+    var initChecked = map(
+      function(g) { return g.id; },
+      filter(function(g) { return g.granted; }, reqs)
+    );
+
+    var widg = new CheckboxListWidget(displayDoms, initChecked).
+      belayServerSaving(function(grants) {
+        var dict = {};
+        map(function(g) {
+           var isGranted = filter(
+            function(_) { return _ === g.id},
+            grants
+          ).length !== 0;
+          dict[g.id] = isGranted;
+        }, reqs);
+        console.log(dict);
+        return {fields:{grants: dict}}
+      }, false, cap);
+
+    return DIV(grantAll.dom, widg.dom);
+  }, grantsE.startsWith(null), updateGrantsE.startsWith(null));
+  return widget;
 }
 
 function makeDecisionsTable(decisions,targetable,deleteDecision,addDecision) {
@@ -441,6 +499,11 @@ function loader() {
 		return BLOCKQUOTE(map(function(sr) {return P({className:'pre'},sr);},srs));
 	});
 	insertDomB(subDomB,'subrevlist');
+
+  var requestsE = getFieldE(launchE, 'componentRequests');
+  var grantRequestCapE = getFieldE(launchE, 'grantComponentRequests');
+  var tableB = makeGrantsTable(requestsE, grantRequestCapE);
+  insertDomB(tableB, 'grantlist', 'end');
 
  insertValueE(methodE(getFieldE(launchE, 'configure'), 'serialize', []), 'configure', 'action');
 

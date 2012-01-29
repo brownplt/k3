@@ -740,7 +740,8 @@ class ComponentGrantRequest(belay.Grantable):
       'id': self.id,
       'reviewer': self.reviewer.to_json(),
       'component': self.component.to_json(),
-      'granted': self.granted
+      'granted': self.granted,
+      'paperTitle': self.component.paper.title
     }
 
 class DeadlineExtension(belay.Grantable):

@@ -32,6 +32,12 @@ p {
     margin-right:auto;
 }
 
+.centered {
+    width: 700px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
 pre {
     margin:0;
     line-height:115%;
