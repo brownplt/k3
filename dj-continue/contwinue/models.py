@@ -877,6 +877,94 @@ class Review(belay.Grantable):
       'lastSaved': self.last_saved
     }
 
+class MeetingException(Exception):
+  pass
+
+class MeetingOrder(belay.Grantable):
+  class Meta:
+    ordering = ['morder']
+  paper = models.ForeignKey(Paper)
+  morder = models.IntegerField()
+  current = models.BooleanField(default=False)
+  conference = models.ForeignKey(Conference)
+
+  paper_title = property(fget = lambda s : s.paper.title)
+  paper_conflicts = property(
+    fget = lambda s: [x.full_name for x in s.paper.conflicts]
+  )
+  paper_authors = property(
+    fget = lambda s:
+      ", ".join([a.full_name for a in s.paper.authors.all()])
+  )
+
+  def to_json(self):
+    return {
+      'current': self.current,
+      'morder': self.morder,
+      'paperID': self.paper_id,
+      'paperTitle': self.paper_title,
+      'paperAuthors': self.paper_authors,
+      'paperConflicts': self.paper_conflicts
+    }
+
+  @classmethod
+  def get_order(cls, conf):
+    return [m.to_json() for m in conf.my(cls)]
+
+  @classmethod
+  def set_order(cls, conf, papers):
+    if get_one(cls.objects.filter(conference=conf,current=True)):
+      raise MeetingException('Refusing to re-order while meeting in progress')
+    for mo in cls.objects.filter(conference=conf):
+      mo.delete()
+    order = 1
+    for pid in [p.lstrip().rstrip() for p in papers.split(' ')]:
+      paper = get_one(Paper.objects.filter(id=int(pid)))
+      if paper:
+        mo = MeetingOrder(conference=conf, paper=paper, morder=order)
+        mo.save()
+        order += 1
+
+    return [mo.to_json() for mo in conf.my(MeetingOrder)]
+
+  @classmethod
+  def jump_to(cls, conf, paper):
+    thecur = get_one(cls.objects.filter(conference=conf, current=True))
+    thep = get_one(cls.objects.filter(paper__id=int(paper)))
+    if thep:
+      if thecur:
+        thecur.current = False
+        thecur.save()
+      thep.current = True
+      thep.save()
+      return [m.to_json() for m in conf.my(MeetingOrder)]
+    else:
+      raise MeetingException('Paper with that number not in meeting')
+
+  @classmethod
+  def end_meeting(cls, conf):
+    thecur = get_one(cls.objects.filter(conference=conf, current=True))
+    if thecur:
+      thecur.current = False
+      thecur.save()
+    return [m.to_json() for m in conf.my(MeetingOrder)]
+
+  @classmethod
+  def get_paper(cls, conf, paper):
+    thep = get_one(cls.objects.filter(
+      conference=conf,
+      paper__id=int(paper)
+    ))
+    if thep:
+      startjson = thep.paper.get_paper()
+      startjson['decision'] = thep.paper.decision.to_json()
+      startjson['reviewsInfo'] = thep.paper.reviews_info
+      startjson['conflicts'] = thep.paper.conflicts
+      return startjson
+    else:
+      raise MeetingException('Paper with that number not in meeting')
+
+
 class Launchable(belay.Grantable):
   account = models.ForeignKey(Account)
   launchbase = models.TextField(max_length=500)

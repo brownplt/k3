@@ -19,7 +19,8 @@ from contwinue.paperview_tests import TestGetByRole, TestGetPaper, \
     TestSetDeadline, TestGetDeadlines, TestAssignReviewers, \
     TestGetComments, TestPostComment
 from contwinue.accounts_tests import TestCreateReviewer
-from contwinue.model_tests import TestPaperJsons, TestCJSONSpeed
+from contwinue.model_tests import TestPaperJsons, TestCJSONSpeed, \
+    TestMeetingOrder
 from contwinue.crypt_tests import TestEnDecrypt
 
 class FakeHttp(object):

@@ -138,7 +138,11 @@ Pages
 
 
 [] (2) Identify handlers/models for backend of meeting.(html|js)
-  [] ...
+  [] Meeting/endMeeting
+  [] Meeting/getOrder →
+  [] Meeting/getPaper
+  [] Meeting/jumpTo
+  [] Meeting/setOrder
 [] (_) Move them (and unit-test each one)
 
 [] (2) Identify handlers/models for backend of spreadsheet.(html|js)

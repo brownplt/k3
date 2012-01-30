@@ -171,3 +171,73 @@ class TestCJSONSpeed(Generator):
     
     print('Diff: %s', t2 - t1)
 
+class TestMeetingOrder(Generator):
+  def setup_meeting(self):
+    [p3, p2, p1] = m.Paper.objects.all()[:3]
+    m.MeetingOrder.set_order(
+      conf=self.conference,
+      papers=" ".join([str(p.id) for p in [p1, p2, p3]])
+    )
+    self.p1, self.p2, self.p3 = p1, p2, p3
+
+  def test_set_order(self):
+    self.setup_meeting()
+    mos = m.MeetingOrder.objects.all()
+    self.assertEqual(mos[0].paper.id, self.p1.id)
+    self.assertEqual(mos[0].morder, 1)
+    
+    self.assertEqual(mos[1].paper.id, self.p2.id)
+    self.assertEqual(mos[1].morder, 2)
+
+    self.assertEqual(mos[2].paper.id, self.p3.id)
+    self.assertEqual(mos[2].morder, 3)
+
+  def test_set_twice(self):
+    self.setup_meeting()
+    mo = m.MeetingOrder.objects.all()[0]
+    mo.current = True
+    mo.save()
+    with self.assertRaises(m.MeetingException):
+      self.setup_meeting()
+
+  def test_jump_to(self):
+    self.setup_meeting()
+    m.MeetingOrder.jump_to(self.conference, str(self.p2.id))
+    mo = m.get_one(m.MeetingOrder.objects.filter(current=True))
+    self.assertEqual(mo.paper, self.p2)
+    m.MeetingOrder.jump_to(self.conference, str(self.p1.id))
+    mo = m.get_one(m.MeetingOrder.objects.filter(current=True))
+    self.assertEqual(mo.paper, self.p1)
+
+  def test_jump_bad(self):
+    self.setup_meeting()
+    with self.assertRaises(m.MeetingException):
+      m.MeetingOrder.jump_to(self.conference, str(-1))
+
+  def test_get_order(self):
+    self.setup_meeting()
+    order = m.MeetingOrder.get_order(self.conference)
+    self.assertEqual(len(order), 3)
+    self.assertEqual(order[0]['paperID'], self.p1.id)
+    self.assertEqual(order[1]['paperID'], self.p2.id)
+    self.assertEqual(order[2]['paperID'], self.p3.id)
+
+  def test_get_paper(self):
+    self.setup_meeting()
+    paper = m.MeetingOrder.get_paper(self.conference, self.p2.id)
+    pjson = self.p2.get_paper()
+    for prop in ['id','title','author','target','othercats']:
+      self.assertEqual(paper[prop], pjson[prop])
+    self.assertEqual(paper['decision'], self.p2.decision.to_json())
+    self.assertEqual(paper['conflicts'], self.p2.conflicts)
+    self.assertEqual(paper['reviewsInfo'], self.p2.reviews_info)
+
+  def test_end_meeting(self):
+    self.setup_meeting()
+    m.MeetingOrder.jump_to(self.conference, self.p2.id)
+    mo = m.get_one(m.MeetingOrder.objects.filter(current=True))
+    self.assertEqual(mo.paper, self.p2)
+    m.MeetingOrder.end_meeting(self.conference)
+    mo = m.get_one(m.MeetingOrder.objects.filter(current=True))
+    self.assertEqual(mo, None)
+
