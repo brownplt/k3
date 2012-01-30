@@ -442,8 +442,15 @@ function makeReviewTable(papersB,basicInfo,cuser,getReviewPercentages,paperCaps)
 	var downloadCols = map(function(dc) {
 			return new Column('download',dc.description,function(a,b) {return 0;},
 		function (paper,cookie,tab) {
-      return TD(paper.dcobj[dc.id] ? A({target:'_blank',
-      href:paperCaps[paper.id].compsCaps[dc.id].serialize()},'Download') : '');});},
+      var ccap = paperCaps[paper.id].compsCaps[dc.id];
+      if (ccap) {
+        return TD(paper.dcobj[dc.id] ? A({target:'_blank',
+          href:ccap.serialize()},'Download') : '');
+      }
+      else {
+        return TD(SPAN());
+      }
+    })},
 		filter(function(c) {return c.format != 'Text';},basicInfo.components));
 	var trListsB = papersB.transform_b(function(papers) {
 		var toreview = [];
@@ -729,9 +736,9 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
 				if(!detb)
           detb = constant_b(makeDecideTable(ncSummariesB,basicInfo,launchInfo.paperCaps));
 				return detb;
-//			case 'meeting_tab':
-//				if(!mtb) mtb = lift_b(function(m) {if (m) return makeMeetingTable(nhSummariesB,basicInfo,curUser,m); else return constant_b(getLoadingDiv());},meetingInfoB);
-//				return mtb;
+		case 'meeting_tab':
+				if(!mtb) mtb = lift_b(function(m) {if (m) return makeMeetingTable(nhSummariesB,basicInfo,curUser,m); else return constant_b(getLoadingDiv());},meetingInfoB);
+   			return mtb;
 			case 'goto_tab':
 				if(!gtb) gtb = constant_b(makeGotoTab(summariesB,basicInfo,curUser));
 				return gtb;
