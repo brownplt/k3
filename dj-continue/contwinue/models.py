@@ -919,12 +919,14 @@ class MeetingOrder(belay.Grantable):
       mo.delete()
     order = 1
     for pid in [p.lstrip().rstrip() for p in papers.split(' ')]:
-      paper = get_one(Paper.objects.filter(id=int(pid)))
-      if paper:
-        mo = MeetingOrder(conference=conf, paper=paper, morder=order)
-        mo.save()
-        order += 1
-
+      try:
+        paper = get_one(Paper.objects.filter(id=int(pid)))
+        if paper:
+          mo = MeetingOrder(conference=conf, paper=paper, morder=order)
+          mo.save()
+          order += 1
+      except ValueError:
+        continue
     return [mo.to_json() for mo in conf.my(MeetingOrder)]
 
   @classmethod

@@ -172,6 +172,9 @@ class ContinueInit():
       'add-pcs': admin.AddPCsHandler,
       'get-component-requests': admin.GetComponentRequestsHandler,
       'grant-component-requests': admin.GrantComponentRequestsHandler,
+      'set-meeting-order': admin.SetMeetingOrderHandler,
+      'meeting-jump-to': admin.MeetingJumpHandler,
+      'end-meeting': admin.EndMeetingHandler,
       'launch-admin': admin.LaunchAdminHandler,
       # End LaunchAdmin handlers
 
@@ -183,6 +186,8 @@ class ContinueInit():
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
       'request-component-access': reviewer.RequestComponentAccessHandler,
+      'get-meeting-order' : reviewer.GetMeetingOrderHandler,
+      'get-meeting-paper' : reviewer.GetMeetingPaperHandler,
       'launch-reviewer' : reviewer.LaunchReviewerHandler,
       # End LaunchContinue handlers
 

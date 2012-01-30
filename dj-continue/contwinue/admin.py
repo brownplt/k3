@@ -407,7 +407,24 @@ class GrantComponentRequestsHandler(bcap.CapHandler):
 
     return bcap.bcapResponse([g.to_json() for g in \
       conf.my(ComponentGrantRequest)])
-    
+
+class SetMeetingOrderHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    return bcap.bcapResponse(
+      MeetingOrder.set_order(granted.conference, args['pstr'])
+    )
+
+class MeetingJumpHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    return bcap.bcapResponse(
+      MeetingOrder.jump_to(granted.conference, args['paper'])
+    )
+
+class EndMeetingHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    return bcap.bcapResponse(
+      MeetingOrder.end_meeting(granted.conference)
+    )
 
 class LaunchAdminHandler(bcap.CapHandler):
   def get(self, granted):

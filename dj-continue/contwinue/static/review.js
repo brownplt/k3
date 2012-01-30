@@ -555,7 +555,7 @@ function makeDecideTable(papersB,basicInfo,updateCaps) {
 	return new TableWidget(paperEntriesB,'paper',dcolumns,new FilterWidget(basicInfo)).dom;
 }
 
-function makeMeetingTable(papersB,basicInfo,cuser,meetingInfo) {
+function makeMeetingTable(papersB,basicInfo,cuser,meetingInfo,meetingCaps) {
 	var meetingOrderB = constant_b(meetingInfo);
 	var contdomB = constant_b('');
 
@@ -578,20 +578,15 @@ function makeMeetingTable(papersB,basicInfo,cuser,meetingInfo) {
 					return toOrderStr(filter(function(_) {return _.decision.id == basicInfo.info.defaultDecisionID;},ps),'id');}));
 		var soE = snapshot_e(extractEvent_e(orderbtn,'click'),orderBox.behaviors.value);
 		
-		var setOrderE = getFilteredWSO_e(merge_e(caE,cuE,soE).transform_e(function(pstr) {
-			return genRequest(
-				{url:'Meeting/setOrder',
-				fields:{cookie:authCookie,pstr:pstr}});}));
+		var setOrderE = postE(merge_e(caE,cuE,soE).transform_e(
+      function(pstr) { return [meetingCaps.setOrder, {pstr:pstr}];}));
 		var startE = getFilteredWSO_e(snapshot_e(extractEvent_e(startmeeting,'click'),setOrderE.startsWith(meetingInfo)).filter_e(function(ord) {
 			return ord.length > 0;}).transform_e(function(ord) {
-				return genRequest(
-					{url:'Meeting/jumpTo',
-					fields:{cookie:authCookie,paper:ord[0].paperID}});
-				}));
+        return [meetingCaps.jumpTo, {paper:ord[0].paperID}];
+		  }));
 		startE.transform_e(function(_) {window.location = 'meeting.html?cookie='+authCookie;});
-		var restartE = getFilteredWSO_e(extractEvent_e(restartmeeting,'click').constant_e(genRequest(
-					{url:'Meeting/endMeeting',
-					fields:{cookie:authCookie}})));
+		var restartE = postE(extractEvent_e(restartmeeting,'click').
+      constant_e(meetingCaps.endMeeting));
 		meetingOrderB = merge_e(setOrderE,startE,restartE).startsWith(meetingInfo);
 
 		insertValueE(setOrderE.transform_e(function(_) {return toOrderStr(_,'paperID');}),orderBox.dom,'value');
@@ -737,7 +732,12 @@ function setMainContent(currentTabB,curUser,basicInfo,summariesE,bidValsE,meetin
           detb = constant_b(makeDecideTable(ncSummariesB,basicInfo,launchInfo.paperCaps));
 				return detb;
 		case 'meeting_tab':
-				if(!mtb) mtb = lift_b(function(m) {if (m) return makeMeetingTable(nhSummariesB,basicInfo,curUser,m); else return constant_b(getLoadingDiv());},meetingInfoB);
+				if(!mtb) mtb = lift_b(function(m) {
+          if (m) 
+            return makeMeetingTable(nhSummariesB,basicInfo,curUser,
+              m,launchInfo.meetingCaps);
+          else
+            return constant_b(getLoadingDiv());},meetingInfoB);
    			return mtb;
 			case 'goto_tab':
 				if(!gtb) gtb = constant_b(makeGotoTab(summariesB,basicInfo,curUser));
@@ -764,11 +764,11 @@ function loadPaperLists(MainTabs,onLoadTimeE,curUser,basicInfo,launchInfo) {
 		}, bidsin);
 		return bidarr;
 	});
-	var meetingQueryE = MainTabs.currentTabB.changes().filter_e(function(ct) {return ct == 'meeting_tab';}).constant_e(
-			genRequest(
-				{url: 'Meeting/getOrder',
-				fields: {cookie:authCookie}}));
-	var meetingInfoE = getFilteredWSO_e(meetingQueryE);
+	var meetingQueryE = MainTabs.currentTabB.changes().filter_e(
+    function(ct) { return ct == 'meeting_tab';}).
+   constant_e(launchInfo.meetingCaps.getOrder);
+
+	var meetingInfoE = getE(meetingQueryE);
 
 	if(basicInfo.info.useDS) {
 		summaryCol = new Column('summary','Sum',

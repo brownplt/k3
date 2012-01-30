@@ -234,6 +234,18 @@ class RequestComponentAccessHandler(bcap.CapHandler):
 
     return bcap.bcapResponse(True)
 
+class GetMeetingOrderHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(
+      m.MeetingOrder.get_order(granted.conference)
+    )
+
+class GetMeetingPaperHandler(bcap.CapHandler):
+  def get(self, granted):
+    return bcap.bcapResponse(
+      m.MeetingOrder.get_paper(granted.conference)
+    )
+
 # LaunchReviewerHandler
 # Gets info and caps for launching the reviewer page
 class LaunchReviewerHandler(bcap.CapHandler):
@@ -263,11 +275,17 @@ class LaunchReviewerHandler(bcap.CapHandler):
       papers_caps[paper.id] = paper_caps
 
     launchAdmin = "#"
+    meeting_caps = {}
+    meeting_caps['getPaper'] = bcap.grant('get-meeting-paper', conf)
+    meeting_caps['getOrder'] = bcap.grant('get-meeting-order', conf)
     if 'admin' in reviewer.rolenames:
       launchAdmin = "%s/admin#%s" % (
         bcap.this_server_url_prefix(),
         bcap.cap_for_hash(bcap.grant('launch-admin', reviewer))
       )
+      meeting_caps['setOrder'] = bcap.grant('set-meeting-order', conf)
+      meeting_caps['jumpTo'] = bcap.grant('meeting-jump-to', conf)
+      meeting_caps['endMeeting'] = bcap.grant('end-meeting', conf)
 
     users = conf.users_by_role_name('reviewer')
     users_caps = {}
@@ -286,6 +304,8 @@ class LaunchReviewerHandler(bcap.CapHandler):
       'email': reviewer.email,
       'currentUser': reviewer.to_json(),
       'launchAdmin': launchAdmin,
+
+      'meetingCaps' : meeting_caps,
 
       'paperCaps': papers_caps,
       'userCaps': users_caps,
