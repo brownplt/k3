@@ -41,10 +41,11 @@ function ControlBoxWidget(onLoadTimeE,basicInfoE,meetingCapsE) {
   var endCapE = getFieldE(meetingCapsE, 'endMeeting').transform_e(function(_) {
     return [_, {}];
   });
-	var endE = postE(snapnull(eE, endCapE));
-  snapnull(endE, getFieldE(meetingCapsE, 'backToList')).transform_e(function(_) {
-		window.location = _;
-  });
+	var endE = postE(eE.snapshot_e(endCapE.startsWith(null)).filter_e(id));
+  endE.snapshot_e(getFieldE(meetingCapsE, 'backToList').
+    startsWith(null)).filter_e(id).transform_e(function(_) {
+      window.location = _;
+    });
 
 	this.events.meetingInfo = rec_e(function(miE) {
 		var loadMInfoE = getE(getFieldE(meetingCapsE, 'getOrder'));
@@ -187,7 +188,8 @@ function loader() {
 	},controlBox.events.next,controlBox.behaviors.current);
 
 	function getclist(l,nobody) {
-	    var cl = fold(function(v, acc) {return (acc == 'Nobody') ? v : acc+', '+v;},'Nobody',l);
+	    var cl = fold(function(v, acc) {
+        return (acc == 'Nobody') ? v : acc+', '+v;},'Nobody',l);
 	    if (!nobody && cl=='Nobody')
 		cl = '';
 	    return cl;

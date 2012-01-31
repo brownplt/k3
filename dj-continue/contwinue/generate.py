@@ -95,19 +95,6 @@ def generate(numusers=10):
         roletext=rand_str(10), conference=c)
       uu.save()
 
-  revrole = Role.objects.filter(name='reviewer')[0]
-  reviewers = revrole.user_set.all()
-  if not len(reviewers) >= 10:
-    for n in range(10):
-      account = Account(key=str(uuid.uuid4()))
-      account.save()
-      rev_user = User(username='reviewer%s' % n, 
-        full_name='Joe Reviewer%s' % n, email='joe@reviewer%s.com' % n, 
-        conference=c,
-        account=account)
-      rev_user.save()
-      rev_user.roles.add(revrole)
-
   if not check_size(Topic, 10):
     topics = ['Programming Languages', 'Distributed Systems', 'Web Security', 
       'Computer Vision', 'Machine Learning', 'Computational Biology', 
@@ -184,6 +171,7 @@ def generate(numusers=10):
       pc_only=False)
     author_comments.save()
 
+
   if not check_size(DecisionValue, 3):
     undecided = DecisionValue(conference=c, abbr='U', targetable=False, 
       description='Undecided')
@@ -215,6 +203,50 @@ def generate(numusers=10):
       description='I am conflicted with this paper')
     conf_bid.save()
 
+  revrole = Role.objects.filter(name='reviewer')[0]
+  reviewers = revrole.user_set.all()
+  papers = Paper.objects.all()
+  ratings = RatingValue.objects.all()
+  experts = ExpertiseValue.objects.all()
+  types = ReviewComponentType.objects.all()
+  bidvalues = BidValue.objects.all()
+  if not len(reviewers) >= 20:
+    for n in range(20):
+      account = Account(key=str(uuid.uuid4()))
+      account.save()
+      rev_user = User(username='reviewer%s' % n, 
+        full_name='Joe Reviewer%s' % n, email='joe@reviewer%s.com' % n, 
+        conference=c,
+        account=account)
+      rev_user.save()
+      rev_user.roles.add(revrole)
+      for p in random.sample(papers, int(len(papers) / 5)):
+        b = Bid(
+          paper=p, bidder=rev_user, conference=c,
+          value=random.choice(bidvalues)
+        )
+        b.save()
+      # Each reviewer reviews 1/5 papers
+      for p in random.sample(papers, int(len(papers) / 5)):
+        rev = Review(
+          paper=p, conference=c, reviewer=rev_user,
+          published=random.choice([True, False]),
+          submitted=random.choice([True, False]),
+          overall=random.choice(ratings),
+          expertise=random.choice(experts),
+          subreviewers="",
+          last_saved=0,
+        )
+        rev.save()
+        pc_comp = ReviewComponent(
+          type=random.choice(types),
+          review=rev,
+          value=random.choice(ipsums),
+          conference=c
+        )
+        pc_comp.save()
+
+
   """
   TODO(matt): bad random things, maybe fix later
   if len(Component.objects.all()) != 10:
@@ -236,3 +268,25 @@ def generate(numusers=10):
 
   return HttpResponse('OK')
 
+ipsums = ["""
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean tempus aliquet auctor. Donec nisi nulla, ullamcorper ornare blandit at, sagittis sed neque. Cras pellentesque eros ac dolor dictum malesuada. Nunc dignissim aliquam leo, quis mattis nisi tincidunt accumsan. Mauris eget egestas turpis. Pellentesque accumsan massa porta purus suscipit vestibulum. Etiam turpis ligula, bibendum a porttitor at, ornare id nisi. Nulla dui risus, dictum eu euismod sed, pretium vel orci. Ut vulputate aliquam elit, et aliquam turpis luctus id. Mauris tempus auctor nulla. Integer tempor blandit libero, sit amet ornare sapien molestie a. Morbi posuere velit at tellus ultricies mattis. Sed feugiat cursus molestie. Donec fringilla, ligula vel congue egestas, sem lacus ultricies massa, ac venenatis felis mauris quis tortor. Aliquam dictum pellentesque placerat. Duis mi nisl, sollicitudin ut molestie nec, pharetra sed dui.
+
+Fusce nunc eros, rhoncus id porttitor non, tempor sed purus. Curabitur pretium gravida rhoncus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec sit amet ligula vitae lectus dapibus rhoncus et sed mauris. Curabitur mollis mollis dignissim. Aenean facilisis mauris aliquam diam eleifend nec tincidunt enim commodo. Integer mi nisl, ultricies sit amet scelerisque at, iaculis quis justo. Sed quis sagittis lorem. Sed accumsan est non leo porttitor rhoncus ac id ante. Sed auctor egestas varius. Curabitur condimentum mauris tortor, feugiat ornare dolor. Pellentesque porttitor metus quis diam sagittis sed ullamcorper ipsum mollis. Morbi eros neque, vulputate ut sollicitudin nec, mollis a lacus. Pellentesque quis lacus non ante imperdiet cursus.
+
+Ut sit amet rhoncus quam. Phasellus orci nibh, viverra vel dictum et, lobortis sit amet enim. Ut luctus congue elit sed consectetur. Nullam ac metus nibh. Suspendisse vehicula eleifend ligula, eu blandit metus venenatis quis. Quisque mollis elit quis velit rutrum eget mollis erat sollicitudin. Vestibulum sit amet quam vitae quam ullamcorper facilisis non et eros. Aliquam malesuada leo eget erat commodo non hendrerit libero porttitor. Sed est massa, pulvinar pretium commodo vel, malesuada vel tellus. Donec porttitor placerat ultricies. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum at lectus a neque pharetra euismod eu id urna. Pellentesque nec elit sit amet ligula facilisis molestie.
+""",
+"""
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent venenatis egestas libero condimentum convallis. Donec odio nibh, porttitor vel sodales nec, luctus ut dui. Mauris a ultrices mi. Praesent consectetur tincidunt ante sit amet sollicitudin. Praesent pretium elit id arcu iaculis eu varius odio eleifend. Suspendisse ac velit eu arcu vestibulum pharetra. In hac habitasse platea dictumst. Curabitur interdum commodo tempor. Vivamus vel mi eu dolor porta pretium sed eu erat.
+
+Aenean gravida risus ac tellus lobortis varius. In sit amet leo a arcu sagittis scelerisque eget vitae libero. Vivamus accumsan est ac nibh venenatis feugiat. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tortor ante, molestie eu blandit vel, fringilla in magna. Nullam orci libero, condimentum eget hendrerit ac, porttitor non enim. Etiam elit diam, hendrerit ac adipiscing quis, dictum in lectus. Morbi sed vehicula tortor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In egestas, odio a facilisis molestie, dolor eros dictum orci, et viverra massa metus sed elit. Fusce ac ipsum justo, et bibendum sapien. Ut eros mi, vestibulum quis eleifend eget, dapibus vel felis. Proin dignissim justo in lectus venenatis et bibendum nisl feugiat. Fusce dictum mollis tempus. Curabitur velit est, viverra mattis mollis et, aliquam eget tellus.
+
+Proin tempor, lorem nec elementum sodales, justo lectus tincidunt dolor, at rhoncus lacus metus eget diam. Aenean at fermentum sapien. Suspendisse lacinia elementum odio id dignissim. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec sollicitudin tempor nisi, nec porttitor justo pretium nec. Nulla facilisi. Etiam malesuada nulla in est dapibus vel mattis nulla suscipit. Duis tincidunt sagittis ante id tempor. Integer vel vestibulum eros. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+""",
+"""
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin consectetur pretium lectus. Nam rutrum tempus massa, in laoreet elit ornare at. Fusce facilisis ornare nisi, eget luctus arcu interdum et. Nulla vel dolor ante. Proin iaculis, sem ut fermentum scelerisque, risus massa tempus ipsum, et sodales nisl neque in tortor. Integer libero neque, malesuada a auctor a, tempor ac diam. Praesent lacinia tortor id orci sodales tincidunt. Sed commodo suscipit congue.
+
+Nulla facilisi. Suspendisse sollicitudin, eros sodales dapibus pulvinar, urna lectus dignissim mi, in imperdiet eros arcu et ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin eget nisl magna. Suspendisse potenti. Sed euismod consequat odio nec tristique. Etiam vel turpis dui.
+
+Nullam cursus sem semper mauris mollis pretium. Proin a lorem est. Donec vitae metus nibh, eu fermentum leo. Suspendisse eget orci libero, venenatis auctor velit. Praesent sit amet ligula quis elit adipiscing ultrices. Sed ac fermentum nisl. Donec sodales leo ut turpis interdum rutrum. Nam sed eros vel risus semper mollis.
+"""
+]

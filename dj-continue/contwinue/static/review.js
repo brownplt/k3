@@ -588,7 +588,7 @@ function makeMeetingTable(papersB,basicInfo,cuser,meetingInfo,meetingCaps) {
       window.location = 'meeting#' + meetingCaps.launchMeeting;
     });
 		var restartE = postE(extractEvent_e(restartmeeting,'click').
-      constant_e(meetingCaps.endMeeting));
+      constant_e([meetingCaps.endMeeting, {}]));
 		meetingOrderB = merge_e(setOrderE,startE,restartE).startsWith(meetingInfo);
 
 		insertValueE(setOrderE.transform_e(function(_) {return toOrderStr(_,'paperID');}),orderBox.dom,'value');
