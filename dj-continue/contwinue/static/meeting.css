@@ -1,0 +1,165 @@
+
+#preview-box {
+margin:40px auto 0px auto;
+width:95%;
+border:1px dashed #888;
+border-bottom:none;
+border-right:none;
+padding:10px 10px;
+clear:both;
+position:fixed;
+bottom:0px;
+background-color:white;
+}
+
+#control-box {
+width:12em;
+float:right;
+padding:5px 10px 0px 10px;
+border: 3px solid black;
+border-top:none;
+border-right:none;
+background-color:#ff8;
+margin:-10px -10px 0 0;
+}
+
+body>p {
+margin:10px 0px 10px 30px;
+}
+
+#control-box form p {
+width:auto;
+margin:0;
+padding:5px;
+}
+
+#control-box input, #control-box select {
+display:block;
+margin:0.25em auto;
+}
+
+#preview-box.hidden div {
+display:none;
+}
+
+#preview-box.hidden h4 {
+display:none;
+}
+
+#preview-box h3 {
+font-size:medium;
+margin:0px;
+}
+
+#preview-box div {
+margin:0 0 5px 0;
+}
+
+#preview-box div.next {
+margin:0 5% 20px 0;
+width:50%;
+float:left;
+height:8em;
+}
+
+#preview-box div.next h4 {
+font-size:x-large;
+margin:5px 0px 0px 0px;
+line-height:110%;
+}
+
+#preview-box div.next p.authors {
+display:block;
+margin:0 0 5px 0;
+}
+
+#preview-box h4 {
+float:left;
+display:block;
+margin:10px 10px 10px 0;
+font-size:medium;
+}
+
+#preview-box div h4 {
+float:none;
+}
+
+#preview-box div h4 {
+margin:10px 0 0 0;
+display: block;
+}
+
+#preview-box h5 {
+margin:0 .8em 0 0;
+font-size:medium;
+float:left;
+}
+
+
+#preview-box p {
+margin:0;
+}
+
+#preview-box p.authors {
+display:none;
+}
+
+table.key-value {
+clear:right;
+margin:0 0 60px 0;
+padding-right:30%;
+/*float:right;*/
+display:block;
+}
+
+table.key-value th {
+font-size:large;
+padding:5px;
+}
+
+table.key-value td {
+margin:0px;
+padding:5px 5px 10px 5px;
+}
+
+table.key-value td {
+font-size:large;
+}
+
+#summary-box {
+float:left;
+width:3em;
+height:3em;
+font-size:xx-large;
+text-align:center;
+line-height:3em;
+clear:both;
+border:2px solid black;
+margin:0 0 0 0;
+}
+
+#decision-box {
+float:left;
+clear:left;
+font-size:large;
+font-weight:bold;
+margin:20px 0 0 0px;
+}
+
+.preview-box-controls {
+float:right;
+font-size:80%;
+}
+
+#show-preview {
+display:none;
+}
+
+h4 {
+font-size:large;
+margin:5px 160px 10px 0px;
+}
+
+h2 {
+margin:0px 160px 0px 0px;
+}

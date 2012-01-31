@@ -125,6 +125,7 @@ paper = make_get_handler('writer.html', {})
 admin_handler = make_get_handler('admin.html', {})
 review_handler = make_get_handler('review.html', {})
 paperview_handler = make_get_handler('paperview.html', {})
+meeting_handler = make_get_handler('meeting.html', {})
 
 class ContinueInit():
   def process_request(self, request):
@@ -183,11 +184,13 @@ class ContinueInit():
       'get-user-bids': reviewer.GetUserBidsHandler,
       'update-bids': reviewer.UpdateBidsHandler,
       'update-decision': reviewer.UpdateDecisionHandler,
+      'update-decision-by-id': reviewer.UpdateDecisionByIdHandler,
       'get-paper-summaries': reviewer.GetPaperSummariesHandler,
       'get-review-percentages': reviewer.GetReviewPercentagesHandler,
       'request-component-access': reviewer.RequestComponentAccessHandler,
       'get-meeting-order' : reviewer.GetMeetingOrderHandler,
       'get-meeting-paper' : reviewer.GetMeetingPaperHandler,
+      'launch-meeting' : reviewer.LaunchMeetingHandler,
       'launch-reviewer' : reviewer.LaunchReviewerHandler,
       # End LaunchContinue handlers
 

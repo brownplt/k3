@@ -15,6 +15,7 @@ urlpatterns = patterns('',
   (r'^admin$', 'contwinue.views.admin_handler'),
   (r'^review$', 'contwinue.views.review_handler'),
   (r'^paperview.*$', 'contwinue.views.paperview_handler'),
+  (r'^meeting.*$', 'contwinue.views.meeting_handler'),
 
   (r'^continue_login', 'contwinue.views.continue_login'),
   (r'^glogin$', 'contwinue.accounts.glogin'),

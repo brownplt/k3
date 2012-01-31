@@ -197,6 +197,24 @@ class UpdateDecisionHandler(bcap.CapHandler):
     paper.conference.update_last_change(paper)
     return bcap.bcapResponse(True)
 
+# UpdateDecisionByIdHandler
+# Changes the decision on a paper based on id
+#
+# granted: |conference:Conference|
+# -> {decision: Int, paper: Int}
+# <- True
+class UpdateDecisionByIdHandler(bcap.CapHandler):
+  def post(self, granted, args):
+    d = m.DecisionValue.get_by_id(int(args['decision']))
+    paper = m.get_one(m.Paper.objects.filter(
+      conference=granted.conference,
+      id=int(args['paper'])
+    ))
+    paper.decision = d
+    paper.save()
+    paper.conference.update_last_change(paper)
+    return bcap.bcapResponse(True)
+
 
 def check_unverified(uu):
   maybe_real_user = uu.get_user()
@@ -241,9 +259,9 @@ class GetMeetingOrderHandler(bcap.CapHandler):
     )
 
 class GetMeetingPaperHandler(bcap.CapHandler):
-  def get(self, granted):
+  def post(self, granted, args):
     return bcap.bcapResponse(
-      m.MeetingOrder.get_paper(granted.conference)
+      m.MeetingOrder.get_paper(granted.conference, args['paper'])
     )
 
 # LaunchReviewerHandler
@@ -276,6 +294,8 @@ class LaunchReviewerHandler(bcap.CapHandler):
 
     launchAdmin = "#"
     meeting_caps = {}
+    launchMeeting = bcap.cap_for_hash(bcap.grant('launch-meeting', reviewer))
+    meeting_caps['launchMeeting'] = launchMeeting
     meeting_caps['getPaper'] = bcap.grant('get-meeting-paper', conf)
     meeting_caps['getOrder'] = bcap.grant('get-meeting-order', conf)
     if 'admin' in reviewer.rolenames:
@@ -314,4 +334,28 @@ class LaunchReviewerHandler(bcap.CapHandler):
       'getPercentages': bcap.grant('get-review-percentages', conf),
       'getAbstracts': bcap.grant('get-abstracts', conf),
       'updateBids': bcap.grant('update-bids', reviewer),
+    })
+
+class LaunchMeetingHandler(bcap.CapHandler):
+  def get(self, granted):
+    reviewer = granted.user
+    conf = reviewer.conference
+    back_to_list = "%s/review#%s" % (
+      bcap.this_server_url_prefix(),
+      bcap.cap_for_hash(bcap.grant('launch-reviewer', reviewer))
+    )
+    meeting_caps = {}
+    meeting_caps['backToList'] = back_to_list,
+    meeting_caps['getPaper'] = bcap.grant('get-meeting-paper', conf)
+    meeting_caps['getOrder'] = bcap.grant('get-meeting-order', conf)
+    if 'admin' in reviewer.rolenames:
+      meeting_caps['setOrder'] = bcap.grant('set-meeting-order', conf)
+      meeting_caps['jumpTo'] = bcap.grant('meeting-jump-to', conf)
+      meeting_caps['endMeeting'] = bcap.grant('end-meeting', conf)
+      meeting_caps['updateDecision'] =\
+        bcap.grant('update-decision-by-id', conf)
+
+    return bcap.bcapResponse({
+      'basicInfo': conf.get_admin_basic(),
+      'meetingCaps': meeting_caps
     })

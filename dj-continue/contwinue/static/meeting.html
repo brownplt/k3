@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Loading...</title>
+<link rel="stylesheet" type="text/css" media="all" href="/static/style.css" />
+<link rel="stylesheet" type="text/css" media="all" href="/static/meeting.css" />
+<script src="/static/lib/js/flapjax/flapjax.js"></script>
+<script src="/static/lib/js/flapjax/json.js"></script>
+<script src="/static/lib/js/flapjax/plug.js"></script>
+<script src="/static/lib/js/flapjax/myfjws.js"></script>
+<script src="/static/gcommon.js"></script>
+<script src="/static/common.js"></script>
+<script src="common.js"></script>
+<script src="/static/lib/js/caps.js"></script>
+<script src="/static/lib/js/flapjax-belay.js"></script>
+<script src="/static/meeting.js"></script>
+	</head>
+	<body onload="loader();">
+		<div id="control-box">
+		</div>
+		<div id="starting">
+			<h2>Program Committee Meeting</h2>
+			<p>PC members will be able to follow along once the meeting has begun by clicking the <b>Meeting</b> tab in their browsers.</p>
+		</div>
+		<div id="switching" style="display:none;">
+			<h2 id="stitle"></h2>
+			<h4 id="sauthor"></h4>
+			<h3>No Longer Conflicted:</h3>
+			<span id="nlconf"></span>
+			<h3>Newly Conflicted:</h3>
+			<span id="newconf"></span>
+			<h3>Still Conflicted:</h3>
+			<span id="stillconf"></span>
+		</div>
+		<div id="current" style="display:none;">
+			<div id="summary"></div>
+			<h2 id="ptitle"></h2>
+			<h4 id="pauthor"></h4>
+			<h4>Conflicts: <span id="pconf"></span></h4>
+			<h4 id="ptall">Target Decision: <span id="ptgt"></span></h4>
+			<h3>Reviewers</h3>
+			<div id="prevs"></div>
+		</div>
+		<div id="preview-box">
+			<h3> Coming Up...</h3>
+			<div class="next"><h4 id="ntitle"></h4><p class="authors" id="nauthor"></p><h5 id="nconfhead">Conflicts:</h5><span id="nconf"></span></div>
+			<div id="later"></div>
+		</div>
+	</body>
+</html>
