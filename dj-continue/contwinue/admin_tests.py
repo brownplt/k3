@@ -746,7 +746,7 @@ class TestGrantComponentRequests(Generator):
     args[g1.id] = True
     args[g2.id] = True
 
-    result = grant.post(args)
+    result = grant.post({'grants': args})
 
     g1after = ComponentGrantRequest.objects.filter(id=g1.id)[0]
     g2after = ComponentGrantRequest.objects.filter(id=g2.id)[0]
