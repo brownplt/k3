@@ -1044,3 +1044,6 @@ function InputWidgetB(widgetTypeB /*, args */) {
 }
 inheritFrom(InputWidgetB,InputWidget);
 
+function zero_e() {
+  return one_e(null).filter_e(function() { return false; });
+}

@@ -1,15 +1,17 @@
-function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,topToo) {
+function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,topToo, saveButton) {
 	var me = this;
 	Widget.apply(this);
 	this.inputElems = [];
-	var bottomSaveButton = new ButtonWidget('Save Now','save');
+	var bottomSaveButton = saveButton ? new ButtonWidget('Save Now','save') : SPAN();
 	var bottomSubmitButton = new ButtonWidget('Submit','submit');
 	this.events.revert = receiver_e();
+  this.events.save = zero_e();
 	if(revert)
 		var bottomRevertButton = new ButtonWidget('Revert','revert');
 	if(topToo) {
-		var topSaveButton = new ButtonWidget('Save Now','save');
-		this.events.save = merge_e(topSaveButton.events.click,bottomSaveButton.events.click);
+		var topSaveButton = saveButton ? new ButtonWidget('Save Now','save') : SPAN();
+    if (saveButton)
+      this.events.save = merge_e(topSaveButton.events.click,bottomSaveButton.events.click);
 		var topSubmitButton = new ButtonWidget('Submit','submit');
 		this.events.submit = merge_e(topSubmitButton.events.click,bottomSubmitButton.events.click);
 		if(revert) {
@@ -18,7 +20,8 @@ function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,t
 		}
 	}
 	else {
-		this.events.save = bottomSaveButton.events.click;
+    if (saveButton)
+      this.events.save = bottomSaveButton.events.click;
 		this.events.submit = bottomSubmitButton.events.click;
 		if(revert)
 			this.events.revert = bottomRevertButton.events.click;
@@ -33,7 +36,7 @@ function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,t
 			var usd = '';
 			if(us) usd = STRONG('You Have Unsaved Changes.');
 			var lsstr = ls.getTime() > 0 ? 'Last Draft Saved '+ls.toLocaleString() : 'No draft saved yet.'
-			return DIV({align:'center'},lsstr,' ',usd);
+			return DIV({align:'center', 'font-size': 'small'},lsstr,' ',usd);
 	};
 	var bottomStatusB = lift_b(genStDom,this.behaviors.unsaved,this.behaviors.lastSaved);
 	var bottomDomB = DIVB({className:'form-buttons'},
@@ -371,7 +374,7 @@ DIVB({className:'pre'},' ') : requestDiv;})),
 				10000,(userCommentInfo && userCommentInfo.hasPublished),false);
 		revertE.add_e(comForm.events.revert);
 		csubmitE.add_e(comForm.events.submitted);
-		return comForm.dom;
+		return DIVB(PB(comForm.dom));
 	};
 	this.getReviewsDom = function() {
 		return DIV(
@@ -396,12 +399,9 @@ DIVB({className:'pre'},' ') : requestDiv;})),
           TABLE({className:'key-value'},
             TBODY(
               map(function(comment) {
-                return DIV({style:{'padding-top': '1em',
-                                   'border-top':'1px dotted gray'}},
+                return DIV({className:'comment'},
                             SPAN(STRONG(comment.submitterName), ' says...'),
-                            SPAN({style:{'font-size': 'small',
-                                         'float':'right',
-                                         'color':'gray'}},
+                            SPAN({className:'commentdate'},
                                  ' (' + comment.postedString + ')'),
                        P(paraString(comment.value,'pre')));
               },this.paper.comments)
@@ -466,8 +466,6 @@ capsB) {
         }, currentObjB, userCommentB));
 			case 'paper_review_form_tab':
 				return switch_b(lift_b(function(o,r) {return (o && r) ? o.getReviewFormDom(r,revertE) : DIV()},currentObjB,userReviewB));
-			case 'paper_comment_form_tab':
-				return switch_b(lift_b(function(o,c) {return o ? o.getCommentFormDom(c,commentRevertE,commentSubmitE) : DIV()},currentObjB,userCommentB));
 			case 'paper_options_tab':
 				return lift_b(function(o,e) {return (o && e) ? o.getOptDom(e) : DIV()},currentObjB,extensionsB);
 			default:

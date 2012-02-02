@@ -772,6 +772,17 @@ font-size:90%;
 .D { background-color: blue; }
 .E { background-color: white; color: white; }
 
+div.comment {
+  padding-top: 1em;
+  border-top: 1px dotted gray;
+}
+
+.commentdate {
+  font-size: small;
+  float:right;
+  color:gray;
+}
+
 div.revcomp {
 	float: left;
 	clear: none;
