@@ -26,6 +26,10 @@ comment tab
 
 --------------------------------------
 
+[] Conflicted reviewers shouldn't see comments
+[] Send emails to reviewers and admin when comments happen
+[] 
+
 Deploy
 [] Make some sample reviewers and reviews
 [] Give documents to existing papers

@@ -4,6 +4,9 @@ import belaylibs.dj_belay as bcap
 import time
 import logging
 
+from contwinue.email import send_and_log_email
+from contwinue.email_strings import comment_body, comment_subject
+
 logger = logging.getLogger('default')
 
 class GetByRoleHandler(bcap.CapHandler):
@@ -176,6 +179,37 @@ class PostCommentHandler(bcap.CapHandler):
       value=args['value']
     )
     c.save()
+    def send_comment_email(recipient):
+      launchcap = bcap.grant('launch-paperview', {
+        'user': recipient,
+        'paper': p
+      })
+      launchurl = '%s/paperview?id=%s&mode=paper_info_tab&tab=bidding_tab#%s' % (
+        bcap.this_server_url_prefix(),
+        p.id,
+        bcap.cap_for_hash(launchcap)
+      )
+
+      send_and_log_email(
+        subject=comment_subject % {
+          'paper': p.title,
+          'confname': p.conference.name
+        },
+        msg=comment_body % {
+          'paper': p.title,
+          'reviewer': user.full_name,
+          'comment': args['value'],
+          'launchpaper': launchurl
+        },
+        address=recipient.email,
+        fromaddr=p.conference.admin_contact.email,
+        logger=logger
+      )
+
+    for a in p.conference.users_by_role_name('admin'):
+      send_comment_email(a)
+    for r in [rev.reviewer for rev in p.review_set.all()]:
+      send_comment_email(r)
     return comments_response(p)
 
 class LaunchPaperViewHandler(bcap.CapHandler):

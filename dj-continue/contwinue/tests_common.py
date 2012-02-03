@@ -2,7 +2,7 @@ import uuid
 
 from contwinue.views import ContinueInit
 from contwinue.models import Conference, Account, User, get_one, \
-  Review, Role
+  Review, Role, Paper
 from contwinue.test_generate import generate
 
 from django.test import TestCase
@@ -17,6 +17,7 @@ class Generator(TestCase):
     self.admin = admin_role.user_set.all()[0]
     reviewer_role = get_one(Role.objects.filter(name='reviewer'))
     self.reviewers = reviewer_role.user_set.all()
+    self.papers = Paper.objects.all()
 
   def tearDown(self):
     self.conference.delete()

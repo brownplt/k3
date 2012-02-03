@@ -640,12 +640,16 @@ class Paper(belay.Grantable):
         component__paper=self,
         reviewer=user
       )])
+    
+    logger.error('User CHECKING if they can see reviews: %s' % user.full_name)
     if self.can_see_reviews(user):
       paper_json['decision'] = self.decision.to_json()
       paper_json['bids'] = [b.to_json() for b in self.bid_set.all()]
       paper_json['reviews'] = [r.to_json() for r in self.get_published()]
       paper_json['components'] = [c.to_json() for c in
         self.get_components_safe(user)]
+    else:
+      logger.error('User CANNOT see reviews: %s' % user.full_name)
     return paper_json
 
 

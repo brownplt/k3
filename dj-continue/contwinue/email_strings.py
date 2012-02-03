@@ -89,3 +89,18 @@ error, please reply to this email.
 Thanks!
 %(confname)s
 """
+
+comment_subject = u"(%(confname)s) New Comment on %(paper)s"
+
+comment_body = """
+%(reviewer)s added the following comment about %(paper)s:
+
+%(comment)s
+
+You can visit the paper and see the comment in context via this link:
+
+%(launchpaper)s
+
+If you run into trouble or believe you received this message in error,
+please respond to this email to let us know.
+"""

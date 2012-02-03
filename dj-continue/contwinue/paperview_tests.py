@@ -2,8 +2,12 @@ import belaylibs.dj_belay as bcap
 
 import settings
 
+from django.core import mail
+
 import contwinue.models as m
 from contwinue.reviewer import *
+
+import contwinue.email_strings as email_strings
 
 import time
 
@@ -285,3 +289,54 @@ class TestPostComment(Generator):
       comments[1].value,
       'This is my super-awesomer comment'
     )
+
+  def test_post_emails(self):
+    settings.NO_MAIL = False
+
+    conf = self.conference
+    p = self.papers[0]
+    r1 = make_reviewer('Joe Reviewer', 'joe@foo.bar', conf)
+    r2 = make_reviewer('Another Reviewer', 'joe@foo.baz', conf)
+    rev1 = make_review(conf, r1, p, True)
+    admin = self.admin
+
+    add_comment = bcap.grant('post-comment', {
+      'user': r1, 'paper': p
+    })
+    comment_body = 'This is my super-awesome comment'
+
+    add_comment.post({
+      'value': comment_body
+    })
+
+    self.assertEqual(mail.outbox[0].to, ['joe@fake.com'])
+    self.assertEqual(mail.outbox[1].to, ['joe@foo.bar'])
+    
+    self.assertEqual(len(mail.outbox), 2)
+    self.assertEqual(
+      mail.outbox[0].subject,
+      email_strings.comment_subject % {
+        'paper': p.title,
+        'confname': conf.name
+      }
+    )
+    self.assertEqual(
+      mail.outbox[1].subject,
+      email_strings.comment_subject % {
+        'paper': p.title,
+        'confname': conf.name
+      }
+    )
+
+    # Stupid test---caps granting isn't deterministic, so can't
+    # just check equality
+    self.assertTrue(mail.outbox[0].body.find(p.title) != -1)
+    self.assertTrue(mail.outbox[0].body.find('Joe Reviewer') != -1)
+    self.assertTrue(mail.outbox[0].body.find(comment_body) != -1)
+
+    self.assertTrue(mail.outbox[1].body.find(p.title) != -1)
+    self.assertTrue(mail.outbox[1].body.find('Joe Reviewer') != -1)
+    self.assertTrue(mail.outbox[1].body.find(comment_body) != -1)
+
+    settings.NO_MAIL = True    
+
