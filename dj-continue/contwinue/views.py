@@ -205,6 +205,7 @@ class ContinueInit():
       'assign-reviewers': paperview.AssignReviewersHandler,
       'get-comments': paperview.GetCommentsHandler,
       'post-comment': paperview.PostCommentHandler,
+      'draft-comment': paperview.DraftCommentHandler,
       'launch-paperview': paperview.LaunchPaperViewHandler
       # End LaunchPaperView handlers
     })

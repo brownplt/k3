@@ -28,13 +28,14 @@ function SSRWidget(underlyings,lastSaved,domFn,saveFn,submitFn,savetime,revert,t
 	}
 	this.behaviors.value = lift_b.apply({},[function() {return slice(arguments,0);}].concat(map(function(w) {return w.behaviors.value;},underlyings)));
 	this.events.submitted = submitFn(snapshot_e(this.events.submit,this.behaviors.value));
-	this.events.saved = merge_e(saveFn(snapshot_e(merge_e(this.events.save,timer_e(savetime)),this.behaviors.value)),this.events.submitted);
+	this.events.saved = merge_e(saveFn(snapshot_e(merge_e(this.events.save,timer_e(savetime)),this.behaviors.value).filterRepeats_e().filter_e(id)),this.events.submitted);
 	this.behaviors.lastSaved = this.events.saved.transform_e(function(_) {return new Date()}).startsWith(new Date(lastSaved*1000));
 	this.behaviors.unsaved = merge_e(this.events.saved.constant_e(false),this.behaviors.value.changes().constant_e(true)).startsWith(false);
 
 	var genStDom = function(us,ls) {
 			var usd = '';
-			if(us) usd = STRONG('You Have Unsaved Changes.');
+			if(us) usd = SPAN({'font-style': 'italic', 'color': 'gray'},
+                        '(Saving draft...)');
 			var lsstr = ls.getTime() > 0 ? 'Last Draft Saved '+ls.toLocaleString() : 'No draft saved yet.'
 			return DIV({align:'center', 'font-size': 'small'},lsstr,' ',usd);
 	};
@@ -348,19 +349,19 @@ DIVB({className:'pre'},' ') : requestDiv;})),
 		return revForm.dom;
 	};
 	this.getCommentFormDom = function(userCommentInfo,revertE,csubmitE) {
-		var valueWidget = new InputWidget(TEXTAREA({cols:80,rows:15,value:(userCommentInfo ? userCommentInfo.comment.value : '')}));
+    var comment = !!userCommentInfo.comment;
+		var valueWidget = new InputWidget(TEXTAREA({cols:80,rows:15,value:(comment ? userCommentInfo.comment.value : '')}));
 		var comForm = new SSRWidget([valueWidget],
-				(userCommentInfo ? userCommentInfo.comment.lastSaved : 0),
+				(comment ? userCommentInfo.comment.lastSaved : 0),
 				function(statusDom,valueDom) {
 					return DIVB(
-//						that.getInfoTable(false),
 						H4('Enter Comment'),
 						DIV({className:'form-inputs'},valueDom),
 						statusDom);
 				},
-				function(saveE) {return saveE.transform_e(function(vals) {
-						return [caps.postComment, {publish:'no', value:vals[0]}];
-				});},
+				function(saveE) {return postE(saveE.transform_e(function(vals) {
+						return [caps.draftComment, {draft:vals[0]}];
+				}));},
 				function(submitE) {return postE(
 					submitE.filter_e(function(vals) {
 						if(vals[0] == '') {
@@ -369,9 +370,9 @@ DIVB({className:'pre'},' ') : requestDiv;})),
 						}
 						return true;})
 					.transform_e(function(vals) {
-						return [caps.postComment, {publish:'yes',value:vals[0]}];
+						return [caps.postComment, {value:vals[0]}];
 				}));},
-				10000,(userCommentInfo && userCommentInfo.hasPublished),false);
+				3000,false,false);
 		revertE.add_e(comForm.events.revert);
 		csubmitE.add_e(comForm.events.submitted);
 		return DIVB(PB(comForm.dom));
@@ -405,7 +406,7 @@ DIVB({className:'pre'},' ') : requestDiv;})),
                                  ' (' + comment.postedString + ')'),
                        P(paraString(comment.value,'pre')));
               },this.paper.comments)
-            )) : '(No comments for this paper yet)')
+            )) : P('(No comments for this paper yet)'))
 		);
 	};
 	this.getOptDom = function(extensions) {
@@ -518,6 +519,10 @@ function loader() {
 	var commentRevertE = consumer_e();
 	var commentSubmitE = consumer_e();
 	paperReloadsE.add_e(commentSubmitE);
+  var userCommentB = merge_e(
+    commentSubmitE.constant_e(""),
+    getFieldE(launchE, 'commentDraft')
+  ).startsWith(false);
 /*	var userCommentB = getFilteredWSO_e(merge_e(
 		merge_e(userReviewE.filter_e(function(ur) {return !ur;}),commentSubmitE)
 		.constant_e(
@@ -535,7 +540,6 @@ function loader() {
 			return window.confirm('Are you sure you want to revert to your last published comment? Anything you have entered since will be lost!');}
 		)
 	)).startsWith(false); */
-  var userCommentB = one_e(false).startsWith(false);
 
 	var uRolesE = lift_b(function(u, ur) {
 		var isadmin = inList('admin',u.rolenames);

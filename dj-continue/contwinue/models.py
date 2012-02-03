@@ -488,6 +488,37 @@ class User(belay.Grantable):
   def unhidden_bids(self):
     return Bid.objects.filter(paper__hidden=False, bidder=self)
 
+  def get_draft(self, paper):
+    return get_one(Comment.objects.filter(
+      paper=paper,
+      commenter=self,
+      draft=True
+    ))
+
+  def get_draft_json(self, paper):
+    comment = self.get_draft(paper)
+    if comment: return comment.to_json()
+    return None
+
+  def update_draft(self, paper, value):
+    comment = self.get_draft(paper)
+    if comment: comment.value = value
+    else:
+      comment = Comment(
+        draft=True,
+        posted_at=int(time.time()),
+        paper=paper,
+        commenter=self,
+        value=value
+      )
+    comment.save()
+    return comment
+
+  def remove_comment_draft(self, paper):
+    comment = self.get_draft(paper)
+    if comment:
+      comment.delete()
+
 class UnverifiedUser(belay.Grantable):
   name = models.TextField()
   email = models.EmailField()
@@ -633,13 +664,13 @@ class Paper(belay.Grantable):
 
   def get_comments(self, user):
     if not self.has_conflict(user):
-      return [c.to_json() for c in paper.comment_set.all()]
+      return [c.to_json() for c in self.comment_set.exclude(draft=True)]
     else:
       return []
 
   def get_paper_with_decision(self, user):
     paper_json = self.get_paper()
-    paper_json['comments'] = [c.to_json() for c in self.my(Comment)]
+    paper_json['comments'] = [c.to_json() for c in self.my(Comment).filter(draft=False)]
     paper_json['hidden'] = self.hidden
     paper_json['grants'] = dict([(g.component.type.id, True) \
       for g in ComponentGrantRequest.objects.filter(
@@ -691,6 +722,7 @@ class Comment(belay.Grantable):
   commenter = models.ForeignKey(User)
   posted_at = models.IntegerField()
   value = models.TextField()
+  draft = models.BooleanField()
 
   def to_json(self):
     return {
@@ -698,6 +730,7 @@ class Comment(belay.Grantable):
       'paperID': self.paper_id,
       'commenterID': self.commenter_id,
       'value': self.value,
+      'lastSaved': self.posted_at,
       'postedString': convertTime(self.posted_at),
       'submitterName': self.commenter.full_name
     }

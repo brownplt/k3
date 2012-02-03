@@ -161,22 +161,36 @@ class AssignReviewersHandler(bcap.CapHandler):
 
 def comments_response(paper, user):
   return bcap.bcapResponse(paper.get_comments(user))
-  return bcap.bcapResponse(
-  )
 
 class GetCommentsHandler(bcap.CapHandler):
   def get(self, granted):
     return comments_response(granted.paper, user)
 
+class DraftCommentHandler(bcap.CapHandler):
+  def get(self, granted):
+    comment = granted['user'].user.get_draft(granted['paper'].paper)
+    if comment: comment = comment.to_json()
+    return bcap.bcapResponse({ 'comment': comment })
+
+  def post(self, granted, args):
+    comment = granted['user'].user.update_draft(
+      granted['paper'].paper,
+      args['draft']
+    )
+    if comment: comment = comment.to_json()
+    return bcap.bcapResponse({ 'comment': comment })
+
 class PostCommentHandler(bcap.CapHandler):
   def post(self, granted, args):
     p = granted['paper'].paper
     user = granted['user'].user
+    user.remove_comment_draft(p)
     c = m.Comment(
       commenter=user,
       paper=p,
       posted_at=int(time.time()),
-      value=args['value']
+      value=args['value'],
+      draft=False
     )
     c.save()
     def send_comment_email(recipient):
@@ -190,10 +204,12 @@ class PostCommentHandler(bcap.CapHandler):
         bcap.cap_for_hash(launchcap)
       )
 
+      conf = p.conference
+      fromaddr = "%s <%s>" % (conf.name, conf.admin_contact.email)
       send_and_log_email(
         subject=comment_subject % {
           'paper': p.title,
-          'confname': p.conference.name
+          'confname': conf.name
         },
         msg=comment_body % {
           'paper': p.title,
@@ -202,7 +218,7 @@ class PostCommentHandler(bcap.CapHandler):
           'launchpaper': launchurl
         },
         address=recipient.email,
-        fromaddr=p.conference.admin_contact.email,
+        fromaddr=fromaddr,
         logger=logger
       )
 
@@ -234,6 +250,9 @@ class LaunchPaperViewHandler(bcap.CapHandler):
       'user': user
     })
     caps['updateBids'] = bcap.grant('update-bids', user)
+    caps['draftComment'] = bcap.grant('draft-comment', {
+      'user': user, 'paper': paper
+    })
     caps['postComment'] = bcap.grant('post-comment', {
       'user': user, 'paper': paper
     })
@@ -284,5 +303,6 @@ class LaunchPaperViewHandler(bcap.CapHandler):
       'email': user.email,
       'currentUser': user.to_json(),
 
+      'commentDraft': {'comment': user.get_draft_json(paper)},
       'paperCaps': caps
     })

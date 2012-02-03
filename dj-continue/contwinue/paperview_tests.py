@@ -264,6 +264,34 @@ class TestGetComments(Generator):
     self.assertEqual(result, [c2.to_json(), c1.to_json()])
 
 class TestPostComment(Generator):
+  def test_post_draft(self):
+    conf = self.conference
+    p = m.Paper.objects.all()[0]
+    r1 = make_reviewer('Joe Reviewer', 'joe@foo.bar', conf)
+
+    draft_comment = bcap.grant('draft-comment', {
+      'user': r1, 'paper': p
+    })
+
+    draft_comment.post({
+      'draft': 'This is a draft comment'
+    })
+
+    result = draft_comment.get()
+    c = m.Comment.objects.all()[0]
+    self.assertEqual(result['comment'], c.to_json())
+
+    add_comment = bcap.grant('post-comment', {
+      'user': r1, 'paper': p
+    })
+    add_comment.post({
+      'value': 'This is the final comment'
+    })
+
+    # Clears the draft
+    result = draft_comment.get()
+    self.assertEqual(result['comment'], None)
+
   def test_post_comment(self):
     conf = self.conference
     p = m.Paper.objects.all()[0]
