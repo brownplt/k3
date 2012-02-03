@@ -561,7 +561,7 @@ function loader() {
 		uRolesE.startsWith([]),
 		{
 			reviewing:[getObj('paper_review_form_tab')],
-			commenter:[],
+			commenter:[getObj('paper_info_tab')],
 			reviewer:$$('paper-tab'),user:[],loggedout:[],
 			admin:$$('paper-tab').concat($$('admin-tab'))
 		},

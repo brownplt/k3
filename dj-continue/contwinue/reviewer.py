@@ -279,8 +279,9 @@ class LaunchReviewerHandler(bcap.CapHandler):
     papers_caps = {}
     for paper in papers:
       paper_caps = {}
-      if paper.can_see_reviews(reviewer):
-        paper_caps['updateDecision'] = bcap.grant('update-decision', paper)
+      if not paper.has_conflict(reviewer):
+        if 'admin' in reviewer.role_names():
+          paper_caps['updateDecision'] = bcap.grant('update-decision', paper)
         paper_caps['getAbstract'] = bcap.grant('get-abstract', paper)
         paper_caps['launch'] = bcap.cap_for_hash(
           bcap.grant('launch-paperview', {'user': reviewer, 'paper': paper})
