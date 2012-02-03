@@ -552,8 +552,7 @@ function loader() {
 			if(!ur || ur.hasPublished)
 				rls.push('reviewer');
 		}
-		if(!ur)
-			rls.push('commenter');
+	  rls.push('commenter');
 		return rls;
 	}, curUserE.startsWith({rolenames:['loggedout']}),userReviewE.startsWith(false)).changes();
 
