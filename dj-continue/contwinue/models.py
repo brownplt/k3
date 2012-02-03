@@ -679,10 +679,10 @@ class Paper(belay.Grantable):
       )])
     
     if self.can_see_reviews(user):
-      paper_json['decision'] = self.decision.to_json()
       paper_json['reviews'] = [r.to_json() for r in self.get_published()]
       paper_json['bids'] = [b.to_json() for b in self.bid_set.all()]
     if not self.has_conflict(user):
+      paper_json['decision'] = self.decision.to_json()
       paper_json['components'] = [c.to_json() for c in
         self.get_components_safe(user)]
     return paper_json
