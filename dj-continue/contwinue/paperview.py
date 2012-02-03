@@ -159,14 +159,14 @@ class AssignReviewersHandler(bcap.CapHandler):
     conf.update_last_change(paper)
     return bcap.bcapResponse(True)
 
-def comments_response(paper):
+def comments_response(paper, user):
+  return bcap.bcapResponse(paper.get_comments(user))
   return bcap.bcapResponse(
-    [c.to_json() for c in paper.comment_set.all()]
   )
 
 class GetCommentsHandler(bcap.CapHandler):
   def get(self, granted):
-    return comments_response(granted.paper)
+    return comments_response(granted.paper, user)
 
 class PostCommentHandler(bcap.CapHandler):
   def post(self, granted, args):
@@ -206,11 +206,14 @@ class PostCommentHandler(bcap.CapHandler):
         logger=logger
       )
 
-    for a in p.conference.users_by_role_name('admin'):
+    admins = p.conference.users_by_role_name('admin')
+    for a in admins:
       send_comment_email(a)
     for r in [rev.reviewer for rev in p.review_set.all()]:
-      send_comment_email(r)
-    return comments_response(p)
+      # Don't double-send to admins who are reviewing this paper
+      if not r in admins:
+        send_comment_email(r)
+    return comments_response(p, user)
 
 class LaunchPaperViewHandler(bcap.CapHandler):
   def get(self, granted):
